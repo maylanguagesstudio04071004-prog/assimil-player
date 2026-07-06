@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#7a6ff0">
+<title>Assimil Multi-Language Player</title>
+<style>
+:root{
+  --bg:#f5f4f0; --card:#ffffff; --text:#2a2723; --sub:#8a857c;
+  --accent:#7a6ff0; --accent-soft:#edebfd; --border:#e4e1da; --danger:#d05a5a;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#17161a; --card:#211f26; --text:#eceae6; --sub:#8f8a94;
+    --accent:#9a90ff; --accent-soft:#2e2a44; --border:#37343e; --danger:#e07777; }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
+  background:var(--bg); color:var(--text); padding-bottom:env(safe-area-inset-bottom)}
+header{padding:16px 20px 4px; font-size:18px; font-weight:700}
+header small{display:block; font-weight:400; color:var(--sub); font-size:12px; margin-top:2px}
+.tabs{display:flex; gap:8px; padding:12px 16px}
+.tabs button{flex:1; padding:10px; border:1px solid var(--border); background:var(--card);
+  color:var(--sub); border-radius:12px; font-size:15px; font-weight:600}
+.tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff}
+main{padding:0 16px 40px; max-width:560px; margin:0 auto}
+.card{background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:16px; margin-bottom:14px}
+.card h2{margin:0 0 10px; font-size:13px; color:var(--sub); font-weight:600;
+  text-transform:uppercase; letter-spacing:.05em}
+button{font-family:inherit; cursor:pointer; border:none}
+.row{display:flex; align-items:center; gap:10px}
+/* lesson selector */
+.lesson-row input[type=number]{width:90px; font-size:26px; font-weight:700; text-align:center;
+  padding:8px; border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text)}
+.step{width:46px; height:46px; border-radius:12px; background:var(--accent-soft);
+  color:var(--accent); font-size:22px; font-weight:700}
+.load-btn{flex:1; height:46px; border-radius:12px; background:var(--accent); color:#fff;
+  font-size:16px; font-weight:700}
+/* queue */
+#queue{list-style:none; margin:0; padding:0}
+#queue li{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+  font-size:15px; color:var(--sub)}
+#queue li.playing{background:var(--accent-soft); color:var(--text); font-weight:600}
+#queue li .dot{width:8px; height:8px; border-radius:50%; background:var(--border); flex:none}
+#queue li.playing .dot{background:var(--accent)}
+#queue li.done{opacity:.45}
+#queue li .spd{margin-left:auto; font-size:12px; color:var(--sub)}
+/* transport */
+#nowTitle{font-size:17px; font-weight:700; min-height:22px}
+#nowTime{font-variant-numeric:tabular-nums; color:var(--sub); font-size:13px}
+#seek{width:100%; margin:10px 0; accent-color:var(--accent)}
+.transport{display:flex; justify-content:center; align-items:center; gap:12px; margin-top:4px}
+.transport button{background:var(--accent-soft); color:var(--accent); border-radius:50%;
+  width:52px; height:52px; font-size:15px; font-weight:700}
+.transport .main{width:72px; height:72px; background:var(--accent); color:#fff; font-size:26px}
+.small-note{font-size:12px; color:var(--sub); margin-top:8px}
+/* speed */
+#speedVal{font-weight:700; font-variant-numeric:tabular-nums; width:56px; text-align:right}
+#speed{flex:1; accent-color:var(--accent)}
+.presets{display:flex; gap:8px; margin-top:10px}
+.presets button{flex:1; padding:8px 0; border-radius:10px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
+/* AB + loop */
+.ab-row button{flex:1; padding:12px 0; border-radius:10px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
+.ab-row button.set{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+.toggle{display:flex; align-items:center; justify-content:space-between; padding:4px 0; font-size:15px}
+.toggle input{width:22px; height:22px; accent-color:var(--accent)}
+/* library */
+.add-lang{display:flex; gap:8px}
+.add-lang input{flex:1; padding:11px; border:1px solid var(--border); border-radius:10px;
+  background:var(--bg); color:var(--text); font-size:15px}
+.add-lang button{padding:0 18px; border-radius:10px; background:var(--accent); color:#fff; font-weight:700}
+.lang-item{display:flex; align-items:center; gap:8px; padding:12px 0; border-bottom:1px solid var(--border)}
+.lang-item:last-child{border-bottom:none}
+.lang-item .name{flex:1; min-width:0}
+.lang-item .name b{display:block; font-size:15px}
+.lang-item .name span{font-size:12px; color:var(--sub)}
+.lang-item button{width:38px; height:38px; border-radius:9px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); font-size:15px}
+.lang-item button.del{color:var(--danger)}
+.lang-item button.add-files{width:auto; padding:0 12px; color:var(--accent);
+  background:var(--accent-soft); border-color:transparent; font-weight:700}
+#importLog{font-size:12px; color:var(--sub); white-space:pre-wrap; margin-top:10px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<header>Assimil Player<small>同一Lessonを言語横断で連続再生</small></header>
+
+<div class="tabs">
+  <button id="tabPlay" class="on">再生</button>
+  <button id="tabLib">ライブラリ</button>
+</div>
+
+<main>
+<!-- ================= PLAY VIEW ================= -->
+<div id="viewPlay">
+  <div class="card">
+    <h2>Lesson</h2>
+    <div class="row lesson-row">
+      <button class="step" id="lessonDown">−</button>
+      <input type="number" id="lessonNum" min="1" max="150" value="56">
+      <button class="step" id="lessonUp">＋</button>
+      <button class="load-btn" id="loadBtn">読込 ▶</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="nowTitle">未読込</div>
+    <div id="nowTime">0:00 / 0:00</div>
+    <input type="range" id="seek" min="0" max="100" step="0.1" value="0">
+    <div class="transport">
+      <button id="prevBtn">前へ</button>
+      <button id="rw15">−15s</button>
+      <button class="main" id="playBtn">▶</button>
+      <button id="rw5">−5s</button>
+      <button id="nextBtn">次へ</button>
+    </div>
+    <div class="small-note" id="resumeNote"></div>
+  </div>
+
+  <div class="card">
+    <h2>速度 <span style="text-transform:none">(言語ごとに記憶)</span></h2>
+    <div class="row">
+      <input type="range" id="speed" min="0.5" max="2" step="0.05" value="1">
+      <span id="speedVal">1.00×</span>
+    </div>
+    <div class="presets">
+      <button data-s="0.7">0.7</button>
+      <button data-s="0.85">0.85</button>
+      <button data-s="1">1.0</button>
+      <button data-s="1.2">1.2</button>
+      <button data-s="1.5">1.5</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>区間リピート</h2>
+    <div class="row ab-row">
+      <button id="abASet">A点</button>
+      <button id="abBSet">B点</button>
+      <button id="abClear">解除</button>
+    </div>
+    <div class="toggle" style="margin-top:12px">
+      <span>キュー全体をループ</span>
+      <input type="checkbox" id="loopAll">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>再生キュー</h2>
+    <ul id="queue"><li style="color:var(--sub)">Lessonを読み込んでください</li></ul>
+  </div>
+</div>
+
+<!-- ================= LIBRARY VIEW ================= -->
+<div id="viewLib" class="hidden">
+  <div class="card">
+    <h2>言語を追加</h2>
+    <div class="add-lang">
+      <input id="newLangName" placeholder="言語名 (例: Turkish)">
+      <button id="addLangBtn">追加</button>
+    </div>
+    <div class="small-note">再生はこのリストの並び順。↑↓で入れ替え。<br>
+    「＋音声」でその言語のmp3を選択(複数可)。ファイル名の数字からLesson番号を自動判定します。</div>
+  </div>
+  <div class="card">
+    <h2>言語一覧</h2>
+    <div id="langList"></div>
+    <div id="importLog"></div>
+  </div>
+  <input type="file" id="filePicker" accept="audio/*,.mp3,.m4a" multiple class="hidden">
+</div>
+</main>
+
+<script>
+'use strict';
+/* ---------- state ---------- */
+let db, keySet = new Set();
+let langs = JSON.parse(localStorage.getItem('langs') || '[]'); // [{name, speed}]
+let queue = [], qi = -1, currentKey = null, currentUrl = null;
+let abA = null, abB = null;
+let lastPosSave = 0;
+
+const audio = new Audio();
+audio.preservesPitch = true;
+if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = true;
+
+const $ = id => document.getElementById(id);
+
+/* ---------- IndexedDB ---------- */
+function openDB(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('assimilPlayer', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('tracks');
+    r.onsuccess = () => { db = r.result; res(); };
+    r.onerror = () => rej(r.error);
+  });
+}
+function tx(mode){ return db.transaction('tracks', mode).objectStore('tracks'); }
+function idbPut(key, val){ return new Promise((res, rej) => {
+  const q = tx('readwrite').put(val, key); q.onsuccess = res; q.onerror = () => rej(q.error); }); }
+function idbGet(key){ return new Promise((res, rej) => {
+  const q = tx('readonly').get(key); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+function idbDel(key){ return new Promise((res, rej) => {
+  const q = tx('readwrite').delete(key); q.onsuccess = res; q.onerror = () => rej(q.error); }); }
+function idbKeys(){ return new Promise((res, rej) => {
+  const q = tx('readonly').getAllKeys(); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+async function refreshKeys(){ keySet = new Set(await idbKeys()); }
+
+/* ---------- helpers ---------- */
+const keyOf = (lang, lesson) => lang + '|' + lesson;
+function saveLangs(){ localStorage.setItem('langs', JSON.stringify(langs)); }
+function langOf(name){ return langs.find(l => l.name === name); }
+function fmt(t){
+  if (!isFinite(t)) t = 0;
+  const m = Math.floor(t / 60), s = Math.floor(t % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+function parseLesson(filename){
+  const stem = filename.replace(/\.[a-z0-9]+$/i, '');
+  let m = stem.match(/[LS]0*(\d{1,3})(?!\d)/i);
+  if (m) return parseInt(m[1], 10);
+  const nums = stem.match(/\d+/g);
+  if (!nums) return null;
+  return parseInt(nums[nums.length - 1], 10);
+}
+function trackCount(name){
+  let n = 0; keySet.forEach(k => { if (k.startsWith(name + '|')) n++; });
+  return n;
+}
+
+/* ---------- tabs ---------- */
+$('tabPlay').onclick = () => switchTab(true);
+$('tabLib').onclick  = () => switchTab(false);
+function switchTab(play){
+  $('viewPlay').classList.toggle('hidden', !play);
+  $('viewLib').classList.toggle('hidden', play);
+  $('tabPlay').classList.toggle('on', play);
+  $('tabLib').classList.toggle('on', !play);
+}
+
+/* ---------- library ---------- */
+$('addLangBtn').onclick = () => {
+  const name = $('newLangName').value.trim();
+  if (!name) return;
+  if (langOf(name)) { alert('同名の言語があります'); return; }
+  langs.push({ name, speed: 1 });
+  $('newLangName').value = '';
+  saveLangs(); renderLangs();
+};
+
+let importTarget = null;
+$('filePicker').onchange = async e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length || !importTarget) return;
+  let ok = 0; const skipped = [], lessons = [];
+  for (const f of files){
+    const lesson = parseLesson(f.name);
+    if (lesson == null) { skipped.push(f.name); continue; }
+    await idbPut(keyOf(importTarget, lesson), { lang: importTarget, lesson, name: f.name, blob: f });
+    lessons.push(lesson); ok++;
+  }
+  await refreshKeys(); renderLangs();
+  let log = importTarget + ': ' + ok + '件追加';
+  if (lessons.length) log += ' (L' + Math.min(...lessons) + '–L' + Math.max(...lessons) + ')';
+  if (skipped.length) log += '\n番号不明でスキップ: ' + skipped.join(', ');
+  $('importLog').textContent = log;
+};
+
+function renderLangs(){
+  const box = $('langList');
+  box.innerHTML = '';
+  if (!langs.length){
+    box.innerHTML = '<div class="small-note">まだ言語がありません。上で追加してください。</div>';
+    return;
+  }
+  langs.forEach((l, i) => {
+    const row = document.createElement('div');
+    row.className = 'lang-item';
+    const cnt = trackCount(l.name);
+    row.innerHTML =
+      '<div class="name"><b></b><span>' + cnt + 'ファイル ・ ' + l.speed.toFixed(2) + '×</span></div>' +
+      '<button class="add-files">＋音声</button>' +
+      '<button class="up">↑</button><button class="dn">↓</button>' +
+      '<button class="del">×</button>';
+    row.querySelector('b').textContent = l.name;
+    row.querySelector('.add-files').onclick = () => { importTarget = l.name; $('filePicker').click(); };
+    row.querySelector('.up').onclick = () => { if (i > 0){ [langs[i-1], langs[i]] = [langs[i], langs[i-1]]; saveLangs(); renderLangs(); } };
+    row.querySelector('.dn').onclick = () => { if (i < langs.length - 1){ [langs[i+1], langs[i]] = [langs[i], langs[i+1]]; saveLangs(); renderLangs(); } };
+    row.querySelector('.del').onclick = async () => {
+      if (!confirm(l.name + ' と音声ファイルを削除しますか?')) return;
+      for (const k of [...keySet]) if (k.startsWith(l.name + '|')) await idbDel(k);
+      langs.splice(i, 1); saveLangs();
+      await refreshKeys(); renderLangs();
+    };
+    box.appendChild(row);
+  });
+}
+
+/* ---------- queue / playback ---------- */
+$('loadBtn').onclick = () => loadLesson();
+$('lessonUp').onclick = () => { $('lessonNum').value = +$('lessonNum').value + 1; loadLesson(); };
+$('lessonDown').onclick = () => { $('lessonNum').value = Math.max(1, +$('lessonNum').value - 1); loadLesson(); };
+
+function loadLesson(){
+  const n = +$('lessonNum').value;
+  localStorage.setItem('lastLesson', n);
+  queue = langs.filter(l => keySet.has(keyOf(l.name, n))).map(l => ({ lang: l.name, lesson: n }));
+  if (!queue.length){
+    qi = -1; renderQueue();
+    $('nowTitle').textContent = 'L' + n + ' の音声がありません';
+    return;
+  }
+  playIndex(0);
+}
+
+async function playIndex(i){
+  qi = i;
+  const t = queue[i];
+  const rec = await idbGet(keyOf(t.lang, t.lesson));
+  if (!rec){ nextTrack(); return; }
+  clearAB();
+  if (currentUrl) URL.revokeObjectURL(currentUrl);
+  currentKey = keyOf(t.lang, t.lesson);
+  currentUrl = URL.createObjectURL(rec.blob);
+  audio.src = currentUrl;
+  audio.load();
+  $('nowTitle').textContent = t.lang + ' — L' + t.lesson;
+  $('resumeNote').textContent = '';
+  renderQueue();
+  updateMediaSession(t);
+  try { await audio.play(); } catch(e){ /* autoplay block: user taps ▶ */ }
+}
+
+audio.addEventListener('loadedmetadata', () => {
+  const l = queue[qi] && langOf(queue[qi].lang);
+  applySpeed(l ? l.speed : 1, false);
+  const pos = parseFloat(localStorage.getItem('pos:' + currentKey) || '0');
+  if (pos > 3 && pos < audio.duration - 3){
+    audio.currentTime = pos;
+    $('resumeNote').textContent = fmt(pos) + ' から再開';
+  }
+  $('seek').max = audio.duration;
+});
+
+audio.addEventListener('timeupdate', () => {
+  $('seek').value = audio.currentTime;
+  $('nowTime').textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
+  if (abB != null && audio.currentTime >= abB) audio.currentTime = (abA != null ? abA : 0);
+  const now = Date.now();
+  if (currentKey && now - lastPosSave > 1500){
+    lastPosSave = now;
+    localStorage.setItem('pos:' + currentKey, audio.currentTime);
+  }
+});
+
+audio.addEventListener('ended', () => {
+  if (currentKey) localStorage.removeItem('pos:' + currentKey);
+  nextTrack();
+});
+audio.addEventListener('play',  () => { $('playBtn').textContent = '❚❚'; });
+audio.addEventListener('pause', () => { $('playBtn').textContent = '▶'; });
+
+function nextTrack(){
+  if (qi < queue.length - 1) playIndex(qi + 1);
+  else if ($('loopAll').checked && queue.length) playIndex(0);
+  else { renderQueue(true); }
+}
+
+$('playBtn').onclick = () => {
+  if (!audio.src){ loadLesson(); return; }
+  audio.paused ? audio.play() : audio.pause();
+};
+$('nextBtn').onclick = () => { if (qi < queue.length - 1) playIndex(qi + 1); };
+$('prevBtn').onclick = () => {
+  if (audio.currentTime > 4) audio.currentTime = 0;
+  else if (qi > 0) playIndex(qi - 1);
+  else audio.currentTime = 0;
+};
+$('rw5').onclick  = () => { audio.currentTime = Math.max(0, audio.currentTime - 5); };
+$('rw15').onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 15); };
+$('seek').oninput = e => { audio.currentTime = +e.target.value; };
+
+function renderQueue(finished){
+  const ul = $('queue');
+  ul.innerHTML = '';
+  if (!queue.length){
+    ul.innerHTML = '<li style="color:var(--sub)">Lessonを読み込んでください</li>';
+    return;
+  }
+  queue.forEach((t, i) => {
+    const li = document.createElement('li');
+    const l = langOf(t.lang);
+    li.className = (i === qi && !finished) ? 'playing' : (i < qi || finished) ? 'done' : '';
+    li.innerHTML = '<span class="dot"></span><span class="nm"></span>' +
+                   '<span class="spd">' + (l ? l.speed.toFixed(2) + '×' : '') + '</span>';
+    li.querySelector('.nm').textContent = t.lang;
+    li.onclick = () => playIndex(i);
+    ul.appendChild(li);
+  });
+}
+
+/* ---------- speed ---------- */
+function applySpeed(v, save){
+  v = Math.round(v * 100) / 100;
+  audio.playbackRate = v;
+  $('speed').value = v;
+  $('speedVal').textContent = v.toFixed(2) + '×';
+  if (save !== false && qi >= 0){
+    const l = langOf(queue[qi].lang);
+    if (l){ l.speed = v; saveLangs(); renderQueue(); }
+  }
+}
+$('speed').oninput = e => applySpeed(+e.target.value);
+document.querySelectorAll('.presets button').forEach(b => {
+  b.onclick = () => applySpeed(+b.dataset.s);
+});
+
+/* ---------- A-B repeat ---------- */
+function clearAB(){
+  abA = abB = null;
+  $('abASet').classList.remove('set'); $('abASet').textContent = 'A点';
+  $('abBSet').classList.remove('set'); $('abBSet').textContent = 'B点';
+}
+$('abASet').onclick = () => {
+  abA = audio.currentTime;
+  $('abASet').classList.add('set');
+  $('abASet').textContent = 'A ' + fmt(abA);
+  if (abB != null && abB <= abA){ abB = null; $('abBSet').classList.remove('set'); $('abBSet').textContent = 'B点'; }
+};
+$('abBSet').onclick = () => {
+  if (audio.currentTime <= (abA != null ? abA : 0)) return;
+  abB = audio.currentTime;
+  $('abBSet').classList.add('set');
+  $('abBSet').textContent = 'B ' + fmt(abB);
+};
+$('abClear').onclick = clearAB;
+
+$('loopAll').onchange = e => localStorage.setItem('loopAll', e.target.checked ? '1' : '');
+
+/* ---------- Media Session (ロック画面) ---------- */
+function updateMediaSession(t){
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: t.lang + ' — Lesson ' + t.lesson,
+    artist: 'Assimil', album: 'L' + t.lesson
+  });
+  navigator.mediaSession.setActionHandler('play',  () => audio.play());
+  navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+  navigator.mediaSession.setActionHandler('previoustrack', () => $('prevBtn').click());
+  navigator.mediaSession.setActionHandler('nexttrack', () => $('nextBtn').click());
+  navigator.mediaSession.setActionHandler('seekbackward', d => {
+    audio.currentTime = Math.max(0, audio.currentTime - (d.seekOffset || 5));
+  });
+}
+
+/* ---------- init ---------- */
+(async function init(){
+  await openDB();
+  await refreshKeys();
+  renderLangs();
+  const last = localStorage.getItem('lastLesson');
+  if (last) $('lessonNum').value = last;
+  $('loopAll').checked = !!localStorage.getItem('loopAll');
+  if (!langs.length) switchTab(false); // 初回はライブラリへ
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+  if ('serviceWorker' in navigator && location.protocol === 'https:')
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>

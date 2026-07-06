@@ -1,0 +1,11 @@
+{
+  "name": "Assimil Player",
+  "short_name": "Assimil",
+  "display": "standalone",
+  "background_color": "#17161a",
+  "theme_color": "#7a6ff0",
+  "start_url": "./",
+  "icons": [
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
