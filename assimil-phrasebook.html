@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Assimil Phrasebook</title>
+<style>
+:root{
+  --bg:#f5f4f0; --card:#ffffff; --text:#2a2723; --sub:#8a857c;
+  --accent:#7a6ff0; --accent-soft:#edebfd; --border:#e4e1da; --danger:#d05a5a;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#17161a; --card:#211f26; --text:#eceae6; --sub:#8f8a94;
+    --accent:#9a90ff; --accent-soft:#2e2a44; --border:#37343e; --danger:#e07777; }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
+  background:var(--bg); color:var(--text); padding-bottom:env(safe-area-inset-bottom)}
+header{padding:16px 20px 4px; font-size:18px; font-weight:700}
+header small{display:block; font-weight:400; color:var(--sub); font-size:12px; margin-top:2px}
+.tabs{display:flex; gap:8px; padding:12px 16px}
+.tabs button{flex:1; padding:10px; border:1px solid var(--border); background:var(--card);
+  color:var(--sub); border-radius:12px; font-size:15px; font-weight:600}
+.tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff}
+main{padding:0 16px 40px; max-width:560px; margin:0 auto}
+.card{background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:16px; margin-bottom:14px}
+.card h2{margin:0 0 10px; font-size:13px; color:var(--sub); font-weight:600;
+  text-transform:uppercase; letter-spacing:.05em}
+button{font-family:inherit; cursor:pointer; border:none}
+input,textarea,select{font-family:inherit}
+/* language chips */
+.langbar{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 12px; -webkit-overflow-scrolling:touch}
+.langbar::-webkit-scrollbar{display:none}
+.langbar button{flex:none; padding:9px 16px; border-radius:20px; border:1px solid var(--border);
+  background:var(--card); color:var(--sub); font-size:14px; font-weight:600; white-space:nowrap}
+.langbar button.on{background:var(--accent); border-color:var(--accent); color:#fff}
+/* lesson selector */
+.lesson-row{display:flex; align-items:center; gap:10px}
+.lesson-row input{width:90px; font-size:26px; font-weight:700; text-align:center;
+  padding:8px; border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text)}
+.step{width:46px; height:46px; border-radius:12px; background:var(--accent-soft);
+  color:var(--accent); font-size:22px; font-weight:700; flex:none}
+.lesson-title{font-size:15px; font-weight:700; flex:1; min-width:0}
+/* registered lessons chips */
+.reg{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px}
+.reg button{padding:6px 12px; border-radius:16px; background:var(--bg); border:1px solid var(--border);
+  color:var(--sub); font-size:13px; font-weight:600}
+.reg button.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+/* lesson content */
+.phrase{padding:12px 4px; border-bottom:1px solid var(--border); display:flex; gap:12px}
+.phrase:last-child{border-bottom:none}
+.phrase .no{flex:none; width:22px; font-size:12px; color:var(--sub); font-weight:600; padding-top:4px;
+  font-variant-numeric:tabular-nums; text-align:right}
+.phrase .txt{font-size:17px; line-height:1.65; overflow-wrap:anywhere}
+.words{display:flex; flex-wrap:wrap; gap:8px}
+.words span{padding:8px 14px; border-radius:12px; background:var(--accent-soft); color:var(--text);
+  font-size:15px; line-height:1.4}
+.lesson-note{font-size:13px; color:var(--sub); line-height:1.7}
+.empty-msg{text-align:center; color:var(--sub); font-size:14px; padding:40px 0; line-height:1.9}
+/* forms */
+textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--border);
+  border-radius:12px; background:var(--bg); color:var(--text); font-size:14px; resize:vertical; line-height:1.7}
+.btn{padding:12px 18px; border-radius:12px; background:var(--accent); color:#fff;
+  font-size:15px; font-weight:700}
+.btn.soft{background:var(--accent-soft); color:var(--accent)}
+.btn.danger{background:transparent; color:var(--danger); border:1px solid var(--danger)}
+.btn.full{width:100%; margin-top:10px}
+.msg{font-size:13px; margin-top:10px; color:var(--accent); min-height:18px}
+.msg.err{color:var(--danger)}
+.small-note{font-size:12px; color:var(--sub); margin-top:8px; line-height:1.7}
+pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:12px;
+  font-size:11.5px; overflow-x:auto; line-height:1.6}
+/* settings language list */
+.lang-item{display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--border)}
+.lang-item:last-child{border-bottom:none}
+.lang-item b{flex:1; font-size:15px; min-width:0}
+.lang-item span{font-size:12px; color:var(--sub)}
+.lang-item button{width:38px; height:38px; border-radius:10px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); font-size:15px}
+.lang-item button.del{color:var(--danger)}
+.add-lang{display:flex; gap:8px; margin-top:12px}
+.add-lang input{flex:1; padding:11px; border:1px solid var(--border); border-radius:10px;
+  background:var(--bg); color:var(--text); font-size:15px}
+.add-lang button{padding:0 18px; border-radius:10px; background:var(--accent); color:#fff; font-weight:700}
+/* edit form */
+.f-label{font-size:12px; color:var(--sub); font-weight:600; margin:14px 0 5px}
+.f-input{width:100%; padding:11px; border:1px solid var(--border); border-radius:10px;
+  background:var(--bg); color:var(--text); font-size:15px}
+</style>
+</head>
+<body>
+<header>Assimil Phrasebook<small>レッスンのフレーズと単語を呼び出す</small></header>
+
+<div class="tabs">
+  <button id="tabLesson" class="on">レッスン</button>
+  <button id="tabImport">取り込み</button>
+  <button id="tabSettings">設定</button>
+</div>
+
+<main>
+<!-- レッスン -->
+<section id="pageLesson">
+  <div class="langbar" id="langbar"></div>
+  <div class="card">
+    <div class="lesson-row">
+      <button class="step" id="prevBtn">−</button>
+      <input id="lessonNo" type="number" inputmode="numeric" min="1" value="1">
+      <button class="step" id="nextBtn">＋</button>
+      <div class="lesson-title" id="lessonTitle"></div>
+    </div>
+    <div class="reg" id="regList"></div>
+  </div>
+  <div id="content"></div>
+  <button class="btn soft full" id="editBtn">このレッスンを編集</button>
+</section>
+
+<!-- 取り込み -->
+<section id="pageImport" style="display:none">
+  <div class="card">
+    <h2>JSONを貼り付けて取り込み</h2>
+    <textarea id="importBox" placeholder='{"lessons":[...]}'></textarea>
+    <button class="btn full" id="importBtn">取り込む</button>
+    <div class="msg" id="importMsg"></div>
+    <div class="small-note">同じ言語・同じレッスン番号は上書きされます。未登録の言語は自動で追加されます。言語名は日本語(例: ロシア語)でも自己表記(Русский)に自動変換されます。</div>
+  </div>
+  <div class="card">
+    <h2>形式(Claudeに依頼するとき用)</h2>
+    <pre id="formatSample"></pre>
+    <div class="small-note">テキストのページ写真や本文をClaudeに渡して「この形式でJSONにして」と頼めば、そのまま貼り付けられます。title・words・noteは省略可。</div>
+  </div>
+</section>
+
+<!-- 設定 -->
+<section id="pageSettings" style="display:none">
+  <div class="card">
+    <h2>言語(表示順)</h2>
+    <div id="langList"></div>
+    <div class="add-lang">
+      <input id="newLang" placeholder="言語名を追加(例: フランス語)">
+      <button id="addLangBtn">追加</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>バックアップ</h2>
+    <button class="btn full" id="exportBtn">JSONを書き出す</button>
+    <button class="btn soft full" id="fileImportBtn">ファイルから読み込む</button>
+    <input type="file" id="fileInput" accept=".json" style="display:none">
+    <div class="msg" id="settingsMsg"></div>
+    <div class="small-note">データはこの端末のブラウザ内に保存されます。定期的に書き出しておくと安心です。</div>
+  </div>
+</section>
+
+<!-- 編集(レッスン単位) -->
+<section id="pageEdit" style="display:none">
+  <div class="card">
+    <h2 id="editHead">レッスンを編集</h2>
+    <div class="f-label">タイトル(任意)</div>
+    <input class="f-input" id="eTitle">
+    <div class="f-label">フレーズ(1行に1つ)</div>
+    <textarea id="ePhrases"></textarea>
+    <div class="f-label">単語(1行に1つ)</div>
+    <textarea id="eWords" style="min-height:90px"></textarea>
+    <div class="f-label">メモ(任意)</div>
+    <input class="f-input" id="eNote">
+    <button class="btn full" id="eSave">保存</button>
+    <button class="btn soft full" id="eCancel">キャンセル</button>
+    <button class="btn danger full" id="eDelete">このレッスンを削除</button>
+  </div>
+</section>
+</main>
+
+<script>
+"use strict";
+const KEY = "phrasebook.v3";
+const $ = id => document.getElementById(id);
+
+// 日本語名→各言語の自己表記(取り込み時・旧データの自動変換にも使用)
+const NATIVE = {
+  "英語":"English","中国語":"中文","イタリア語":"Italiano","スペイン語":"Español",
+  "フランス語":"Français","ドイツ語":"Deutsch","トルコ語":"Türkçe","アラビア語":"العربية",
+  "ヒンディー語":"हिन्दी","インドネシア語":"Bahasa Indonesia","タイ語":"ไทย","ロシア語":"Русский",
+  "オランダ語":"Nederlands","ベトナム語":"Tiếng Việt","ポルトガル語":"Português","韓国語":"한국어"
+};
+function toNative(l){ return NATIVE[l] || l; }
+
+let db = load();
+let currentLang = toNative(localStorage.getItem(KEY + ".lang") || db.langs[0] || "");
+let currentNo = Number(localStorage.getItem(KEY + ".no")) || 1;
+
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && Array.isArray(d.langs) && Array.isArray(d.lessons)){
+      // 旧データ(日本語名)を自己表記へ移行
+      d.langs = [...new Set(d.langs.map(toNative))];
+      d.lessons.forEach(x=>{ x.lang = toNative(x.lang); });
+      return d;
+    }
+  }catch(e){}
+  return {
+    langs: ["English","中文","Italiano","Español","Français","Deutsch",
+            "Türkçe","العربية","हिन्दी","Bahasa Indonesia","ไทย","Русский"],
+    lessons: []
+  };
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function findLesson(lang, no){ return db.lessons.find(x=>x.lang===lang && x.lesson===no); }
+
+/* ---------- tabs ---------- */
+const pages = {tabLesson:"pageLesson", tabImport:"pageImport", tabSettings:"pageSettings"};
+function showTab(t){
+  $("pageEdit").style.display = "none";
+  Object.keys(pages).forEach(k=>{
+    $(k).classList.toggle("on", k===t);
+    $(pages[k]).style.display = (k===t) ? "" : "none";
+  });
+  if(t==="tabLesson") renderLesson();
+  if(t==="tabSettings") renderLangs();
+}
+Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
+
+/* ---------- lesson view ---------- */
+function renderLangbar(){
+  if(!db.langs.includes(currentLang)) currentLang = db.langs[0] || "";
+  const bar = $("langbar");
+  bar.innerHTML = "";
+  db.langs.forEach(l=>{
+    const b = document.createElement("button");
+    b.textContent = l;
+    b.className = (l===currentLang) ? "on" : "";
+    b.onclick = ()=>{ currentLang = l; localStorage.setItem(KEY + ".lang", l); renderLesson(); };
+    bar.appendChild(b);
+  });
+}
+function renderLesson(){
+  renderLangbar();
+  $("lessonNo").value = currentNo;
+  localStorage.setItem(KEY + ".no", currentNo);
+  const L = findLesson(currentLang, currentNo);
+  $("lessonTitle").textContent = L && L.title ? L.title : "";
+  // 登録済みレッスンのチップ
+  const regs = db.lessons.filter(x=>x.lang===currentLang).map(x=>x.lesson).sort((a,b)=>a-b);
+  const reg = $("regList");
+  reg.innerHTML = "";
+  regs.forEach(n=>{
+    const b = document.createElement("button");
+    b.textContent = "L" + n;
+    b.className = (n===currentNo) ? "on" : "";
+    b.onclick = ()=>{ currentNo = n; renderLesson(); };
+    reg.appendChild(b);
+  });
+  // 本体
+  const box = $("content");
+  box.innerHTML = "";
+  if(!L){
+    box.innerHTML = '<div class="empty-msg">' + esc(currentLang) + ' L' + currentNo + ' は未登録です。<br><br>'
+      + 'テキストのページ写真や本文をClaudeに渡すと<br>取り込み用JSONにしてもらえます。<br>'
+      + '下のボタンから手で入力することもできます。</div>';
+    $("editBtn").textContent = "このレッスンを入力する";
+    return;
+  }
+  $("editBtn").textContent = "このレッスンを編集";
+  if(L.phrases && L.phrases.length){
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<h2>フレーズ</h2>' + L.phrases.map((p,i)=>
+      '<div class="phrase"><span class="no">' + (i+1) + '</span><span class="txt">' + esc(p) + '</span></div>'
+    ).join("");
+    box.appendChild(c);
+  }
+  if(L.words && L.words.length){
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<h2>単語</h2><div class="words">' + L.words.map(w=>'<span>' + esc(w) + '</span>').join("") + '</div>';
+    box.appendChild(c);
+  }
+  if(L.note){
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<h2>メモ</h2><div class="lesson-note">' + esc(L.note) + '</div>';
+    box.appendChild(c);
+  }
+}
+$("prevBtn").onclick = ()=>{ if(currentNo>1){ currentNo--; renderLesson(); } };
+$("nextBtn").onclick = ()=>{ currentNo++; renderLesson(); };
+$("lessonNo").addEventListener("change", ()=>{
+  const v = Math.max(1, Math.floor(Number($("lessonNo").value) || 1));
+  currentNo = v; renderLesson();
+});
+
+/* ---------- edit ---------- */
+$("editBtn").onclick = ()=>{
+  const L = findLesson(currentLang, currentNo);
+  $("editHead").textContent = currentLang + " L" + currentNo;
+  $("eTitle").value = L && L.title ? L.title : "";
+  $("ePhrases").value = L && L.phrases ? L.phrases.join("\n") : "";
+  $("eWords").value = L && L.words ? L.words.join("\n") : "";
+  $("eNote").value = L && L.note ? L.note : "";
+  $("eDelete").style.display = L ? "" : "none";
+  $("pageLesson").style.display = "none";
+  $("pageEdit").style.display = "";
+};
+function lines(s){ return s.split("\n").map(x=>x.trim()).filter(Boolean); }
+$("eSave").onclick = ()=>{
+  const rec = {
+    lang: currentLang, lesson: currentNo,
+    title: $("eTitle").value.trim(),
+    phrases: lines($("ePhrases").value),
+    words: lines($("eWords").value),
+    note: $("eNote").value.trim()
+  };
+  const i = db.lessons.findIndex(x=>x.lang===currentLang && x.lesson===currentNo);
+  if(i>=0) db.lessons[i] = rec; else db.lessons.push(rec);
+  save(); showTab("tabLesson");
+};
+$("eCancel").onclick = ()=>showTab("tabLesson");
+$("eDelete").onclick = ()=>{
+  if(!confirm(currentLang + " L" + currentNo + " を削除しますか?")) return;
+  db.lessons = db.lessons.filter(x=>!(x.lang===currentLang && x.lesson===currentNo));
+  save(); showTab("tabLesson");
+};
+
+/* ---------- import ---------- */
+const SAMPLE = {lessons:[{
+  lang: "Italiano",
+  lesson: 34,
+  title: "Al ristorante",
+  phrases: ["Buongiorno, avete un tavolo per due?", "Certo, da questa parte, prego."],
+  words: ["il tavolo", "prenotare", "il conto"],
+  note: "任意のメモ"
+}]};
+$("formatSample").textContent = JSON.stringify(SAMPLE, null, 2);
+
+function importData(raw, msgEl){
+  let data;
+  try{ data = JSON.parse(raw); }
+  catch(e){ msgEl.textContent = "JSONを読み取れませんでした: " + e.message; msgEl.className = "msg err"; return false; }
+  const list = Array.isArray(data) ? data : (data.lessons || data.entries);
+  if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
+  if(data.langs) data.langs.forEach(l=>{ if(!db.langs.includes(l)) db.langs.push(l); });
+  let added = 0, updated = 0;
+  list.forEach(item=>{
+    if(!item || !item.lang || item.lesson==null) return;
+    const rec = {
+      lang: toNative(String(item.lang)),
+      lesson: Number(item.lesson),
+      title: item.title ? String(item.title) : "",
+      phrases: Array.isArray(item.phrases) ? item.phrases.map(String) : [],
+      words: Array.isArray(item.words) ? item.words.map(String) : [],
+      note: item.note ? String(item.note) : ""
+    };
+    if(!db.langs.includes(rec.lang)) db.langs.push(rec.lang);
+    const i = db.lessons.findIndex(x=>x.lang===rec.lang && x.lesson===rec.lesson);
+    if(i>=0){ db.lessons[i] = rec; updated++; } else { db.lessons.push(rec); added++; }
+  });
+  save();
+  msgEl.textContent = "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件";
+  msgEl.className = "msg";
+  return true;
+}
+$("importBtn").onclick = ()=>{
+  if(importData($("importBox").value, $("importMsg"))) $("importBox").value = "";
+};
+
+/* ---------- settings ---------- */
+function renderLangs(){
+  const box = $("langList");
+  box.innerHTML = "";
+  db.langs.forEach((l,i)=>{
+    const n = db.lessons.filter(x=>x.lang===l).length;
+    const row = document.createElement("div");
+    row.className = "lang-item";
+    row.innerHTML = '<b>' + esc(l) + '</b><span>' + n + ' レッスン</span>';
+    const up = document.createElement("button"); up.textContent = "↑";
+    up.onclick = ()=>{ if(i>0){ [db.langs[i-1],db.langs[i]]=[db.langs[i],db.langs[i-1]]; save(); renderLangs(); } };
+    const dn = document.createElement("button"); dn.textContent = "↓";
+    dn.onclick = ()=>{ if(i<db.langs.length-1){ [db.langs[i+1],db.langs[i]]=[db.langs[i],db.langs[i+1]]; save(); renderLangs(); } };
+    const del = document.createElement("button"); del.textContent = "×"; del.className = "del";
+    del.onclick = ()=>{
+      if(n>0){
+        if(!confirm('「' + l + '」の ' + n + ' レッスン分のデータも削除されます。よろしいですか?')) return;
+        db.lessons = db.lessons.filter(x=>x.lang!==l);
+      }
+      db.langs.splice(i,1); save(); renderLangs();
+    };
+    row.append(up,dn,del);
+    box.appendChild(row);
+  });
+}
+$("addLangBtn").onclick = ()=>{
+  const name = $("newLang").value.trim();
+  if(!name) return;
+  if(db.langs.includes(name)){ alert("すでに登録されています"); return; }
+  db.langs.push(name); $("newLang").value = ""; save(); renderLangs();
+};
+$("exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "phrasebook-" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+$("fileImportBtn").onclick = ()=>$("fileInput").click();
+$("fileInput").onchange = e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ importData(r.result, $("settingsMsg")); renderLangs(); };
+  r.readAsText(f);
+  e.target.value = "";
+};
+
+renderLesson();
+</script>
+</body>
+</html>
