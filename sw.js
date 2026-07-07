@@ -1,4 +1,4 @@
-const CACHE = 'assimil-player-v1';
+const CACHE = 'assimil-player-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
