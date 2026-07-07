@@ -27,6 +27,15 @@ header small{display:block; font-weight:400; color:var(--sub); font-size:12px; m
 .tabs button{flex:1; padding:10px; border:1px solid var(--border); background:var(--card);
   color:var(--sub); border-radius:12px; font-size:15px; font-weight:600}
 .tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff}
+/* mode segmented control */
+.mode-seg{display:flex; gap:8px; margin-bottom:14px}
+.mode-seg button{flex:1; padding:9px; border:1px solid var(--border); background:var(--card);
+  color:var(--sub); border-radius:12px; font-size:14px; font-weight:600}
+.mode-seg button.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+.lang-sel-row select{flex:1; height:46px; border:1px solid var(--border); border-radius:12px;
+  background:var(--bg); color:var(--text); font-size:15px; font-weight:600; padding:0 10px}
+#langStart{width:80px; font-size:18px; font-weight:700; text-align:center; padding:8px;
+  border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text)}
 main{padding:0 16px 40px; max-width:560px; margin:0 auto}
 .card{background:var(--card); border:1px solid var(--border); border-radius:16px;
   padding:16px; margin-bottom:14px}
@@ -91,7 +100,7 @@ button{font-family:inherit; cursor:pointer; border:none}
 </style>
 </head>
 <body>
-<header>Assimil Player<small>同一Lessonを言語横断で連続再生</small></header>
+<header>Assimil Player<small>Lesson横断 / 言語縦断 で連続再生</small></header>
 
 <div class="tabs">
   <button id="tabPlay" class="on">再生</button>
@@ -101,13 +110,31 @@ button{font-family:inherit; cursor:pointer; border:none}
 <main>
 <!-- ================= PLAY VIEW ================= -->
 <div id="viewPlay">
-  <div class="card">
-    <h2>Lesson</h2>
+  <div class="mode-seg">
+    <button id="modeCross" class="on">Lesson横断</button>
+    <button id="modeLang">言語縦断</button>
+  </div>
+
+  <div class="card" id="lessonCard">
+    <h2>Lesson <span style="text-transform:none">(全言語を横断)</span></h2>
     <div class="row lesson-row">
       <button class="step" id="lessonDown">−</button>
       <input type="number" id="lessonNum" min="1" max="150" value="56">
       <button class="step" id="lessonUp">＋</button>
       <button class="load-btn" id="loadBtn">読込 ▶</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="langCard">
+    <h2>言語 <span style="text-transform:none">(全Lessonを縦断)</span></h2>
+    <div class="row lang-sel-row">
+      <select id="langSelect"></select>
+      <button class="load-btn" id="loadLangBtn">読込 ▶</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span class="small-note" style="margin:0">開始Lesson</span>
+      <input type="number" id="langStart" min="1" max="150" value="1">
+      <span class="small-note" id="langRange" style="margin:0 0 0 auto"></span>
     </div>
   </div>
 
@@ -164,10 +191,11 @@ button{font-family:inherit; cursor:pointer; border:none}
   <div class="card">
     <h2>言語を追加</h2>
     <div class="add-lang">
-      <input id="newLangName" placeholder="言語名 (例: Turkish)">
+      <input id="newLangName" placeholder="言語名 (例: トルコ語 / Turkish)">
       <button id="addLangBtn">追加</button>
     </div>
-    <div class="small-note">再生はこのリストの並び順。↑↓で入れ替え。<br>
+    <div class="small-note">日本語名・英語名は自己表記(例: Türkçe)に自動変換されます。<br>
+    再生はこのリストの並び順。↑↓で入れ替え。<br>
     「＋音声」でその言語のmp3を選択(複数可)。ファイル名の数字からLesson番号を自動判定します。</div>
   </div>
   <div class="card">
@@ -185,6 +213,7 @@ button{font-family:inherit; cursor:pointer; border:none}
 let db, keySet = new Set();
 let langs = JSON.parse(localStorage.getItem('langs') || '[]'); // [{name, speed}]
 let queue = [], qi = -1, currentKey = null, currentUrl = null;
+let mode = 'cross'; // 'cross' = Lesson横断 / 'lang' = 言語縦断
 let abA = null, abB = null;
 let lastPosSave = 0;
 
@@ -216,6 +245,23 @@ async function refreshKeys(){ keySet = new Set(await idbKeys()); }
 
 /* ---------- helpers ---------- */
 const keyOf = (lang, lesson) => lang + '|' + lesson;
+// 日本語名/英語名 → 各言語の自己表記 (phrasebookと同じ)
+const NATIVE = {
+  "英語":"English","中国語":"中文","イタリア語":"Italiano","スペイン語":"Español",
+  "フランス語":"Français","ドイツ語":"Deutsch","トルコ語":"Türkçe","アラビア語":"العربية",
+  "ヒンディー語":"हिन्दी","インドネシア語":"Bahasa Indonesia","タイ語":"ไทย","ロシア語":"Русский",
+  "オランダ語":"Nederlands","ベトナム語":"Tiếng Việt","ポルトガル語":"Português","韓国語":"한국어",
+  "Chinese":"中文","Mandarin":"中文","Italian":"Italiano","Spanish":"Español",
+  "French":"Français","German":"Deutsch","Turkish":"Türkçe","Arabic":"العربية",
+  "Hindi":"हिन्दी","Indonesian":"Bahasa Indonesia","Thai":"ไทย","Russian":"Русский",
+  "Dutch":"Nederlands","Vietnamese":"Tiếng Việt","Portuguese":"Português","Korean":"한국어"
+};
+function toNative(n){
+  n = (n || '').trim();
+  if (NATIVE[n]) return NATIVE[n];
+  const k = Object.keys(NATIVE).find(x => x.toLowerCase() === n.toLowerCase());
+  return k ? NATIVE[k] : n;
+}
 function saveLangs(){ localStorage.setItem('langs', JSON.stringify(langs)); }
 function langOf(name){ return langs.find(l => l.name === name); }
 function fmt(t){
@@ -246,9 +292,67 @@ function switchTab(play){
   $('tabLib').classList.toggle('on', !play);
 }
 
+/* ---------- mode (横断 / 縦断) ---------- */
+$('modeCross').onclick = () => setMode('cross');
+$('modeLang').onclick  = () => setMode('lang');
+function setMode(m){
+  mode = m;
+  $('modeCross').classList.toggle('on', m === 'cross');
+  $('modeLang').classList.toggle('on', m === 'lang');
+  $('lessonCard').classList.toggle('hidden', m !== 'cross');
+  $('langCard').classList.toggle('hidden', m !== 'lang');
+  localStorage.setItem('mode', m);
+  if (m === 'lang') renderLangSelect();
+}
+function lessonsOf(name){
+  const list = [];
+  keySet.forEach(k => { const i = k.indexOf('|'); if (i > 0 && k.slice(0, i) === name) list.push(+k.slice(i + 1)); });
+  return list.sort((a, b) => a - b);
+}
+function renderLangSelect(){
+  const sel = $('langSelect');
+  const prev = sel.value || localStorage.getItem('lastLang') || '';
+  sel.innerHTML = '';
+  const withAudio = langs.filter(l => lessonsOf(l.name).length);
+  if (!withAudio.length){
+    sel.innerHTML = '<option value="">音声のある言語がありません</option>';
+    $('langRange').textContent = '';
+    return;
+  }
+  withAudio.forEach(l => {
+    const ls = lessonsOf(l.name);
+    const o = document.createElement('option');
+    o.value = l.name;
+    o.textContent = l.name + ' (' + ls.length + '本 L' + ls[0] + '–L' + ls[ls.length - 1] + ')';
+    sel.appendChild(o);
+  });
+  if (withAudio.some(l => l.name === prev)) sel.value = prev;
+  updateLangRange();
+}
+function updateLangRange(){
+  const ls = lessonsOf($('langSelect').value);
+  $('langRange').textContent = ls.length ? '全' + ls.length + '本' : '';
+}
+$('langSelect').onchange = updateLangRange;
+$('loadLangBtn').onclick = () => loadLanguage();
+function loadLanguage(){
+  const name = $('langSelect').value;
+  if (!name) return;
+  const start = Math.max(1, +$('langStart').value || 1);
+  const all = lessonsOf(name).filter(n => n >= start);
+  if (!all.length){
+    qi = -1; queue = []; renderQueue();
+    $('nowTitle').textContent = name + ' に該当Lessonがありません';
+    return;
+  }
+  localStorage.setItem('lastLang', name);
+  queue = all.map(n => ({ lang: name, lesson: n }));
+  playIndex(0);
+}
+
 /* ---------- library ---------- */
 $('addLangBtn').onclick = () => {
-  const name = $('newLangName').value.trim();
+  const name = toNative($('newLangName').value.trim());
   if (!name) return;
   if (langOf(name)) { alert('同名の言語があります'); return; }
   langs.push({ name, speed: 1 });
@@ -303,6 +407,7 @@ function renderLangs(){
     };
     box.appendChild(row);
   });
+  if (mode === 'lang') renderLangSelect();
 }
 
 /* ---------- queue / playback ---------- */
@@ -376,7 +481,7 @@ function nextTrack(){
 }
 
 $('playBtn').onclick = () => {
-  if (!audio.src){ loadLesson(); return; }
+  if (!audio.src){ mode === 'lang' ? loadLanguage() : loadLesson(); return; }
   audio.paused ? audio.play() : audio.pause();
 };
 $('nextBtn').onclick = () => { if (qi < queue.length - 1) playIndex(qi + 1); };
@@ -402,7 +507,7 @@ function renderQueue(finished){
     li.className = (i === qi && !finished) ? 'playing' : (i < qi || finished) ? 'done' : '';
     li.innerHTML = '<span class="dot"></span><span class="nm"></span>' +
                    '<span class="spd">' + (l ? l.speed.toFixed(2) + '×' : '') + '</span>';
-    li.querySelector('.nm').textContent = t.lang;
+    li.querySelector('.nm').textContent = (mode === 'lang') ? ('L' + t.lesson) : t.lang;
     li.onclick = () => playIndex(i);
     ul.appendChild(li);
   });
@@ -463,12 +568,41 @@ function updateMediaSession(t){
 }
 
 /* ---------- init ---------- */
+async function migrateNative(){
+  let changed = false;
+  langs.forEach(l => { const n = toNative(l.name); if (n !== l.name){ l.name = n; changed = true; } });
+  const seen = {};
+  langs = langs.filter(l => seen[l.name] ? false : (seen[l.name] = 1));
+  if (changed) saveLangs();
+  for (const k of [...keySet]){
+    const i = k.indexOf('|'); if (i < 0) continue;
+    const lang = k.slice(0, i), n = toNative(lang);
+    if (n !== lang){
+      const rec = await idbGet(k);
+      if (rec){ rec.lang = n; await idbPut(n + k.slice(i), rec); }
+      await idbDel(k);
+    }
+  }
+  await refreshKeys();
+  for (const key of Object.keys(localStorage)){
+    if (!key.startsWith('pos:')) continue;
+    const body = key.slice(4), i = body.indexOf('|'); if (i < 0) continue;
+    const n = toNative(body.slice(0, i));
+    if (n !== body.slice(0, i)){
+      localStorage.setItem('pos:' + n + body.slice(i), localStorage.getItem(key));
+      localStorage.removeItem(key);
+    }
+  }
+}
+
 (async function init(){
   await openDB();
   await refreshKeys();
+  await migrateNative();
   renderLangs();
   const last = localStorage.getItem('lastLesson');
   if (last) $('lessonNum').value = last;
+  if (localStorage.getItem('mode') === 'lang') setMode('lang');
   $('loopAll').checked = !!localStorage.getItem('loopAll');
   if (!langs.length) switchTab(false); // 初回はライブラリへ
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
