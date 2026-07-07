@@ -323,7 +323,7 @@ function renderLangSelect(){
     const ls = lessonsOf(l.name);
     const o = document.createElement('option');
     o.value = l.name;
-    o.textContent = l.name + ' (' + ls.length + '本 L' + ls[0] + '–L' + ls[ls.length - 1] + ')';
+    o.textContent = l.name;
     sel.appendChild(o);
   });
   if (withAudio.some(l => l.name === prev)) sel.value = prev;
