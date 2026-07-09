@@ -858,7 +858,11 @@ document.addEventListener("click", (ev)=>{
   if(trPop.contains(ev.target)) return;
   hideTrPop();
 });
-document.addEventListener("scroll", hideTrPop, true);
+document.addEventListener("scroll", ()=>{
+  // 入力欄にフォーカス中(キーボード表示によるスクロール)は閉じない
+  if(document.activeElement && trPop.contains(document.activeElement)) return;
+  hideTrPop();
+}, true);
 
 /* ---------- 単語だけ選択したときの簡易訳(その単語だけをその場で自動翻訳) ---------- */
 // 「訳」ボタン=フレーズ全体の保存済み訳、テキスト選択=選んだ範囲だけのその場翻訳、と役割を分ける
