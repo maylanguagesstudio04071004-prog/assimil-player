@@ -133,6 +133,13 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 .tr-pop .tr-actions .btn{background:var(--accent); color:#fff}
 .tr-pop .tr-actions .btn.soft{background:var(--bg); color:var(--text); border:1px solid var(--border)}
 .tr-pop .tr-auto{background:var(--accent-soft); color:var(--accent)}
+/* 単語/部分選択した範囲だけの簡易訳(読み取り専用のミニポップアップ) */
+.sel-pop{position:fixed; z-index:1000; max-width:260px; background:var(--card);
+  border:1px solid var(--border); border-radius:12px; padding:9px 11px;
+  box-shadow:0 8px 22px rgba(0,0,0,.26); font-size:13.5px; line-height:1.5}
+.sel-pop .sel-src{font-size:11.5px; color:var(--sub); margin-bottom:3px; overflow-wrap:anywhere}
+.sel-pop .sel-out{color:var(--text); overflow-wrap:anywhere}
+.sel-pop .sel-out.err{color:var(--danger); font-size:12px}
 </style>
 </head>
 <body>
@@ -238,6 +245,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 </main>
 
 <div id="trPop" class="tr-pop" style="display:none"></div>
+<div id="selPop" class="sel-pop" style="display:none"></div>
 
 <script>
 "use strict";
@@ -350,18 +358,7 @@ function phraseRow(lang, lesson, p, i){
   btn.textContent = "★";
   btn.onclick = (ev)=>{ ev.stopPropagation(); toggleFav(lang, lesson, p, "phrase"); btn.classList.toggle("on"); };
   row.appendChild(btn);
-  // 長押しでもポップアップを開く(誤操作防止: 押している間に指が動いた/テキスト選択された場合はキャンセル)
-  let pressTimer = null, moved = false;
-  row.addEventListener("pointerdown", ()=>{
-    moved = false;
-    pressTimer = setTimeout(()=>{
-      if(!moved && !window.getSelection().toString()) openNotePopup(lang, lesson, p, row);
-    }, 550);
-  });
-  row.addEventListener("pointermove", ()=>{ moved = true; });
-  ["pointerup","pointerleave","pointercancel"].forEach(ev=>{
-    row.addEventListener(ev, ()=>clearTimeout(pressTimer));
-  });
+  // フレーズ全体の訳は「訳」ボタンのタップのみで開く(長押し/単語選択と競合させない)
   return row;
 }
 function wordChip(lang, lesson, w){
@@ -862,6 +859,62 @@ document.addEventListener("click", (ev)=>{
   hideTrPop();
 });
 document.addEventListener("scroll", hideTrPop, true);
+
+/* ---------- 単語だけ選択したときの簡易訳(その単語だけをその場で自動翻訳) ---------- */
+// 「訳」ボタン=フレーズ全体の保存済み訳、テキスト選択=選んだ範囲だけのその場翻訳、と役割を分ける
+const selPop = $("selPop");
+let selTimer = null, selSeq = 0;
+function hideSelPop(){ selPop.style.display = "none"; selPop.innerHTML = ""; }
+function placeSelPop(rect){
+  const w = Math.min(260, window.innerWidth - 16), pad = 8;
+  let left = rect.left + rect.width/2 - w/2;
+  left = Math.max(pad, Math.min(left, window.innerWidth - w - pad));
+  let top = rect.bottom + pad;
+  if(top > window.innerHeight - 100) top = Math.max(pad, rect.top - pad - 70);
+  selPop.style.width = w + "px";
+  selPop.style.left = left + "px";
+  selPop.style.top = top + "px";
+}
+async function liveTranslateSelection(text, lang, rect){
+  const seq = ++selSeq;
+  selPop.innerHTML = '<div class="sel-src">' + esc(text) + '</div><div class="sel-out">訳を取得中…</div>';
+  selPop.style.display = "block";
+  placeSelPop(rect);
+  try{
+    const sl = LANGCODE[lang] || "auto";
+    const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="
+      + encodeURIComponent(sl) + "&tl=ja&dt=t&q=" + encodeURIComponent(text);
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const out = (data[0] || []).map(seg=>seg[0]).join("");
+    if(seq !== selSeq) return;
+    selPop.innerHTML = '<div class="sel-src">' + esc(text) + '</div><div class="sel-out">' + esc(out || "(結果なし)") + '</div>';
+    placeSelPop(rect);
+  }catch(e){
+    if(seq !== selSeq) return;
+    selPop.innerHTML = '<div class="sel-out err">訳を取得できませんでした</div>';
+  }
+}
+document.addEventListener("selectionchange", ()=>{
+  clearTimeout(selTimer);
+  selTimer = setTimeout(()=>{
+    const sel = window.getSelection();
+    const text = sel.toString().trim();
+    if(!text || text.length > 200 || sel.rangeCount === 0){ hideSelPop(); return; }
+    const anchor = sel.anchorNode;
+    const el = anchor && (anchor.nodeType === 1 ? anchor : anchor.parentElement);
+    // 入力欄・編集フォーム・訳ポップアップ内の選択は無視
+    if(el && el.closest("textarea,input,#pageEdit,#pageImport,.tr-pop,.sel-pop")) return;
+    const phraseHost = el && el.closest(".phrase");
+    if(!phraseHost){ hideSelPop(); return; }
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    if(!rect || (rect.width===0 && rect.height===0)) return;
+    liveTranslateSelection(text, phraseHost.dataset.lang, rect);
+  }, 400);
+});
+document.addEventListener("scroll", hideSelPop, true);
 
 renderLesson();
 </script>
