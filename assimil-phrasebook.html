@@ -81,7 +81,8 @@ input,textarea,select{font-family:inherit}
   padding:12px 14px; margin-bottom:8px; cursor:pointer; display:flex; gap:10px; align-items:flex-start}
 .result .body{flex:1; min-width:0}
 .result .txt{font-size:16px; line-height:1.55; overflow-wrap:anywhere}
-.result .txt mark{background:var(--accent-soft); color:var(--accent); border-radius:3px; padding:0 1px}
+.result .txt mark, .result .txt-ja mark{background:var(--accent-soft); color:var(--accent); border-radius:3px; padding:0 1px}
+.result .txt-ja{font-size:14px; color:var(--sub); line-height:1.5; margin-top:3px; overflow-wrap:anywhere}
 .result .meta{font-size:12px; color:var(--sub); margin-top:4px}
 .result .fav{flex:none; background:none; font-size:20px; color:var(--border); padding:0 2px}
 .result .fav.on{color:var(--star)}
@@ -165,7 +166,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <!-- 検索 -->
 <section id="pageSearch" style="display:none">
-  <input id="q" type="search" placeholder="全言語・全レッスンから検索(部分一致)">
+  <input id="q" type="search" placeholder="全言語・全レッスンから検索(原文・日本語訳、部分一致)">
   <div class="filterbar">
     <button id="fAll" class="on">すべて</button>
     <button id="fPhrase">フレーズ</button>
@@ -484,9 +485,10 @@ function resultRow(r, q){
   const row = document.createElement("div");
   row.className = "result";
   row.dataset.lang = r.lang;
-  row.innerHTML = '<div class="body"><div class="txt">' + highlight(r.text, q) + '</div>'
-    + '<div class="meta">' + esc(r.lang) + ' · L' + r.lesson
-    + (r.type==="word" ? " · 単語" : "") + '</div></div>';
+  let body = '<div class="txt">' + highlight(r.text, q) + '</div>';
+  if(r.ja) body += '<div class="txt-ja">' + (r.hitJa ? highlight(r.ja, q) : esc(r.ja)) + '</div>';
+  body += '<div class="meta">' + esc(r.lang) + ' · L' + r.lesson + (r.type==="word" ? " · 単語" : "") + '</div>';
+  row.innerHTML = '<div class="body">' + body + '</div>';
   const btn = document.createElement("button");
   btn.className = "fav" + (isFav(r.lang, r.lesson, r.text, r.type) ? " on" : "");
   btn.textContent = "★";
@@ -507,21 +509,30 @@ function renderSearch(){
   box.innerHTML = "";
   if(!q){
     $("rcount").textContent = "";
-    box.innerHTML = '<div class="empty-msg">原文の一部を入力すると、全言語・全レッスンから探します。<br>結果をタップすると該当レッスンにジャンプします。</div>';
+    box.innerHTML = '<div class="empty-msg">原文または日本語訳の一部を入力すると、全言語・全レッスンから探します。<br>結果をタップすると該当レッスンにジャンプします。</div>';
     return;
   }
   const ql = q.toLowerCase();
   const results = [];
+  // フレーズの日本語訳を高速に引けるようマップ化(langlessontext -> ja)
+  const jaMap = new Map();
+  db.notes.forEach(n=>{
+    if((n.type||"phrase")!=="phrase" || !n.ja) return;
+    jaMap.set(n.lang + "" + n.lesson + "" + n.text, n.ja);
+  });
   const sorted = [...db.lessons].sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || a.lesson-b.lesson);
   for(const L of sorted){
     if(searchType!=="word"){
       (L.phrases||[]).forEach(p=>{
-        if(p.toLowerCase().includes(ql)) results.push({lang:L.lang, lesson:L.lesson, text:p, type:"phrase"});
+        const ja = jaMap.get(L.lang + "" + L.lesson + "" + p) || "";
+        const hitOrig = p.toLowerCase().includes(ql);
+        const hitJa = !!ja && ja.includes(q);
+        if(hitOrig || hitJa) results.push({lang:L.lang, lesson:L.lesson, text:p, type:"phrase", ja, hitJa});
       });
     }
     if(searchType!=="phrase"){
       (L.words||[]).forEach(w=>{
-        if(w.toLowerCase().includes(ql)) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word"});
+        if(w.toLowerCase().includes(ql)) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word", ja:"", hitJa:false});
       });
     }
     if(results.length>=300) break;
@@ -746,15 +757,17 @@ const NOTE_FIELDS = [
 const trPop = $("trPop");
 let trJustOpened = false;
 
-function noteIndex(lang, lesson, text){
-  return db.notes.findIndex(n=>n.lang===lang && n.lesson===lesson && n.text===text);
+function noteIndex(lang, lesson, text, type){
+  type = type || "phrase";
+  return db.notes.findIndex(n=>n.lang===lang && n.lesson===lesson && n.text===text && (n.type||"phrase")===type);
 }
-function getNote(lang, lesson, text){
-  const i = noteIndex(lang, lesson, text);
+function getNote(lang, lesson, text, type){
+  const i = noteIndex(lang, lesson, text, type);
   return i>=0 ? db.notes[i] : null;
 }
-function saveNoteField(lang, lesson, text, field, value){
-  const i = noteIndex(lang, lesson, text);
+function saveNoteField(lang, lesson, text, field, value, type){
+  type = type || "phrase";
+  const i = noteIndex(lang, lesson, text, type);
   const v = String(value||"").trim();
   if(i>=0){
     db.notes[i][field] = v;
@@ -762,7 +775,7 @@ function saveNoteField(lang, lesson, text, field, value){
     const empty = NOTE_FIELDS.every(f=>!String(db.notes[i][f.key]||"").trim());
     if(empty) db.notes.splice(i,1);
   } else if(v){
-    const rec = {lang, lesson, text, updated: Date.now()};
+    const rec = {lang, lesson, text, type, updated: Date.now()};
     NOTE_FIELDS.forEach(f=>rec[f.key] = "");
     rec[field] = v;
     db.notes.push(rec);
