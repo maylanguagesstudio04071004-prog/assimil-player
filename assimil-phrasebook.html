@@ -115,6 +115,15 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 .f-label{font-size:12px; color:var(--sub); font-weight:600; margin:14px 0 5px}
 .f-input{width:100%; padding:11px; border:1px solid var(--border); border-radius:10px;
   background:var(--bg); color:var(--text); font-size:15px}
+/* selection translate popup */
+.tr-pop{position:fixed; z-index:999; max-width:280px; background:var(--card);
+  border:1px solid var(--border); border-radius:14px; padding:10px 12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.22); font-size:14px; line-height:1.55}
+.tr-pop .tr-src{font-size:12px; color:var(--sub); margin-bottom:4px; overflow-wrap:anywhere}
+.tr-pop .tr-out{color:var(--text); overflow-wrap:anywhere}
+.tr-pop .tr-close{position:absolute; top:4px; right:6px; background:none; color:var(--sub);
+  font-size:15px; padding:4px 6px; line-height:1}
+.tr-pop.err .tr-out{color:var(--danger); font-size:12.5px}
 </style>
 </head>
 <body>
@@ -219,6 +228,8 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 </section>
 </main>
 
+<div id="trPop" class="tr-pop" style="display:none"></div>
+
 <script>
 "use strict";
 const KEY = "phrasebook.v3";
@@ -313,6 +324,7 @@ function renderLangbar(){
 function phraseRow(lang, lesson, p, i){
   const row = document.createElement("div");
   row.className = "phrase";
+  row.dataset.lang = lang;
   const fav = isFav(lang, lesson, p, "phrase");
   row.innerHTML = '<span class="no">' + (i+1) + '</span><span class="txt">' + esc(p) + '</span>';
   const btn = document.createElement("button");
@@ -325,6 +337,7 @@ function phraseRow(lang, lesson, p, i){
 function wordChip(lang, lesson, w){
   const b = document.createElement("button");
   b.textContent = w;
+  b.dataset.lang = lang;
   b.className = isFav(lang, lesson, w, "word") ? "faved" : "";
   b.onclick = ()=>{ toggleFav(lang, lesson, w, "word"); b.classList.toggle("faved"); };
   return b;
@@ -335,6 +348,7 @@ function lessonCards(L, withLangTitle){
     // 比較モード: 1言語=1カード(フレーズ+単語)
     const c = document.createElement("div");
     c.className = "card";
+    c.dataset.lang = L.lang;
     c.innerHTML = '<h2>' + esc(L.lang) + (L.title ? " — " + esc(L.title) : "") + '</h2>';
     (L.phrases||[]).forEach((p,i)=>c.appendChild(phraseRow(L.lang, L.lesson, p, i)));
     if(L.words && L.words.length){
@@ -440,6 +454,7 @@ function highlight(text, q){
 function resultRow(r, q){
   const row = document.createElement("div");
   row.className = "result";
+  row.dataset.lang = r.lang;
   row.innerHTML = '<div class="body"><div class="txt">' + highlight(r.text, q) + '</div>'
     + '<div class="meta">' + esc(r.lang) + ' · L' + r.lesson
     + (r.type==="word" ? " · 単語" : "") + '</div></div>';
@@ -524,6 +539,7 @@ function renderFavs(){
   favs.forEach(f=>{
     const row = document.createElement("div");
     row.className = "result";
+    row.dataset.lang = f.lang;
     row.innerHTML = '<div class="body"><div class="txt">' + esc(f.text) + '</div>'
       + '<div class="meta">' + esc(f.lang) + ' · L' + f.lesson
       + (f.type==="word" ? " · 単語" : "") + '</div></div>';
@@ -668,6 +684,79 @@ $("fileInput").onchange = e=>{
   r.readAsText(f);
   e.target.value = "";
 };
+
+/* ---------- 選択部分だけ日本語表記(ポップアップ翻訳) ---------- */
+const LANGCODE = {
+  "English":"en", "中文":"zh-CN", "Italiano":"it", "Español":"es", "Français":"fr",
+  "Deutsch":"de", "Türkçe":"tr", "العربية":"ar", "हिन्दी":"hi", "Bahasa Indonesia":"id",
+  "ไทย":"th", "Русский":"ru", "Nederlands":"nl", "Tiếng Việt":"vi", "Português":"pt", "한국어":"ko"
+};
+const trPop = $("trPop");
+let trTimer = null, trSeq = 0;
+
+function langCodeFor(node){
+  const el = node && node.nodeType === 1 ? node : (node ? node.parentElement : null);
+  const host = el ? el.closest("[data-lang]") : null;
+  const lang = host ? host.dataset.lang : null;
+  return lang ? (LANGCODE[lang] || "auto") : "auto";
+}
+function hideTrPop(){ trPop.style.display = "none"; trPop.innerHTML = ""; }
+function placeTrPop(rect){
+  const w = 280, pad = 8;
+  let left = rect.left + rect.width/2 - w/2;
+  left = Math.max(pad, Math.min(left, window.innerWidth - w - pad));
+  let top = rect.bottom + pad;
+  if(top > window.innerHeight - 80) top = rect.top - pad - 60;
+  trPop.style.left = left + "px";
+  trPop.style.top = Math.max(pad, top) + "px";
+}
+function showTrPop(rect, html, isErr){
+  trPop.className = "tr-pop" + (isErr ? " err" : "");
+  trPop.innerHTML = html + '<button class="tr-close">×</button>';
+  trPop.style.display = "block";
+  placeTrPop(rect);
+  trPop.querySelector(".tr-close").onclick = ()=>{
+    hideTrPop();
+    window.getSelection().removeAllRanges();
+  };
+}
+async function translateSelection(text, sl, rect){
+  const seq = ++trSeq;
+  showTrPop(rect, '<div class="tr-src">' + esc(text) + '</div><div class="tr-out">訳を取得中…</div>', false);
+  try{
+    const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="
+      + encodeURIComponent(sl) + "&tl=ja&dt=t&q=" + encodeURIComponent(text);
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    const out = (data[0] || []).map(seg=>seg[0]).join("");
+    if(seq !== trSeq) return; // 選択が変わっていたら破棄
+    showTrPop(rect, '<div class="tr-src">' + esc(text) + '</div><div class="tr-out">' + esc(out || "(結果なし)") + '</div>', false);
+  }catch(e){
+    if(seq !== trSeq) return;
+    showTrPop(rect, '<div class="tr-out">翻訳を取得できませんでした(通信環境をご確認ください)</div>', true);
+  }
+}
+document.addEventListener("selectionchange", ()=>{
+  clearTimeout(trTimer);
+  trTimer = setTimeout(()=>{
+    const sel = window.getSelection();
+    const text = sel.toString().trim();
+    if(!text || text.length > 300 || sel.rangeCount === 0){ hideTrPop(); return; }
+    const range = sel.getRangeAt(0);
+    const anchor = sel.anchorNode;
+    // 編集フォームや入力欄内の選択は無視
+    const editHost = anchor && (anchor.nodeType===1?anchor:anchor.parentElement).closest("textarea,input,#pageEdit,#pageImport");
+    if(editHost) return;
+    const mainHost = anchor && (anchor.nodeType===1?anchor:anchor.parentElement).closest("main");
+    if(!mainHost) return;
+    const rect = range.getBoundingClientRect();
+    if(!rect || (rect.width===0 && rect.height===0)) return;
+    const sl = langCodeFor(anchor);
+    translateSelection(text, sl, rect);
+  }, 450);
+});
+document.addEventListener("scroll", hideTrPop, true);
 
 renderLesson();
 </script>
