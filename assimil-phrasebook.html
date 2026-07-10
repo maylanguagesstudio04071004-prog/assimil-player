@@ -58,6 +58,9 @@ input,textarea,select{font-family:inherit}
 .lesson-heading{font-size:17px; font-weight:700; margin:2px 4px 10px; line-height:1.5}
 .lesson-heading-ja{font-size:13px; color:var(--sub); font-weight:400; margin-top:3px; line-height:1.6}
 .lesson-heading-roman{font-size:13px; color:var(--sub); font-weight:400; font-style:italic; margin-top:3px; line-height:1.5}
+.tagrow{display:flex; flex-wrap:wrap; gap:6px; margin:0 4px 12px}
+.tagrow button{padding:7px 13px; border-radius:15px; background:var(--accent-soft);
+  color:var(--accent); font-size:13px; font-weight:600}
 .phrase .roman{font-size:13px; color:var(--sub); font-style:italic; margin-top:2px; line-height:1.5; overflow-wrap:anywhere}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
   background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
@@ -179,11 +182,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <button class="step" id="prevBtn">−</button>
       <input id="lessonNo" type="number" inputmode="numeric" min="1" value="1">
       <button class="step" id="nextBtn">＋</button>
+      <button class="step" id="playBtn" style="display:none">▶</button>
+      <button class="step" id="spdBtn" style="display:none; width:auto; padding:0 12px; font-size:15px">1.0×</button>
       <div class="lesson-title" id="lessonTitle"></div>
-    </div>
-    <div class="audio-row" id="audioRow" style="display:none">
-      <button class="step" id="playBtn">▶</button>
-      <button class="step" id="spdBtn" style="width:auto; padding:0 14px; font-size:15px">1.0×</button>
     </div>
     <div id="seekRow" style="display:none">
       <input type="range" id="seekBar" min="0" max="100" step="0.1" value="0">
@@ -203,6 +204,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <button id="fAll" class="on">すべて</button>
     <button id="fPhrase">フレーズ</button>
     <button id="fWord">単語</button>
+    <button id="fTag">#タグ</button>
   </div>
   <div id="rcount"></div>
   <div id="results"></div>
@@ -267,6 +269,8 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <textarea id="eWords" style="min-height:90px"></textarea>
     <div class="f-label">メモ(任意)</div>
     <input class="f-input" id="eNote">
+    <div class="f-label">タグ(スペース区切り、#は不要。例: 挨拶 道案内)</div>
+    <input class="f-input" id="eTags">
     <button class="btn full" id="eSave">保存</button>
     <button class="btn soft full" id="eCancel">キャンセル</button>
     <button class="btn danger full" id="eDelete">このレッスンを削除</button>
@@ -527,6 +531,17 @@ function renderLesson(){
     }
     box.appendChild(h);
   }
+  if(L.tags && L.tags.length){
+    const tr = document.createElement("div");
+    tr.className = "tagrow";
+    L.tags.forEach(t=>{
+      const b = document.createElement("button");
+      b.textContent = "#" + t;
+      b.onclick = ()=>{ $("q").value = "#" + t; searchType = "tag"; showTab("tabSearch"); };
+      tr.appendChild(b);
+    });
+    box.appendChild(tr);
+  }
   box.appendChild(lessonCards(L, false));
 }
 $("prevBtn").onclick = ()=>{ if(currentNo>1){ currentNo--; renderLesson(); } };
@@ -547,34 +562,44 @@ function resultRow(r, q){
   const row = document.createElement("div");
   row.className = "result";
   row.dataset.lang = r.lang;
-  let body = '<div class="txt">' + highlight(r.text, q) + '</div>';
+  let body = '<div class="txt">' + (r.type==="lesson" ? esc(r.text) : highlight(r.text, q)) + '</div>';
   if(r.ja) body += '<div class="txt-ja">' + (r.hitJa ? highlight(r.ja, q) : esc(r.ja)) + '</div>';
-  body += '<div class="meta">' + esc(r.lang) + ' · L' + r.lesson + (r.type==="word" ? " · 単語" : "") + '</div>';
+  let meta = esc(r.lang) + ' · L' + r.lesson + (r.type==="word" ? " · 単語" : "");
+  if(r.type==="lesson"){
+    const tq = (q.startsWith("#") ? q.slice(1) : q);
+    meta += ' · ' + (r.tags||[]).map(t=>'#' + (tq ? highlight(t, tq) : esc(t))).join(" ");
+  }
+  body += '<div class="meta">' + meta + '</div>';
   row.innerHTML = '<div class="body">' + body + '</div>';
-  const btn = document.createElement("button");
-  btn.className = "fav" + (isFav(r.lang, r.lesson, r.text, r.type) ? " on" : "");
-  btn.textContent = "★";
-  btn.onclick = (ev)=>{ ev.stopPropagation(); toggleFav(r.lang, r.lesson, r.text, r.type); btn.classList.toggle("on"); };
-  row.appendChild(btn);
+  if(r.type!=="lesson"){
+    const btn = document.createElement("button");
+    btn.className = "fav" + (isFav(r.lang, r.lesson, r.text, r.type) ? " on" : "");
+    btn.textContent = "★";
+    btn.onclick = (ev)=>{ ev.stopPropagation(); toggleFav(r.lang, r.lesson, r.text, r.type); btn.classList.toggle("on"); };
+    row.appendChild(btn);
+  }
   row.onclick = ()=>jumpTo(r.lang, r.lesson);
   return row;
 }
 function renderSearch(){
-  ["fAll","fPhrase","fWord"].forEach(id=>{
+  ["fAll","fPhrase","fWord","fTag"].forEach(id=>{
     $(id).classList.toggle("on",
       (id==="fAll" && searchType==="all") ||
       (id==="fPhrase" && searchType==="phrase") ||
-      (id==="fWord" && searchType==="word"));
+      (id==="fWord" && searchType==="word") ||
+      (id==="fTag" && searchType==="tag"));
   });
   const q = $("q").value.trim();
   const box = $("results");
   box.innerHTML = "";
   if(!q){
     $("rcount").textContent = "";
-    box.innerHTML = '<div class="empty-msg">原文または日本語訳の一部を入力すると、全言語・全レッスンから探します。<br>結果をタップすると該当レッスンにジャンプします。</div>';
+    box.innerHTML = '<div class="empty-msg">原文または日本語訳の一部を入力すると、全言語・全レッスンから探します。<br>「#挨拶」のように入力するとタグ検索になります。<br>結果をタップすると該当レッスンにジャンプします。</div>';
     return;
   }
   const ql = q.toLowerCase();
+  const tagOnly = searchType==="tag" || q.startsWith("#");
+  const tq = (q.startsWith("#") ? q.slice(1) : q).toLowerCase();
   const results = [];
   // フレーズの日本語訳を高速に引けるようマップ化(langlessontext -> ja)
   const jaMap = new Map();
@@ -584,6 +609,11 @@ function renderSearch(){
   });
   const sorted = [...db.lessons].sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || a.lesson-b.lesson);
   for(const L of sorted){
+    if(tq && (searchType==="all" || tagOnly) && (L.tags||[]).some(t=>t.toLowerCase().includes(tq))){
+      results.push({lang:L.lang, lesson:L.lesson, text: L.title || ("Lesson " + L.lesson),
+                    type:"lesson", tags:L.tags, ja:"", hitJa:false});
+    }
+    if(tagOnly){ if(results.length>=300) break; else continue; }
     if(searchType!=="word"){
       (L.phrases||[]).forEach(p=>{
         const ja = jaMap.get(L.lang + "" + L.lesson + "" + p) || "";
@@ -610,6 +640,7 @@ $("q").addEventListener("input", renderSearch);
 $("fAll").onclick = ()=>{ searchType="all"; renderSearch(); };
 $("fPhrase").onclick = ()=>{ searchType="phrase"; renderSearch(); };
 $("fWord").onclick = ()=>{ searchType="word"; renderSearch(); };
+$("fTag").onclick = ()=>{ searchType="tag"; renderSearch(); };
 
 /* ---------- favorites ---------- */
 function renderFavs(){
@@ -663,18 +694,24 @@ $("editBtn").onclick = ()=>{
   $("ePhrases").value = L && L.phrases ? L.phrases.join("\n") : "";
   $("eWords").value = L && L.words ? L.words.join("\n") : "";
   $("eNote").value = L && L.note ? L.note : "";
+  $("eTags").value = L && L.tags ? L.tags.join(" ") : "";
   $("eDelete").style.display = L ? "" : "none";
   $("pageLesson").style.display = "none";
   $("pageEdit").style.display = "";
 };
 function lines(s){ return s.split("\n").map(x=>x.trim()).filter(Boolean); }
+function parseTags(s){
+  if(Array.isArray(s)) return s.map(t=>String(t).replace(/^#/,"").trim()).filter(Boolean);
+  return String(s||"").split(/[\s,、]+/).map(t=>t.replace(/^#/,"").trim()).filter(Boolean);
+}
 $("eSave").onclick = ()=>{
   const rec = {
     lang: currentLang, lesson: currentNo,
     title: $("eTitle").value.trim(),
     phrases: lines($("ePhrases").value),
     words: lines($("eWords").value),
-    note: $("eNote").value.trim()
+    note: $("eNote").value.trim(),
+    tags: parseTags($("eTags").value)
   };
   const i = db.lessons.findIndex(x=>x.lang===currentLang && x.lesson===currentNo);
   if(i>=0) db.lessons[i] = rec; else db.lessons.push(rec);
@@ -737,11 +774,16 @@ function importData(raw, msgEl){
       title: item.title ? String(item.title) : "",
       phrases: Array.isArray(item.phrases) ? item.phrases.map(String) : [],
       words: Array.isArray(item.words) ? item.words.map(String) : [],
-      note: item.note ? String(item.note) : ""
+      note: item.note ? String(item.note) : "",
+      tags: parseTags(item.tags)
     };
     if(!db.langs.includes(rec.lang)) db.langs.push(rec.lang);
     const i = db.lessons.findIndex(x=>x.lang===rec.lang && x.lesson===rec.lesson);
-    if(i>=0){ db.lessons[i] = rec; updated++; } else { db.lessons.push(rec); added++; }
+    if(i>=0){
+      // 手元で付けたタグは、取り込みデータにタグが無ければ残す
+      if(!rec.tags.length && Array.isArray(db.lessons[i].tags)) rec.tags = db.lessons[i].tags;
+      db.lessons[i] = rec; updated++;
+    } else { db.lessons.push(rec); added++; }
   });
   save();
   let msg = "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件";
@@ -1089,15 +1131,18 @@ $("spdBtn").onclick = ()=>{
   if(AP.key && AP.key.slice(0, AP.key.lastIndexOf("|"))===currentLang) AP.audio.playbackRate = v;
 };
 let playToken = 0;
+function setAudioVisible(v){
+  $("playBtn").style.display = v ? "" : "none";
+  $("spdBtn").style.display = v ? "" : "none";
+  $("seekRow").style.display = v ? "" : "none";
+}
 async function updatePlayBtn(){
   const my = ++playToken;
-  const row = $("audioRow");
-  if(compareMode){ row.style.display = "none"; $("seekRow").style.display = "none"; return; }
+  if(compareMode){ setAudioVisible(false); return; }
   const rec = await getTrack(currentLang, currentNo);
   if(my !== playToken) return;
-  if(!rec){ row.style.display = "none"; $("seekRow").style.display = "none"; return; }
-  row.style.display = "";
-  $("seekRow").style.display = "";
+  if(!rec){ setAudioVisible(false); return; }
+  setAudioVisible(true);
   $("spdBtn").textContent = speedLabel(currentSpeed());
   const key = currentLang + "|" + currentNo;
   $("playBtn").textContent = (AP.key===key && !AP.audio.paused) ? "⏸" : "▶";
