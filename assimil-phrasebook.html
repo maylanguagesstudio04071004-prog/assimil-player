@@ -56,6 +56,7 @@ input,textarea,select{font-family:inherit}
   color:var(--accent); font-size:22px; font-weight:700; flex:none}
 .lesson-title{font-size:15px; font-weight:700; flex:1; min-width:0}
 .lesson-heading{font-size:17px; font-weight:700; margin:2px 4px 10px; line-height:1.5}
+.lesson-heading-ja{font-size:13px; color:var(--sub); font-weight:400; margin-top:3px; line-height:1.6}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
   background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
 .compare-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
@@ -486,7 +487,24 @@ function renderLesson(){
   if(L.title){
     const h = document.createElement("div");
     h.className = "lesson-heading";
-    h.textContent = L.title;
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "display:flex; align-items:flex-start; gap:8px";
+    const t = document.createElement("span");
+    t.textContent = L.title;
+    t.style.flex = "1";
+    const note = getNote(currentLang, currentNo, L.title, "title");
+    const nbtn = document.createElement("button");
+    nbtn.className = "note-btn" + (note && note.ja ? " on" : "");
+    nbtn.textContent = "訳";
+    nbtn.onclick = (ev)=>{ ev.stopPropagation(); openNotePopup(currentLang, currentNo, L.title, nbtn, "title"); };
+    wrap.append(t, nbtn);
+    h.appendChild(wrap);
+    if(note && note.ja){
+      const j = document.createElement("div");
+      j.className = "lesson-heading-ja";
+      j.textContent = note.ja;
+      h.appendChild(j);
+    }
     box.appendChild(h);
   }
   box.appendChild(lessonCards(L, false));
@@ -827,9 +845,10 @@ function refreshNoteButtons(lang, lesson, text){
     if(b) b.classList.toggle("on", has);
   });
 }
-function openNotePopup(lang, lesson, text, anchorEl){
+function openNotePopup(lang, lesson, text, anchorEl, type){
+  type = type || "phrase";
   const rect = anchorEl.getBoundingClientRect();
-  const note = getNote(lang, lesson, text) || {};
+  const note = getNote(lang, lesson, text, type) || {};
   let html = '<div class="tr-src">' + esc(text) + '</div>';
   NOTE_FIELDS.forEach(f=>{
     html += '<div class="tr-field"><div class="tr-label">' + esc(f.label) + '</div>'
@@ -851,10 +870,11 @@ function openNotePopup(lang, lesson, text, anchorEl){
   trPop.querySelector(".tr-save").onclick = ()=>{
     NOTE_FIELDS.forEach(f=>{
       const ta = trPop.querySelector('[data-field="' + f.key + '"]');
-      if(ta) saveNoteField(lang, lesson, text, f.key, ta.value);
+      if(ta) saveNoteField(lang, lesson, text, f.key, ta.value, type);
     });
     hideTrPop();
-    refreshNoteButtons(lang, lesson, text);
+    if(type==="title") renderLesson(); // タイトル下の常時表示を更新
+    else refreshNoteButtons(lang, lesson, text);
   };
   const autoBtn = trPop.querySelector(".tr-auto");
   if(autoBtn){
