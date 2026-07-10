@@ -173,6 +173,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <input id="lessonNo" type="number" inputmode="numeric" min="1" value="1">
       <button class="step" id="nextBtn">＋</button>
       <button class="step" id="playBtn" style="display:none">▶</button>
+      <button class="step" id="spdBtn" style="display:none; width:auto; padding:0 12px; font-size:15px">1.0×</button>
       <div class="lesson-title" id="lessonTitle"></div>
     </div>
     <button class="compare-btn" id="compareBtn">全言語でこのレッスンを見る</button>
@@ -969,15 +970,40 @@ function getTrack(lang, no){
     }catch(e){ res(null); }
   }));
 }
+// 再生速度(言語ごとに記憶。初期値はプレーヤー側の言語別設定を引き継ぐ)
+const SPEEDS = [0.7, 0.8, 1, 1.2, 1.5];
+function currentSpeed(){
+  const v = parseFloat(localStorage.getItem(KEY + ".spd." + currentLang));
+  if(!isNaN(v)) return v;
+  try{
+    const ls = JSON.parse(localStorage.getItem("langs") || "[]");
+    const s = ls.find(x=>x.name===currentLang);
+    if(s && s.speed) return s.speed;
+  }catch(e){}
+  return 1;
+}
+function speedLabel(v){ return v.toFixed(v===Math.round(v) ? 1 : 2) + "×"; }
+$("spdBtn").onclick = ()=>{
+  const cur = currentSpeed();
+  // 現在値に一番近いプリセットの次へ
+  let i = 0, best = Infinity;
+  SPEEDS.forEach((s,k)=>{ const d = Math.abs(s-cur); if(d<best){ best = d; i = k; } });
+  const v = SPEEDS[(i+1) % SPEEDS.length];
+  localStorage.setItem(KEY + ".spd." + currentLang, v);
+  $("spdBtn").textContent = speedLabel(v);
+  if(AP.key && AP.key.slice(0, AP.key.lastIndexOf("|"))===currentLang) AP.audio.playbackRate = v;
+};
 let playToken = 0;
 async function updatePlayBtn(){
   const my = ++playToken;
-  const btn = $("playBtn");
-  if(compareMode){ btn.style.display = "none"; return; }
+  const btn = $("playBtn"), spd = $("spdBtn");
+  if(compareMode){ btn.style.display = "none"; spd.style.display = "none"; return; }
   const rec = await getTrack(currentLang, currentNo);
   if(my !== playToken) return;
-  if(!rec){ btn.style.display = "none"; return; }
+  if(!rec){ btn.style.display = "none"; spd.style.display = "none"; return; }
   btn.style.display = "";
+  spd.style.display = "";
+  spd.textContent = speedLabel(currentSpeed());
   const key = currentLang + "|" + currentNo;
   btn.textContent = (AP.key===key && !AP.audio.paused) ? "⏸" : "▶";
 }
@@ -994,12 +1020,7 @@ $("playBtn").onclick = async ()=>{
   AP.url = URL.createObjectURL(rec.blob);
   AP.audio.src = AP.url;
   AP.key = key;
-  // プレーヤー側で言語ごとに設定した再生速度を引き継ぐ
-  try{
-    const ls = JSON.parse(localStorage.getItem("langs") || "[]");
-    const s = ls.find(x=>x.name===currentLang);
-    AP.audio.playbackRate = (s && s.speed) ? s.speed : 1;
-  }catch(e){}
+  AP.audio.playbackRate = currentSpeed();
   try{ await AP.audio.play(); }catch(e){}
 };
 AP.audio.addEventListener("ended", updatePlayBtn);
