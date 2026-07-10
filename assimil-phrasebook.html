@@ -77,6 +77,8 @@ input,textarea,select{font-family:inherit}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
 .audio-row{display:flex; gap:10px; margin-top:12px; align-items:center; justify-content:center}
+#seekBar{width:100%; accent-color:var(--accent); margin:12px 0 2px}
+#seekTime{font-size:12px; color:var(--sub); text-align:center; font-variant-numeric:tabular-nums}
 .words{display:flex; flex-wrap:wrap; gap:8px}
 .words button{padding:8px 14px; border-radius:12px; background:var(--accent-soft); color:var(--text);
   font-size:15px; line-height:1.4; border:1px solid transparent}
@@ -184,6 +186,10 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <button class="step" id="playBtn">▶</button>
       <button class="step" id="ffBtn" style="width:auto; padding:0 14px; font-size:15px">＋5s</button>
       <button class="step" id="spdBtn" style="width:auto; padding:0 14px; font-size:15px">1.0×</button>
+    </div>
+    <div id="seekRow" style="display:none">
+      <input type="range" id="seekBar" min="0" max="100" step="0.1" value="0">
+      <div id="seekTime">0:00 / 0:00</div>
     </div>
     <button class="compare-btn" id="compareBtn">全言語でこのレッスンを見る</button>
     <div class="reg" id="regList"></div>
@@ -1088,15 +1094,39 @@ let playToken = 0;
 async function updatePlayBtn(){
   const my = ++playToken;
   const row = $("audioRow");
-  if(compareMode){ row.style.display = "none"; return; }
+  if(compareMode){ row.style.display = "none"; $("seekRow").style.display = "none"; return; }
   const rec = await getTrack(currentLang, currentNo);
   if(my !== playToken) return;
-  if(!rec){ row.style.display = "none"; return; }
+  if(!rec){ row.style.display = "none"; $("seekRow").style.display = "none"; return; }
   row.style.display = "";
+  $("seekRow").style.display = "";
   $("spdBtn").textContent = speedLabel(currentSpeed());
   const key = currentLang + "|" + currentNo;
   $("playBtn").textContent = (AP.key===key && !AP.audio.paused) ? "⏸" : "▶";
+  syncSeek();
 }
+function fmtTime(t){
+  if(!isFinite(t)) t = 0;
+  const m = Math.floor(t/60), s = Math.floor(t%60);
+  return m + ":" + String(s).padStart(2, "0");
+}
+function syncSeek(){
+  if(AP.key !== currentLang + "|" + currentNo){
+    $("seekBar").value = 0;
+    $("seekTime").textContent = "0:00 / 0:00";
+    return;
+  }
+  const d = AP.audio.duration;
+  $("seekBar").max = isFinite(d) ? d : 100;
+  $("seekBar").value = AP.audio.currentTime;
+  $("seekTime").textContent = fmtTime(AP.audio.currentTime) + " / " + fmtTime(d);
+}
+AP.audio.addEventListener("timeupdate", syncSeek);
+AP.audio.addEventListener("loadedmetadata", syncSeek);
+$("seekBar").addEventListener("input", e=>{
+  if(AP.key !== currentLang + "|" + currentNo) return;
+  AP.audio.currentTime = Number(e.target.value);
+});
 function audioSkip(sec){
   if(!AP.audio.src || AP.key !== currentLang + "|" + currentNo) return;
   const d = AP.audio.duration;
