@@ -55,6 +55,7 @@ input,textarea,select{font-family:inherit}
 .step{width:46px; height:46px; border-radius:12px; background:var(--accent-soft);
   color:var(--accent); font-size:22px; font-weight:700; flex:none}
 .lesson-title{font-size:15px; font-weight:700; flex:1; min-width:0}
+.lesson-heading{font-size:17px; font-weight:700; margin:2px 4px 10px; line-height:1.5}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
   background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
 .compare-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
@@ -463,7 +464,7 @@ function renderLesson(){
 
   $("editBtn").style.display = "";
   const L = findLesson(currentLang, currentNo);
-  $("lessonTitle").textContent = L && L.title ? L.title : "";
+  $("lessonTitle").textContent = ""; // タイトルは本文側の見出しに表示(▶・速度ボタンと重なるため)
   const regs = db.lessons.filter(x=>x.lang===currentLang).map(x=>x.lesson).sort((a,b)=>a-b);
   const reg = $("regList");
   reg.innerHTML = "";
@@ -482,6 +483,12 @@ function renderLesson(){
     return;
   }
   $("editBtn").textContent = "このレッスンを編集";
+  if(L.title){
+    const h = document.createElement("div");
+    h.className = "lesson-heading";
+    h.textContent = L.title;
+    box.appendChild(h);
+  }
   box.appendChild(lessonCards(L, false));
 }
 $("prevBtn").onclick = ()=>{ if(currentNo>1){ currentNo--; renderLesson(); } };
