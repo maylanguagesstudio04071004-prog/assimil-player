@@ -57,6 +57,8 @@ input,textarea,select{font-family:inherit}
 .lesson-title{font-size:15px; font-weight:700; flex:1; min-width:0}
 .lesson-heading{font-size:17px; font-weight:700; margin:2px 4px 10px; line-height:1.5}
 .lesson-heading-ja{font-size:13px; color:var(--sub); font-weight:400; margin-top:3px; line-height:1.6}
+.lesson-heading-roman{font-size:13px; color:var(--sub); font-weight:400; font-style:italic; margin-top:3px; line-height:1.5}
+.phrase .roman{font-size:13px; color:var(--sub); font-style:italic; margin-top:2px; line-height:1.5; overflow-wrap:anywhere}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
   background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
 .compare-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
@@ -210,7 +212,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <textarea id="importBox" placeholder='{"lessons":[...]}'></textarea>
     <button class="btn full" id="importBtn">取り込む</button>
     <div class="msg" id="importMsg"></div>
-    <div class="small-note">同じ言語・同じレッスン番号は上書きされます。未登録の言語は自動で追加されます。言語名は日本語(例: ロシア語)でも自己表記(Русский)に自動変換されます。<br>日本語訳をまとめて登録したい場合は <code>{"notes":[{"lang":"...","lesson":1,"text":"フレーズ原文","ja":"日本語訳"}]}</code> の形式で貼り付けても取り込めます(lessonsと同時でも単独でもOK)。</div>
+    <div class="small-note">同じ言語・同じレッスン番号は上書きされます。未登録の言語は自動で追加されます。言語名は日本語(例: ロシア語)でも自己表記(Русский)に自動変換されます。<br>日本語訳をまとめて登録したい場合は <code>{"notes":[{"lang":"...","lesson":1,"text":"フレーズ原文","ja":"日本語訳","roman":"読み(任意)"}]}</code> の形式で貼り付けても取り込めます(lessonsと同時でも単独でもOK)。タイトルの訳は <code>"type":"title"</code> を付けます。</div>
   </div>
   <div class="card">
     <h2>形式(Claudeに依頼するとき用)</h2>
@@ -365,8 +367,11 @@ function phraseRow(lang, lesson, p, i){
   row.className = "phrase";
   row.dataset.lang = lang;
   const fav = isFav(lang, lesson, p, "phrase");
-  row.innerHTML = '<span class="no">' + (i+1) + '</span><span class="txt">' + esc(p) + '</span>';
   const note = getNote(lang, lesson, p);
+  row.innerHTML = '<span class="no">' + (i+1) + '</span>'
+    + '<div style="flex:1; min-width:0"><span class="txt">' + esc(p) + '</span>'
+    + (note && note.roman ? '<div class="roman">' + esc(note.roman) + '</div>' : '')
+    + '</div>';
   const hasNote = !!(note && NOTE_FIELDS.some(f=>note[f.key]));
   const nbtn = document.createElement("button");
   nbtn.className = "note-btn" + (hasNote ? " on" : "");
@@ -499,6 +504,12 @@ function renderLesson(){
     nbtn.onclick = (ev)=>{ ev.stopPropagation(); openNotePopup(currentLang, currentNo, L.title, nbtn, "title"); };
     wrap.append(t, nbtn);
     h.appendChild(wrap);
+    if(note && note.roman){
+      const r = document.createElement("div");
+      r.className = "lesson-heading-roman";
+      r.textContent = note.roman;
+      h.appendChild(r);
+    }
     if(note && note.ja){
       const j = document.createElement("div");
       j.className = "lesson-heading-ja";
@@ -794,7 +805,8 @@ const LANGCODE = {
 // 将来ここに {key:"memo", label:"自分のメモ"} や {key:"explain", label:"Claudeの解説"} を
 // 追加すれば、ポップアップに自動で入力欄が並ぶ(データ側は既に任意フィールドを保存できる)
 const NOTE_FIELDS = [
-  {key:"ja", label:"日本語訳"}
+  {key:"ja", label:"日本語訳"},
+  {key:"roman", label:"読み(ローマ字)"}
 ];
 const trPop = $("trPop");
 let trJustOpened = false;
@@ -836,13 +848,27 @@ function placeTrPop(rect){
   trPop.style.top = top + "px";
 }
 function refreshNoteButtons(lang, lesson, text){
-  const has = !!(getNote(lang, lesson, text) && NOTE_FIELDS.some(f=>getNote(lang, lesson, text)[f.key]));
+  const note = getNote(lang, lesson, text);
+  const has = !!(note && NOTE_FIELDS.some(f=>note[f.key]));
   document.querySelectorAll(".phrase").forEach(row=>{
     if(row.dataset.lang !== lang) return;
     const txt = row.querySelector(".txt");
     if(!txt || txt.textContent !== text) return;
     const b = row.querySelector(".note-btn");
     if(b) b.classList.toggle("on", has);
+    // 読み(ローマ字)の常時表示も更新
+    let r = row.querySelector(".roman");
+    const roman = note && note.roman;
+    if(roman){
+      if(!r){
+        r = document.createElement("div");
+        r.className = "roman";
+        txt.insertAdjacentElement("afterend", r);
+      }
+      r.textContent = roman;
+    } else if(r){
+      r.remove();
+    }
   });
 }
 function openNotePopup(lang, lesson, text, anchorEl, type){
