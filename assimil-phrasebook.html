@@ -182,9 +182,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <div class="lesson-title" id="lessonTitle"></div>
     </div>
     <div class="audio-row" id="audioRow" style="display:none">
-      <button class="step" id="rwBtn" style="width:auto; padding:0 14px; font-size:15px">−5s</button>
       <button class="step" id="playBtn">▶</button>
-      <button class="step" id="ffBtn" style="width:auto; padding:0 14px; font-size:15px">＋5s</button>
       <button class="step" id="spdBtn" style="width:auto; padding:0 14px; font-size:15px">1.0×</button>
     </div>
     <div id="seekRow" style="display:none">
@@ -1127,16 +1125,6 @@ $("seekBar").addEventListener("input", e=>{
   if(AP.key !== currentLang + "|" + currentNo) return;
   AP.audio.currentTime = Number(e.target.value);
 });
-function audioSkip(sec){
-  if(!AP.audio.src || AP.key !== currentLang + "|" + currentNo) return;
-  const d = AP.audio.duration;
-  let t = AP.audio.currentTime + sec;
-  if(!isFinite(d)) t = Math.max(0, t);
-  else t = Math.max(0, Math.min(t, d - 0.3));
-  AP.audio.currentTime = t;
-}
-$("rwBtn").onclick = ()=>audioSkip(-5);
-$("ffBtn").onclick = ()=>audioSkip(5);
 $("playBtn").onclick = async ()=>{
   const key = currentLang + "|" + currentNo;
   if(AP.key===key){
