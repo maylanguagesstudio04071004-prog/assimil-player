@@ -62,6 +62,7 @@ input,textarea,select{font-family:inherit}
 .phrase .txt{font-size:17px; line-height:1.65; overflow-wrap:anywhere; flex:1}
 .phrase .fav{flex:none; background:none; font-size:20px; color:var(--border); padding:0 2px; line-height:1.4}
 .phrase .fav.on{color:var(--star)}
+#playBtn{background:var(--accent); color:#fff}
 .words{display:flex; flex-wrap:wrap; gap:8px}
 .words button{padding:8px 14px; border-radius:12px; background:var(--accent-soft); color:var(--text);
   font-size:15px; line-height:1.4; border:1px solid transparent}
@@ -162,6 +163,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <button class="step" id="prevBtn">−</button>
       <input id="lessonNo" type="number" inputmode="numeric" min="1" value="1">
       <button class="step" id="nextBtn">＋</button>
+      <button class="step" id="playBtn" style="display:none">▶</button>
       <div class="lesson-title" id="lessonTitle"></div>
     </div>
     <button class="compare-btn" id="compareBtn">全言語でこのレッスンを見る</button>
@@ -426,6 +428,8 @@ function renderLesson(){
   cmp.className = "compare-btn" + (compareMode ? " on" : "");
   const box = $("content");
   box.innerHTML = "";
+
+  if(typeof updatePlayBtn === "function") updatePlayBtn();
 
   if(compareMode){
     $("lessonTitle").textContent = "L" + currentNo + " 全言語";
@@ -919,6 +923,74 @@ document.addEventListener("selectionchange", ()=>{
   }, 400);
 });
 document.addEventListener("scroll", hideSelPop, true);
+
+/* ---------- 音声(assimil-playerと同じ保存領域から再生) ---------- */
+// プレーヤーがIndexedDB "assimilPlayer" に「言語名|レッスン番号」で保存した音声をそのまま使う。
+// 同じサイト(オリジン)上で開いている場合のみ有効。ローカルファイルで開くと音声は見えない。
+const AP = { db:null, failed:false, audio:new Audio(), key:"", url:"" };
+AP.audio.preservesPitch = true;
+if("webkitPreservesPitch" in AP.audio) AP.audio.webkitPreservesPitch = true;
+function openPlayerDB(){
+  return new Promise(res=>{
+    if(AP.db) return res(AP.db);
+    if(AP.failed) return res(null);
+    let done = false;
+    const finish = v=>{ if(!done){ done = true; if(!v) AP.failed = true; res(v); } };
+    const to = setTimeout(()=>finish(null), 2000);
+    try{
+      const r = indexedDB.open("assimilPlayer", 1);
+      r.onupgradeneeded = ()=>{ try{ r.result.createObjectStore("tracks"); }catch(e){} };
+      r.onsuccess = ()=>{ clearTimeout(to); AP.db = r.result; finish(AP.db); };
+      r.onerror = ()=>{ clearTimeout(to); finish(null); };
+    }catch(e){ clearTimeout(to); finish(null); }
+  });
+}
+function getTrack(lang, no){
+  return openPlayerDB().then(dbp=>new Promise(res=>{
+    if(!dbp || !dbp.objectStoreNames.contains("tracks")) return res(null);
+    try{
+      const q = dbp.transaction("tracks","readonly").objectStore("tracks").get(lang + "|" + no);
+      q.onsuccess = ()=>res(q.result || null);
+      q.onerror = ()=>res(null);
+    }catch(e){ res(null); }
+  }));
+}
+let playToken = 0;
+async function updatePlayBtn(){
+  const my = ++playToken;
+  const btn = $("playBtn");
+  if(compareMode){ btn.style.display = "none"; return; }
+  const rec = await getTrack(currentLang, currentNo);
+  if(my !== playToken) return;
+  if(!rec){ btn.style.display = "none"; return; }
+  btn.style.display = "";
+  const key = currentLang + "|" + currentNo;
+  btn.textContent = (AP.key===key && !AP.audio.paused) ? "⏸" : "▶";
+}
+$("playBtn").onclick = async ()=>{
+  const key = currentLang + "|" + currentNo;
+  if(AP.key===key){
+    if(AP.audio.paused){ try{ await AP.audio.play(); }catch(e){} }
+    else AP.audio.pause();
+    return;
+  }
+  const rec = await getTrack(currentLang, currentNo);
+  if(!rec || !rec.blob) return;
+  if(AP.url) URL.revokeObjectURL(AP.url);
+  AP.url = URL.createObjectURL(rec.blob);
+  AP.audio.src = AP.url;
+  AP.key = key;
+  // プレーヤー側で言語ごとに設定した再生速度を引き継ぐ
+  try{
+    const ls = JSON.parse(localStorage.getItem("langs") || "[]");
+    const s = ls.find(x=>x.name===currentLang);
+    AP.audio.playbackRate = (s && s.speed) ? s.speed : 1;
+  }catch(e){}
+  try{ await AP.audio.play(); }catch(e){}
+};
+AP.audio.addEventListener("ended", updatePlayBtn);
+AP.audio.addEventListener("pause", updatePlayBtn);
+AP.audio.addEventListener("play", updatePlayBtn);
 
 renderLesson();
 </script>
