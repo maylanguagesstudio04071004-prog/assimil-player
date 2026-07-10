@@ -21,8 +21,11 @@
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
   background:var(--bg); color:var(--text); padding-bottom:env(safe-area-inset-bottom)}
-header{padding:16px 20px 4px; font-size:18px; font-weight:700}
+header{padding:16px 20px 4px; font-size:18px; font-weight:700; position:relative}
 header small{display:block; font-weight:400; color:var(--sub); font-size:12px; margin-top:2px}
+header .hlink{position:absolute; right:16px; top:16px; font-size:13px; font-weight:600;
+  color:var(--accent); text-decoration:none; padding:7px 12px; border:1px solid var(--accent);
+  border-radius:16px; background:var(--accent-soft)}
 .tabs{display:flex; gap:8px; padding:12px 16px}
 .tabs button{flex:1; padding:10px; border:1px solid var(--border); background:var(--card);
   color:var(--sub); border-radius:12px; font-size:15px; font-weight:600}
@@ -100,7 +103,7 @@ button{font-family:inherit; cursor:pointer; border:none}
 </style>
 </head>
 <body>
-<header>Assimil Player<small>Lesson横断 / 言語縦断 で連続再生</small></header>
+<header>Assimil Player<small>Lesson横断 / 言語縦断 で連続再生</small><a class="hlink" href="./assimil-phrasebook.html">📖 Phrasebook</a></header>
 
 <div class="tabs">
   <button id="tabPlay" class="on">再生</button>
@@ -323,7 +326,7 @@ function renderLangSelect(){
     const ls = lessonsOf(l.name);
     const o = document.createElement('option');
     o.value = l.name;
-    o.textContent = l.name;
+    o.textContent = l.name + ' (' + ls.length + '本 L' + ls[0] + '–L' + ls[ls.length - 1] + ')';
     sel.appendChild(o);
   });
   if (withAudio.some(l => l.name === prev)) sel.value = prev;
