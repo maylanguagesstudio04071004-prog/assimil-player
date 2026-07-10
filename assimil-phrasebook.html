@@ -218,6 +218,11 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     </div>
   </div>
   <div class="card">
+    <h2>音声連携の状態</h2>
+    <button class="btn soft full" id="audioCheckBtn" style="margin-top:0">プレーヤーの音声を確認</button>
+    <div id="audioCheck" class="small-note"></div>
+  </div>
+  <div class="card">
     <h2>バックアップ</h2>
     <button class="btn full" id="exportBtn">JSONを書き出す(お気に入り含む)</button>
     <button class="btn soft full" id="fileImportBtn">ファイルから読み込む</button>
@@ -991,6 +996,38 @@ $("playBtn").onclick = async ()=>{
 AP.audio.addEventListener("ended", updatePlayBtn);
 AP.audio.addEventListener("pause", updatePlayBtn);
 AP.audio.addEventListener("play", updatePlayBtn);
+// 診断: プレーヤーの保存領域に何が見えているかを一覧表示
+$("audioCheckBtn").onclick = async ()=>{
+  const out = $("audioCheck");
+  out.textContent = "確認中…";
+  AP.failed = false; // 再試行できるように
+  const dbp = await openPlayerDB();
+  if(!dbp || !dbp.objectStoreNames.contains("tracks")){
+    out.textContent = "プレーヤーの保存領域が見つかりません。この端末・このブラウザ(またはこのホーム画面アプリ)でプレーヤーの音声を取り込んだことがあるか確認してください。";
+    return;
+  }
+  const keys = await new Promise(res=>{
+    try{
+      const q = dbp.transaction("tracks","readonly").objectStore("tracks").getAllKeys();
+      q.onsuccess = ()=>res(q.result || []);
+      q.onerror = ()=>res([]);
+    }catch(e){ res([]); }
+  });
+  if(!keys.length){
+    out.textContent = "プレーヤーの保存領域はありますが、音声は0件でした。プレーヤーを別のブラウザ/ホーム画面アプリで使っている場合、保存領域が別々になります(特にiPhoneはホーム画面アプリごとに独立)。";
+    return;
+  }
+  const byLang = {};
+  keys.forEach(k=>{
+    const s = String(k), i = s.lastIndexOf("|");
+    const l = i>=0 ? s.slice(0,i) : s;
+    (byLang[l] = byLang[l] || []).push(i>=0 ? s.slice(i+1) : "?");
+  });
+  out.innerHTML = keys.length + " 件の音声が見えています:<br>" + Object.keys(byLang).map(l=>{
+    const ns = byLang[l].map(Number).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+    return esc(l) + ": " + byLang[l].length + " 件(L" + ns.slice(0,8).join(", L") + (ns.length>8 ? ", …" : "") + ")";
+  }).join("<br>") + "<br>※ 言語名がこのアプリの表記と一致していないと▶は出ません。";
+};
 
 renderLesson();
 </script>
