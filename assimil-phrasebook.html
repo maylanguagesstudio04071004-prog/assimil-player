@@ -274,7 +274,8 @@ const NATIVE = {
   "英語":"English","中国語":"中文","イタリア語":"Italiano","スペイン語":"Español",
   "フランス語":"Français","ドイツ語":"Deutsch","トルコ語":"Türkçe","アラビア語":"العربية",
   "ヒンディー語":"हिन्दी","インドネシア語":"Bahasa Indonesia","タイ語":"ไทย","ロシア語":"Русский",
-  "オランダ語":"Nederlands","ベトナム語":"Tiếng Việt","ポルトガル語":"Português","韓国語":"한국어"
+  "オランダ語":"Nederlands","ベトナム語":"Tiếng Việt","ポルトガル語":"Português","韓国語":"한국어",
+  "हिंदी":"हिन्दी"  // ヒンディー語の別綴り(ंとन्द)を同一視
 };
 function toNative(l){ return NATIVE[l] || l; }
 
@@ -960,15 +961,47 @@ function openPlayerDB(){
     }catch(e){ clearTimeout(to); finish(null); }
   });
 }
-function getTrack(lang, no){
-  return openPlayerDB().then(dbp=>new Promise(res=>{
-    if(!dbp || !dbp.objectStoreNames.contains("tracks")) return res(null);
+// 言語名の照合キー(別綴り・大文字小文字・Unicode正規化の揺れを吸収)
+function canonLang(l){ return toNative(String(l).trim()).normalize("NFC").toLowerCase(); }
+let apLangCache = null; // canonical名 → プレーヤーDB内の実際の言語名
+async function apLangMap(){
+  if(apLangCache) return apLangCache;
+  const dbp = await openPlayerDB();
+  const map = new Map();
+  if(dbp && dbp.objectStoreNames.contains("tracks")){
+    const keys = await new Promise(res=>{
+      try{
+        const q = dbp.transaction("tracks","readonly").objectStore("tracks").getAllKeys();
+        q.onsuccess = ()=>res(q.result || []);
+        q.onerror = ()=>res([]);
+      }catch(e){ res([]); }
+    });
+    keys.forEach(k=>{
+      const s = String(k), i = s.lastIndexOf("|");
+      if(i > 0) map.set(canonLang(s.slice(0,i)), s.slice(0,i));
+    });
+  }
+  apLangCache = map;
+  return map;
+}
+function idbTryGet(dbp, key){
+  return new Promise(res=>{
     try{
-      const q = dbp.transaction("tracks","readonly").objectStore("tracks").get(lang + "|" + no);
+      const q = dbp.transaction("tracks","readonly").objectStore("tracks").get(key);
       q.onsuccess = ()=>res(q.result || null);
       q.onerror = ()=>res(null);
     }catch(e){ res(null); }
-  }));
+  });
+}
+async function getTrack(lang, no){
+  const dbp = await openPlayerDB();
+  if(!dbp || !dbp.objectStoreNames.contains("tracks")) return null;
+  // まず完全一致、だめなら表記揺れを吸収した名前で再照会
+  let rec = await idbTryGet(dbp, lang + "|" + no);
+  if(rec) return rec;
+  const actual = (await apLangMap()).get(canonLang(lang));
+  if(actual && actual !== lang) rec = await idbTryGet(dbp, actual + "|" + no);
+  return rec || null;
 }
 // 再生速度(言語ごとに記憶。初期値はプレーヤー側の言語別設定を引き継ぐ)
 const SPEEDS = [0.7, 0.8, 1, 1.2, 1.5];
@@ -977,7 +1010,7 @@ function currentSpeed(){
   if(!isNaN(v)) return v;
   try{
     const ls = JSON.parse(localStorage.getItem("langs") || "[]");
-    const s = ls.find(x=>x.name===currentLang);
+    const s = ls.find(x=>canonLang(x.name)===canonLang(currentLang));
     if(s && s.speed) return s.speed;
   }catch(e){}
   return 1;
@@ -1031,6 +1064,7 @@ $("audioCheckBtn").onclick = async ()=>{
   const out = $("audioCheck");
   out.textContent = "確認中…";
   AP.failed = false; // 再試行できるように
+  apLangCache = null; // 言語名の対応表も作り直す
   const dbp = await openPlayerDB();
   if(!dbp || !dbp.objectStoreNames.contains("tracks")){
     out.textContent = "プレーヤーの保存領域が見つかりません。この端末・このブラウザ(またはこのホーム画面アプリ)でプレーヤーの音声を取り込んだことがあるか確認してください。";
