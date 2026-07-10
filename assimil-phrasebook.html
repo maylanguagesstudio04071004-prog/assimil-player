@@ -76,6 +76,7 @@ input,textarea,select{font-family:inherit}
 .phrase .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
+.audio-row{display:flex; gap:10px; margin-top:12px; align-items:center; justify-content:center}
 .words{display:flex; flex-wrap:wrap; gap:8px}
 .words button{padding:8px 14px; border-radius:12px; background:var(--accent-soft); color:var(--text);
   font-size:15px; line-height:1.4; border:1px solid transparent}
@@ -176,9 +177,13 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <button class="step" id="prevBtn">−</button>
       <input id="lessonNo" type="number" inputmode="numeric" min="1" value="1">
       <button class="step" id="nextBtn">＋</button>
-      <button class="step" id="playBtn" style="display:none">▶</button>
-      <button class="step" id="spdBtn" style="display:none; width:auto; padding:0 12px; font-size:15px">1.0×</button>
       <div class="lesson-title" id="lessonTitle"></div>
+    </div>
+    <div class="audio-row" id="audioRow" style="display:none">
+      <button class="step" id="rwBtn" style="width:auto; padding:0 14px; font-size:15px">−5s</button>
+      <button class="step" id="playBtn">▶</button>
+      <button class="step" id="ffBtn" style="width:auto; padding:0 14px; font-size:15px">＋5s</button>
+      <button class="step" id="spdBtn" style="width:auto; padding:0 14px; font-size:15px">1.0×</button>
     </div>
     <button class="compare-btn" id="compareBtn">全言語でこのレッスンを見る</button>
     <div class="reg" id="regList"></div>
@@ -1082,17 +1087,26 @@ $("spdBtn").onclick = ()=>{
 let playToken = 0;
 async function updatePlayBtn(){
   const my = ++playToken;
-  const btn = $("playBtn"), spd = $("spdBtn");
-  if(compareMode){ btn.style.display = "none"; spd.style.display = "none"; return; }
+  const row = $("audioRow");
+  if(compareMode){ row.style.display = "none"; return; }
   const rec = await getTrack(currentLang, currentNo);
   if(my !== playToken) return;
-  if(!rec){ btn.style.display = "none"; spd.style.display = "none"; return; }
-  btn.style.display = "";
-  spd.style.display = "";
-  spd.textContent = speedLabel(currentSpeed());
+  if(!rec){ row.style.display = "none"; return; }
+  row.style.display = "";
+  $("spdBtn").textContent = speedLabel(currentSpeed());
   const key = currentLang + "|" + currentNo;
-  btn.textContent = (AP.key===key && !AP.audio.paused) ? "⏸" : "▶";
+  $("playBtn").textContent = (AP.key===key && !AP.audio.paused) ? "⏸" : "▶";
 }
+function audioSkip(sec){
+  if(!AP.audio.src || AP.key !== currentLang + "|" + currentNo) return;
+  const d = AP.audio.duration;
+  let t = AP.audio.currentTime + sec;
+  if(!isFinite(d)) t = Math.max(0, t);
+  else t = Math.max(0, Math.min(t, d - 0.3));
+  AP.audio.currentTime = t;
+}
+$("rwBtn").onclick = ()=>audioSkip(-5);
+$("ffBtn").onclick = ()=>audioSkip(5);
 $("playBtn").onclick = async ()=>{
   const key = currentLang + "|" + currentNo;
   if(AP.key===key){
