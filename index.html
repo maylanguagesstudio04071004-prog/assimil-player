@@ -76,6 +76,9 @@ button{font-family:inherit; cursor:pointer; border:none}
 .transport button{background:var(--accent-soft); color:var(--accent); border-radius:50%;
   width:52px; height:52px; font-size:15px; font-weight:700}
 .transport .main{width:72px; height:72px; background:var(--accent); color:#fff; font-size:26px}
+.shuffle-btn{width:100%; margin-top:14px; padding:11px; border-radius:10px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
+.shuffle-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
 .small-note{font-size:12px; color:var(--sub); margin-top:8px}
 /* speed */
 #speedVal{font-weight:700; font-variant-numeric:tabular-nums; width:56px; text-align:right}
@@ -158,6 +161,7 @@ button{font-family:inherit; cursor:pointer; border:none}
       <button id="rw5">−5s</button>
       <button id="nextBtn">次へ</button>
     </div>
+    <button class="shuffle-btn" id="shuffleBtn">🔀 シャッフル: オフ</button>
     <div class="small-note" id="resumeNote"></div>
   </div>
 
@@ -356,6 +360,7 @@ function loadLanguage(){
   }
   localStorage.setItem('lastLang', name);
   queue = all.map(n => ({ lang: name, lesson: n }));
+  if (shuffleMode === 'lang') shuffleArr(queue);
   playIndex(0);
 }
 
@@ -433,8 +438,68 @@ function loadLesson(){
     $('nowTitle').textContent = 'L' + n + ' の音声がありません';
     return;
   }
+  if (shuffleMode === 'lesson') shuffleArr(queue);
   playIndex(0);
 }
+
+/* ---------- shuffle ---------- */
+const SHUFFLE_MODES = ['off', 'lesson', 'all', 'lang'];
+const SHUFFLE_LABELS = {
+  off:    '🔀 シャッフル: オフ',
+  lesson: '🔀 このLessonを全言語ランダムで',
+  all:    '🔀 全Lesson・全言語ランダム',
+  lang:   '🔀 この言語のLessonをランダムで'
+};
+let shuffleMode = localStorage.getItem('shuffleMode') || 'off';
+if (!SHUFFLE_MODES.includes(shuffleMode)) shuffleMode = 'off';
+function shuffleArr(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function updateShuffleBtn(){
+  $('shuffleBtn').textContent = SHUFFLE_LABELS[shuffleMode];
+  $('shuffleBtn').classList.toggle('on', shuffleMode !== 'off');
+}
+function allTracks(){
+  const list = [];
+  keySet.forEach(k => {
+    const i = k.indexOf('|');
+    if (i > 0) list.push({ lang: k.slice(0, i), lesson: +k.slice(i + 1) });
+  });
+  return list;
+}
+function startShuffle(){
+  if (shuffleMode === 'off') return; // 現在のキューはそのまま、以降の読込が通常順に戻る
+  if (shuffleMode === 'lesson'){ loadLesson(); return; }
+  if (shuffleMode === 'lang'){
+    const playing = (qi >= 0 && queue[qi]) ? queue[qi].lang : '';
+    let name = playing || $('langSelect').value || localStorage.getItem('lastLang') || '';
+    if (!name || !lessonsOf(name).length){
+      const first = langs.find(x => lessonsOf(x.name).length);
+      name = first ? first.name : '';
+    }
+    if (!name) return;
+    localStorage.setItem('lastLang', name);
+    queue = shuffleArr(lessonsOf(name).map(n => ({ lang: name, lesson: n })));
+    playIndex(0);
+    return;
+  }
+  if (shuffleMode === 'all'){
+    const list = allTracks();
+    if (!list.length) return;
+    queue = shuffleArr(list);
+    playIndex(0);
+  }
+}
+$('shuffleBtn').onclick = () => {
+  shuffleMode = SHUFFLE_MODES[(SHUFFLE_MODES.indexOf(shuffleMode) + 1) % SHUFFLE_MODES.length];
+  localStorage.setItem('shuffleMode', shuffleMode);
+  updateShuffleBtn();
+  startShuffle();
+};
 
 async function playIndex(i){
   qi = i;
@@ -485,7 +550,10 @@ audio.addEventListener('pause', () => { $('playBtn').textContent = '▶'; });
 
 function nextTrack(){
   if (qi < queue.length - 1) playIndex(qi + 1);
-  else if ($('loopAll').checked && queue.length) playIndex(0);
+  else if ($('loopAll').checked && queue.length){
+    if (shuffleMode !== 'off') shuffleArr(queue); // ループ時は毎周ちがう順番に
+    playIndex(0);
+  }
   else { renderQueue(true); }
 }
 
@@ -612,6 +680,7 @@ async function migrateNative(){
   const last = localStorage.getItem('lastLesson');
   if (last) $('lessonNum').value = last;
   if (localStorage.getItem('mode') === 'lang') setMode('lang');
+  updateShuffleBtn();
   $('loopAll').checked = !!localStorage.getItem('loopAll');
   if (!langs.length) switchTab(false); // 初回はライブラリへ
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
