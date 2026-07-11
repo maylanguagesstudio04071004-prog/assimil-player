@@ -1031,6 +1031,12 @@ function renderLangs(){
     const row = document.createElement("div");
     row.className = "lang-item";
     row.innerHTML = '<b>' + esc(l) + '</b><span>' + n + ' レッスン</span>';
+    const ren = document.createElement("button"); ren.textContent = "✎";
+    ren.onclick = ()=>{
+      const nn = prompt("言語名を変更(表記ゆれの修正など。プレーヤー側と綴りを揃えてください)", l);
+      if(nn===null) return;
+      renameLang(l, nn.trim());
+    };
     const up = document.createElement("button"); up.textContent = "↑";
     up.onclick = ()=>{ if(i>0){ [db.langs[i-1],db.langs[i]]=[db.langs[i],db.langs[i-1]]; save(); renderLangs(); } };
     const dn = document.createElement("button"); dn.textContent = "↓";
@@ -1044,9 +1050,30 @@ function renderLangs(){
       }
       db.langs.splice(i,1); save(); renderLangs();
     };
-    row.append(up,dn,del);
+    row.append(ren,up,dn,del);
     box.appendChild(row);
   });
+}
+// 言語名を丸ごと付け替える(表記ゆれ修正用。lessons/notes/favs/observations/grammarすべてに反映)
+function renameLang(oldName, newName){
+  newName = toNative(newName);
+  if(!newName || newName===oldName) return;
+  if(db.langs.includes(newName)){ alert("その名前はすでに登録されています"); return; }
+  db.langs = db.langs.map(l=>l===oldName ? newName : l);
+  db.lessons.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
+  db.notes.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
+  db.favs.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
+  db.observations.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
+  db.grammar.forEach(g=>{
+    if(g.lang===oldName) g.lang = newName;
+    (g.examples||[]).forEach(e=>{ if(e.lang===oldName) e.lang = newName; });
+  });
+  const spd = localStorage.getItem(KEY + ".spd." + oldName);
+  if(spd!=null){ localStorage.setItem(KEY + ".spd." + newName, spd); localStorage.removeItem(KEY + ".spd." + oldName); }
+  if(currentLang===oldName){ currentLang = newName; localStorage.setItem(KEY + ".lang", newName); }
+  apLangCache = null; // 音声照合キャッシュを作り直す
+  save();
+  renderLangs();
 }
 $("addLangBtn").onclick = ()=>{
   const name = toNative($("newLang").value.trim());
