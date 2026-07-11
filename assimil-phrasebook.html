@@ -1083,14 +1083,21 @@ function saveNoteField(lang, lesson, text, field, value, type){
 }
 function hideTrPop(){ trPop.style.display = "none"; trPop.innerHTML = ""; }
 function placeTrPop(rect){
-  const w = Math.min(300, window.innerWidth - 16), pad = 8;
+  const w = Math.min(320, window.innerWidth - 16), pad = 8;
   let left = rect.left + rect.width/2 - w/2;
   left = Math.max(pad, Math.min(left, window.innerWidth - w - pad));
-  let top = rect.bottom + pad;
-  if(top > window.innerHeight - 200) top = Math.max(pad, rect.top - pad - 180);
   trPop.style.width = w + "px";
   trPop.style.left = left + "px";
+  // 画面内に必ず収まる高さに制限(超えた分は内部スクロール)
+  trPop.style.maxHeight = (window.innerHeight - pad * 2) + "px";
+  // 仮配置して実際の高さを測り、はみ出すなら上へずらす
+  let top = rect.bottom + pad;
   trPop.style.top = top + "px";
+  const h = trPop.offsetHeight;
+  if(top + h > window.innerHeight - pad){
+    top = Math.max(pad, window.innerHeight - h - pad);
+    trPop.style.top = top + "px";
+  }
 }
 function refreshNoteButtons(lang, lesson, text){
   const note = getNote(lang, lesson, text);
