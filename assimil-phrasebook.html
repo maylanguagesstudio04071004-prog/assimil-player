@@ -549,9 +549,13 @@ function renderLesson(){
     reg.appendChild(b);
   });
   if(!L){
-    box.innerHTML = '<div class="empty-msg">' + esc(currentLang) + ' L' + currentNo + ' は未登録です。<br><br>'
+    appendGrammarCard(box);
+    const d = document.createElement("div");
+    d.className = "empty-msg";
+    d.innerHTML = esc(currentLang) + ' L' + currentNo + ' のフレーズは未登録です。<br><br>'
       + 'テキストのページ写真や本文をClaudeに渡すと<br>取り込み用JSONにしてもらえます。<br>'
-      + '下のボタンから手で入力することもできます。</div>';
+      + '下のボタンから手で入力することもできます。';
+    box.appendChild(d);
     $("editBtn").textContent = "このレッスンを入力する";
     return;
   }
@@ -597,6 +601,25 @@ function renderLesson(){
     box.appendChild(tr);
   }
   box.appendChild(lessonCards(L, false));
+  appendGrammarCard(box);
+}
+// その言語・そのL番号を出典とする文法解説の一覧カード
+function appendGrammarCard(box){
+  const gs = db.grammar.filter(g=>g.lang===currentLang && g.lesson===currentNo);
+  if(!gs.length) return;
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = '<h2>§ このレッスンの文法解説</h2>';
+  gs.forEach(g=>{
+    const b = document.createElement("button");
+    b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:12px 14px;"
+      + "border-radius:10px; background:var(--bg); border:1px solid var(--border); color:var(--text);"
+      + "font-size:15px; font-weight:600";
+    b.textContent = "§ " + g.topic;
+    b.onclick = ()=>openGrammarPopup(g, b.getBoundingClientRect());
+    c.appendChild(b);
+  });
+  box.appendChild(c);
 }
 $("prevBtn").onclick = ()=>{ if(currentNo>1){ currentNo--; renderLesson(); } };
 $("nextBtn").onclick = ()=>{ currentNo++; renderLesson(); };
