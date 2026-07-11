@@ -416,7 +416,7 @@ function phraseRow(lang, lesson, p, i){
     row.appendChild(gb);
   }
   const nbtn = document.createElement("button");
-  nbtn.className = "note-btn" + (hasNote ? " on" : "");
+  nbtn.className = "note-btn note-btn-tr" + (hasNote ? " on" : "");
   nbtn.textContent = "訳";
   nbtn.onclick = (ev)=>{ ev.stopPropagation(); openNotePopup(lang, lesson, p, nbtn); };
   row.appendChild(nbtn);
@@ -1098,7 +1098,7 @@ function refreshNoteButtons(lang, lesson, text){
     if(row.dataset.lang !== lang) return;
     const txt = row.querySelector(".txt");
     if(!txt || txt.textContent !== text) return;
-    const b = row.querySelector(".note-btn");
+    const b = row.querySelector(".note-btn-tr");
     if(b) b.classList.toggle("on", has);
     // 読み(ローマ字)の常時表示も更新
     let r = row.querySelector(".roman");
