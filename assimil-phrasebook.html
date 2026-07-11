@@ -551,6 +551,7 @@ function renderLesson(){
   });
   if(!L){
     appendGrammarCard(box);
+    appendObsCard(box);
     const d = document.createElement("div");
     d.className = "empty-msg";
     d.innerHTML = esc(currentLang) + ' L' + currentNo + ' のフレーズは未登録です。<br><br>'
@@ -603,6 +604,29 @@ function renderLesson(){
   }
   box.appendChild(lessonCards(L, false));
   appendGrammarCard(box);
+  appendObsCard(box);
+}
+// この言語(+全言語)・このL番号の気づき一覧カード
+function appendObsCard(box){
+  const os = db.observations
+    .filter(o=>o.lesson===currentNo && (!o.lang || o.lang===currentLang))
+    .sort((a,b)=>(b.date||0)-(a.date||0));
+  if(!os.length) return;
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = '<h2>✎ 気づき</h2>';
+  os.forEach(o=>{
+    const b = document.createElement("button");
+    b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:11px 13px;"
+      + "border-radius:10px; background:var(--bg); border:1px solid var(--border); color:var(--text);"
+      + "font-size:14px; line-height:1.6";
+    b.innerHTML = '<div style="white-space:pre-wrap">' + esc(o.text) + '</div>'
+      + '<div style="color:var(--sub); font-size:11.5px; margin-top:4px">' + esc(o.lang || "全言語")
+      + (o.date ? ' · ' + new Date(o.date).toLocaleDateString("ja-JP") : '') + '</div>';
+    b.onclick = ()=>openObsPopup(o, b.getBoundingClientRect());
+    c.appendChild(b);
+  });
+  box.appendChild(c);
 }
 // その言語・そのL番号を出典とする文法解説の一覧カード
 function appendGrammarCard(box){
@@ -616,7 +640,7 @@ function appendGrammarCard(box){
     b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:12px 14px;"
       + "border-radius:10px; background:var(--bg); border:1px solid var(--border); color:var(--text);"
       + "font-size:15px; font-weight:600";
-    b.textContent = "§ " + g.topic;
+    b.textContent = gMark(g) + " " + g.topic;
     b.onclick = ()=>openGrammarPopup(g, b.getBoundingClientRect());
     c.appendChild(b);
   });
@@ -642,14 +666,19 @@ function resultRow(r, q){
   row.dataset.lang = r.lang;
   let body = '<div class="txt">' + (r.type==="lesson" ? esc(r.text) : highlight(r.text, q)) + '</div>';
   if(r.ja) body += '<div class="txt-ja">' + (r.hitJa ? highlight(r.ja, q) : esc(r.ja)) + '</div>';
-  let meta = esc(r.lang) + ' · L' + r.lesson + (r.type==="word" ? " · 単語" : "");
+  let meta;
+  if(r.type==="obs"){
+    meta = esc(r.lang || "全言語") + (r.lesson!=null ? ' · L' + r.lesson : '') + ' · ✎ 気づき';
+  } else {
+    meta = esc(r.lang) + ' · L' + r.lesson + (r.type==="word" ? " · 単語" : "");
+  }
   if(r.type==="lesson"){
     const tq = (q.startsWith("#") ? q.slice(1) : q);
     meta += ' · ' + (r.tags||[]).map(t=>'#' + (tq ? highlight(t, tq) : esc(t))).join(" ");
   }
   body += '<div class="meta">' + meta + '</div>';
   row.innerHTML = '<div class="body">' + body + '</div>';
-  if(r.type!=="lesson" && r.type!=="grammar"){
+  if(r.type!=="lesson" && r.type!=="grammar" && r.type!=="obs"){
     const btn = document.createElement("button");
     btn.className = "fav" + (isFav(r.lang, r.lesson, r.text, r.type) ? " on" : "");
     btn.textContent = "★";
@@ -658,6 +687,7 @@ function resultRow(r, q){
   }
   row.onclick = ()=>{
     if(r.type==="grammar") openGrammarPopup(r.g, row.getBoundingClientRect());
+    else if(r.type==="obs") openObsPopup(r.o, row.getBoundingClientRect());
     else jumpTo(r.lang, r.lesson);
   };
   return row;
@@ -714,7 +744,14 @@ function renderSearch(){
     db.grammar.forEach(g=>{
       if(results.length>=300) return;
       if(g.topic.toLowerCase().includes(ql) || (g.body||"").toLowerCase().includes(ql)){
-        results.push({lang:g.lang, lesson:g.lesson, text:"§ " + g.topic, type:"grammar", g, ja:"", hitJa:false});
+        const mark = g.type==="concept" ? "◇ " : "§ ";
+        results.push({lang:g.lang, lesson:g.lesson, text:mark + g.topic, type:"grammar", g, ja:"", hitJa:false});
+      }
+    });
+    db.observations.forEach(o=>{
+      if(results.length>=300) return;
+      if((o.text||"").toLowerCase().includes(ql)){
+        results.push({lang:o.lang||"", lesson:o.lesson, text:o.text, type:"obs", o, ja:"", hitJa:false});
       }
     });
   }
@@ -773,7 +810,7 @@ function renderFavs(){
         lastTopic = g.topic;
         const h = document.createElement("div");
         h.className = "lesson-head";
-        h.textContent = "§ " + g.topic;
+        h.textContent = gMark(g) + " " + g.topic;
         box.appendChild(h);
       }
       const row = document.createElement("div");
@@ -899,6 +936,8 @@ function importData(raw, msgEl){
         topic: String(g.topic),
         lang: toNative(String(g.lang)),
         lesson: (g.lesson!=null && g.lesson!=="") ? Number(g.lesson) : null,
+        type: g.type==="concept" ? "concept" : "grammar",
+        related: Array.isArray(g.related) ? g.related.map(String).filter(Boolean) : [],
         body: g.body ? String(g.body) : "",
         examples: Array.isArray(g.examples)
           ? g.examples.filter(e=>e && e.lang && e.text).map(e=>({
@@ -1209,9 +1248,10 @@ document.addEventListener("scroll", ()=>{
 function grammarOf(lang, lesson, text){
   return db.grammar.filter(g=>(g.examples||[]).some(e=>e.lang===lang && e.lesson===lesson && e.text===text));
 }
+function gMark(g){ return g.type==="concept" ? "◇" : "§"; }
 function openGrammarPopup(g, anchorRect){
   trPop.className = "tr-pop";
-  let html = '<div class="tr-src">§ ' + esc(g.topic) + ' — ' + esc(g.lang)
+  let html = '<div class="tr-src">' + gMark(g) + ' ' + esc(g.topic) + ' — ' + esc(g.lang)
     + (g.lesson!=null ? ' · L' + g.lesson : '') + '</div>'
     + '<div style="white-space:pre-wrap; font-size:14px; line-height:1.75; margin-bottom:10px">' + esc(g.body||"") + '</div>';
   if((g.examples||[]).length){
@@ -1227,6 +1267,20 @@ function openGrammarPopup(g, anchorRect){
     html += '<div class="tr-label" style="margin:8px 0 6px">同じtopicの他言語</div><div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px">';
     siblings.forEach((s,i)=>{
       html += '<button class="gsib" data-i="' + i + '" style="padding:8px 12px; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-size:13px; font-weight:600">' + esc(s.lang) + '</button>';
+    });
+    html += '</div>';
+  }
+  // 関連トピックへの道(存在しないものは点線で「まだ無い」ことを示す)
+  if((g.related||[]).length){
+    html += '<div class="tr-label" style="margin:8px 0 6px">関連</div><div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px">';
+    g.related.forEach((name,i)=>{
+      const target = db.grammar.find(x=>x.topic===name && x.lang===g.lang) || db.grammar.find(x=>x.topic===name);
+      if(target){
+        html += '<button class="grel" data-i="' + i + '" style="padding:8px 12px; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-size:13px; font-weight:600">'
+          + gMark(target) + ' ' + esc(name) + '</button>';
+      } else {
+        html += '<span style="padding:8px 12px; border-radius:14px; background:var(--bg); border:1px dashed var(--border); color:var(--sub); font-size:13px">' + esc(name) + '</span>';
+      }
     });
     html += '</div>';
   }
@@ -1256,6 +1310,13 @@ function openGrammarPopup(g, anchorRect){
   });
   trPop.querySelectorAll(".gsib").forEach(b=>{
     b.onclick = ()=>openGrammarPopup(siblings[Number(b.dataset.i)], anchorRect);
+  });
+  trPop.querySelectorAll(".grel").forEach(b=>{
+    b.onclick = ()=>{
+      const name = g.related[Number(b.dataset.i)];
+      const target = db.grammar.find(x=>x.topic===name && x.lang===g.lang) || db.grammar.find(x=>x.topic===name);
+      if(target) openGrammarPopup(target, anchorRect);
+    };
   });
 }
 
