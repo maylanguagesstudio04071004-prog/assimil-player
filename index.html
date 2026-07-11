@@ -407,10 +407,32 @@ function renderLangs(){
     row.innerHTML =
       '<div class="name"><b></b><span>' + cnt + 'ファイル ・ ' + l.speed.toFixed(2) + '×</span></div>' +
       '<button class="add-files">＋音声</button>' +
+      '<button class="ren">✎</button>' +
       '<button class="up">↑</button><button class="dn">↓</button>' +
       '<button class="del">×</button>';
     row.querySelector('b').textContent = l.name;
     row.querySelector('.add-files').onclick = () => { importTarget = l.name; $('filePicker').click(); };
+    row.querySelector('.ren').onclick = async () => {
+      const nn = prompt('言語名を変更(表記ゆれの修正など。phrasebook側と綴りを揃えてください)', l.name);
+      if (nn === null) return;
+      const newName = nn.trim();
+      if (!newName || newName === l.name) return;
+      if (langs.some(x => x !== l && x.name === newName)){
+        alert('その名前はすでに使われています。');
+        return;
+      }
+      const oldKeys = [...keySet].filter(k => k.startsWith(l.name + '|'));
+      for (const k of oldKeys){
+        const val = await idbGet(k);
+        const lesson = k.slice(l.name.length + 1);
+        await idbPut(newName + '|' + lesson, val);
+        await idbDel(k);
+      }
+      l.name = newName;
+      saveLangs();
+      await refreshKeys();
+      renderLangs();
+    };
     row.querySelector('.up').onclick = () => { if (i > 0){ [langs[i-1], langs[i]] = [langs[i], langs[i-1]]; saveLangs(); renderLangs(); } };
     row.querySelector('.dn').onclick = () => { if (i < langs.length - 1){ [langs[i+1], langs[i]] = [langs[i], langs[i+1]]; saveLangs(); renderLangs(); } };
     row.querySelector('.del').onclick = async () => {
