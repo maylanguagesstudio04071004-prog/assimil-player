@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Assimil Phrasebook</title>
+<meta name="apple-mobile-web-app-title" content="Language Atlas">
+<title>Language Atlas</title>
 <style>
 :root{
   --bg:#f5f4f0; --card:#ffffff; --text:#2a2723; --sub:#8a857c;
@@ -169,7 +170,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 </style>
 </head>
 <body>
-<header>Assimil Phrasebook<small>レッスンのフレーズと単語を呼び出す</small><a class="hlink" href="./index.html">▶ Player</a></header>
+<header>Language Atlas<small>レッスンのフレーズと単語を呼び出す</small><a class="hlink" href="./index.html">▶ Player</a></header>
 
 <div class="tabs">
   <button id="tabLesson" class="on">レッスン</button>
@@ -539,12 +540,17 @@ function renderLesson(){
   $("editBtn").style.display = "";
   const L = findLesson(currentLang, currentNo);
   $("lessonTitle").textContent = ""; // タイトルは本文側の見出しに表示(▶・速度ボタンと重なるため)
-  const regs = db.lessons.filter(x=>x.lang===currentLang).map(x=>x.lesson).sort((a,b)=>a-b);
+  const lessonNos = new Set(db.lessons.filter(x=>x.lang===currentLang).map(x=>x.lesson));
+  // フレーズ未登録でも文法解説だけあるレッスン(復習回など)もチップに出す
+  const gramOnlyNos = new Set(
+    db.grammar.filter(g=>g.lang===currentLang && g.lesson!=null && !lessonNos.has(g.lesson)).map(g=>g.lesson)
+  );
+  const regs = [...lessonNos, ...gramOnlyNos].sort((a,b)=>a-b);
   const reg = $("regList");
   reg.innerHTML = "";
   regs.forEach(n=>{
     const b = document.createElement("button");
-    b.textContent = "L" + n;
+    b.textContent = (gramOnlyNos.has(n) ? "§L" : "L") + n;
     b.className = (n===currentNo) ? "on" : "";
     b.onclick = ()=>{ currentNo = n; renderLesson(); };
     reg.appendChild(b);
