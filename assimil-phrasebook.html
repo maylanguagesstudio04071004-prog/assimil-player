@@ -84,6 +84,7 @@ input,textarea,select{font-family:inherit}
 .phrase .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
+#spdBtn{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
 .audio-row{display:flex; gap:10px; margin-top:12px; align-items:center; justify-content:center}
 #seekBar{width:100%; accent-color:var(--accent); margin:12px 0 2px}
 #seekTime{font-size:12px; color:var(--sub); text-align:center; font-variant-numeric:tabular-nums}
@@ -1412,7 +1413,7 @@ async function getTrack(lang, no){
   return rec || null;
 }
 // 再生速度(言語ごとに記憶。初期値はプレーヤー側の言語別設定を引き継ぐ)
-const SPEEDS = [0.7, 0.8, 0.9, 0.95, 1, 1.1, 1.2, 1.3, 1.5, 2];
+const SPEEDS = [0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.5, 2];
 function currentSpeed(){
   const v = parseFloat(localStorage.getItem(KEY + ".spd." + currentLang));
   if(!isNaN(v)) return v;
@@ -1424,16 +1425,34 @@ function currentSpeed(){
   return 1;
 }
 function speedLabel(v){ return (Math.round(v*100) % 10 === 0 ? v.toFixed(1) : v.toFixed(2)) + "×"; }
-$("spdBtn").onclick = ()=>{
+function speedStep(dir){
   const cur = currentSpeed();
-  // 現在値に一番近いプリセットの次へ
+  // 現在値に一番近いプリセットから前後へ
   let i = 0, best = Infinity;
   SPEEDS.forEach((s,k)=>{ const d = Math.abs(s-cur); if(d<best){ best = d; i = k; } });
-  const v = SPEEDS[(i+1) % SPEEDS.length];
+  const v = SPEEDS[(i + dir + SPEEDS.length) % SPEEDS.length];
   localStorage.setItem(KEY + ".spd." + currentLang, v);
   $("spdBtn").textContent = speedLabel(v);
   if(AP.key && AP.key.slice(0, AP.key.lastIndexOf("|"))===currentLang) AP.audio.playbackRate = v;
-};
+}
+// タップで次へ、長押し(0.5秒)で逆回り
+(function(){
+  const b = $("spdBtn");
+  let timer = null, longPressed = false;
+  b.addEventListener("pointerdown", ()=>{
+    longPressed = false;
+    timer = setTimeout(()=>{ longPressed = true; speedStep(-1); }, 500);
+  });
+  const cancel = ()=>clearTimeout(timer);
+  b.addEventListener("pointerup", cancel);
+  b.addEventListener("pointercancel", cancel);
+  b.addEventListener("pointerleave", cancel);
+  b.addEventListener("click", ()=>{
+    if(longPressed){ longPressed = false; return; } // 長押し後のclickは無視
+    speedStep(1);
+  });
+  b.addEventListener("contextmenu", e=>e.preventDefault()); // 長押しメニュー抑止
+})();
 let playToken = 0;
 function setAudioVisible(v){
   $("playBtn").style.display = v ? "" : "none";
