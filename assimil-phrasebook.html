@@ -64,6 +64,9 @@ input,textarea,select{font-family:inherit}
 .phrase .roman{font-size:13px; color:var(--sub); font-style:italic; margin-top:2px; line-height:1.5; overflow-wrap:anywhere}
 .bulk-roman{margin-top:12px; width:100%; padding:10px; border-radius:10px; background:var(--bg);
   border:1px solid var(--border); color:var(--accent); font-size:13.5px; font-weight:600}
+.obs-btn{flex:none; width:48px; border-radius:10px; background:var(--accent-soft);
+  color:var(--accent); font-size:19px; border:1px solid transparent}
+.result .txt{white-space:pre-wrap}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
   background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
 .compare-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
@@ -192,7 +195,10 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <input type="range" id="seekBar" min="0" max="100" step="0.1" value="0">
       <div id="seekTime">0:00 / 0:00</div>
     </div>
-    <button class="compare-btn" id="compareBtn">全言語でこのレッスンを見る</button>
+    <div style="display:flex; gap:8px; margin-top:12px; align-items:stretch">
+      <button class="compare-btn" id="compareBtn" style="margin-top:0; flex:1">全言語でこのレッスンを見る</button>
+      <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button>
+    </div>
     <div class="reg" id="regList"></div>
   </div>
   <div id="content"></div>
@@ -212,8 +218,12 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div id="results"></div>
 </section>
 
-<!-- お気に入り -->
+<!-- お気に入り・気づき -->
 <section id="pageFav" style="display:none">
+  <div class="filterbar" style="margin-top:2px">
+    <button id="fmFav" class="on">★ お気に入り</button>
+    <button id="fmObs">✎ 気づき</button>
+  </div>
   <div class="langbar" id="favLangbar"></div>
   <div id="favList"></div>
 </section>
@@ -324,8 +334,11 @@ function load(){
   d.favs.forEach(f=>{ f.lang = toNative(f.lang); });
   if(!Array.isArray(d.notes)) d.notes = [];
   d.notes.forEach(n=>{ n.lang = toNative(n.lang); });
+  if(!Array.isArray(d.observations)) d.observations = [];
+  d.observations.forEach(o=>{ if(o.lang) o.lang = toNative(o.lang); });
   return d;
 }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function findLesson(lang, no){ return db.lessons.find(x=>x.lang===lang && x.lesson===no); }
@@ -670,11 +683,17 @@ $("fWord").onclick = ()=>{ searchType="word"; renderSearch(); };
 $("fTag").onclick = ()=>{ searchType="tag"; renderSearch(); };
 
 /* ---------- favorites ---------- */
+let favView = "fav"; // fav | obs
+$("fmFav").onclick = ()=>{ favView = "fav"; renderFavs(); };
+$("fmObs").onclick = ()=>{ favView = "obs"; renderFavs(); };
 function renderFavs(){
+  $("fmFav").classList.toggle("on", favView==="fav");
+  $("fmObs").classList.toggle("on", favView==="obs");
   const bar = $("favLangbar");
   bar.innerHTML = "";
-  const langsWithFavs = db.langs.filter(l=>db.favs.some(f=>f.lang===l));
-  if(!langsWithFavs.includes(favFilter)) favFilter = "";
+  const src = favView==="fav" ? db.favs : db.observations;
+  const langsWithFavs = db.langs.filter(l=>src.some(f=>f.lang===l));
+  if(favFilter && !langsWithFavs.includes(favFilter)) favFilter = "";
   const all = document.createElement("button");
   all.textContent = "全言語";
   all.className = favFilter==="" ? "on" : "";
@@ -689,6 +708,26 @@ function renderFavs(){
   });
   const box = $("favList");
   box.innerHTML = "";
+  if(favView==="obs"){
+    const list = db.observations
+      .filter(o=>!favFilter || o.lang===favFilter)
+      .sort((a,b)=>(b.date||0)-(a.date||0));
+    if(!list.length){
+      box.innerHTML = '<div class="empty-msg">気づきはまだありません。<br>レッスン画面の ✎ ボタンから書けます。</div>';
+      return;
+    }
+    list.forEach(o=>{
+      const row = document.createElement("div");
+      row.className = "result";
+      const when = o.date ? new Date(o.date).toLocaleDateString("ja-JP") : "";
+      row.innerHTML = '<div class="body"><div class="txt">' + esc(o.text) + '</div>'
+        + '<div class="meta">' + esc(o.lang || "全言語")
+        + (o.lesson!=null ? ' · L' + o.lesson : '') + (when ? ' · ' + when : '') + '</div></div>';
+      row.onclick = ()=>openObsPopup(o, row.getBoundingClientRect());
+      box.appendChild(row);
+    });
+    return;
+  }
   const favs = db.favs
     .filter(f=>!favFilter || f.lang===favFilter)
     .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || a.lesson-b.lesson);
@@ -778,6 +817,19 @@ function importData(raw, msgEl){
         db.favs.push({lang:toNative(String(f.lang)), lesson:Number(f.lesson), text:String(f.text),
                       type:f.type==="word"?"word":"phrase", added:f.added||Date.now()});
       }
+    });
+  }
+  if(Array.isArray(data.observations)){
+    data.observations.forEach(o=>{
+      if(!o || !o.text) return;
+      if(o.id && db.observations.some(x=>x.id===o.id)) return;
+      db.observations.push({
+        id: o.id || uid(),
+        text: String(o.text),
+        lang: o.lang ? toNative(String(o.lang)) : "",
+        lesson: (o.lesson!=null && o.lesson!=="") ? Number(o.lesson) : null,
+        date: o.date || Date.now()
+      });
     });
   }
   let notesAdded = 0, notesUpdated = 0;
@@ -1044,6 +1096,47 @@ document.addEventListener("scroll", ()=>{
   hideTrPop();
 }, true);
 
+/* ---------- 気づきメモ(Observation) ---------- */
+function openObsPopup(obs, anchorRect){
+  const isNew = !obs;
+  const ctx = obs || { lang: compareMode ? "" : currentLang, lesson: currentNo, text: "" };
+  trPop.className = "tr-pop";
+  trPop.innerHTML = '<div class="tr-src">✎ 気づき — ' + esc(ctx.lang || "全言語")
+    + (ctx.lesson!=null ? ' · L' + ctx.lesson : '') + '</div>'
+    + '<textarea class="tr-input" id="obsText" placeholder="気づいたことを一行でも" style="min-height:96px">' + esc(ctx.text || "") + '</textarea>'
+    + '<div class="tr-actions">'
+    + '<button class="btn obs-save">保存</button>'
+    + '<button class="btn soft obs-close">閉じる</button>'
+    + (!isNew && ctx.lesson!=null && ctx.lang ? '<button class="btn soft obs-open">レッスンへ</button>' : '')
+    + (isNew ? '' : '<button class="obs-del" style="background:none; color:var(--danger); border:1px solid var(--danger)">削除</button>')
+    + '</div>';
+  trPop.style.display = "block";
+  placeTrPop(anchorRect || {left: window.innerWidth/2 - 150, width: 300, bottom: 150, top: 130});
+  trJustOpened = true;
+  setTimeout(()=>{ trJustOpened = false; }, 700);
+  trPop.querySelector(".obs-close").onclick = hideTrPop;
+  trPop.querySelector(".obs-save").onclick = ()=>{
+    const t = trPop.querySelector("#obsText").value.trim();
+    if(!t){ hideTrPop(); return; }
+    if(isNew) db.observations.push({id: uid(), text: t, lang: ctx.lang, lesson: ctx.lesson, date: Date.now()});
+    else { obs.text = t; obs.updated = Date.now(); }
+    save();
+    hideTrPop();
+    if($("pageFav").style.display !== "none") renderFavs();
+  };
+  const del = trPop.querySelector(".obs-del");
+  if(del) del.onclick = ()=>{
+    if(!confirm("この気づきを削除しますか?")) return;
+    db.observations = db.observations.filter(x=>x.id!==obs.id);
+    save();
+    hideTrPop();
+    renderFavs();
+  };
+  const op = trPop.querySelector(".obs-open");
+  if(op) op.onclick = ()=>{ hideTrPop(); jumpTo(obs.lang, obs.lesson); };
+}
+$("obsBtn").onclick = (ev)=>openObsPopup(null, ev.target.getBoundingClientRect());
+
 /* ---------- 単語だけ選択したときの簡易訳(その単語だけをその場で自動翻訳) ---------- */
 // 「訳」ボタン=フレーズ全体の保存済み訳、テキスト選択=選んだ範囲だけのその場翻訳、と役割を分ける
 const selPop = $("selPop");
@@ -1245,6 +1338,8 @@ $("playBtn").onclick = async ()=>{
 AP.audio.addEventListener("ended", updatePlayBtn);
 AP.audio.addEventListener("pause", updatePlayBtn);
 AP.audio.addEventListener("play", updatePlayBtn);
+// 知識ベース化に伴い、保存領域の自動削除をOSに抑止してもらう
+if(navigator.storage && navigator.storage.persist) navigator.storage.persist();
 // 診断: プレーヤーの保存領域に何が見えているかを一覧表示
 $("audioCheckBtn").onclick = async ()=>{
   const out = $("audioCheck");
