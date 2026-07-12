@@ -71,11 +71,31 @@ input,textarea,select{font-family:inherit}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
   background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
 .compare-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
-/* registered lessons chips */
-.reg{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px}
-.reg button{padding:10px 15px; border-radius:18px; background:var(--bg); border:1px solid var(--border);
-  color:var(--sub); font-size:14px; font-weight:600}
-.reg button.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+/* week strip (7課=1週のナビ) */
+.week-strip{display:flex; gap:5px; margin-top:12px; align-items:stretch}
+.week-strip button{border-radius:9px; font-weight:600; padding:11px 0}
+.week-strip .wnav{flex:none; width:36px; background:var(--accent-soft); color:var(--accent); font-size:13px}
+.week-strip .wnav:disabled{opacity:.35}
+.week-strip .wcell{flex:1; min-width:0; background:var(--bg); border:1px solid var(--border);
+  color:var(--sub); font-size:12.5px}
+.week-strip .wcell.reg{background:var(--accent-soft); border-color:transparent; color:var(--text)}
+.week-strip .wcell.cur{background:var(--accent); border-color:var(--accent); color:#fff}
+.week-strip .wcell .g{font-size:9px; vertical-align:super}
+/* coverage map */
+#mapBack{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:20; display:none}
+#mapPanel{position:fixed; left:50%; transform:translateX(-50%);
+  top:calc(12px + env(safe-area-inset-top)); max-height:calc(100vh - 24px - env(safe-area-inset-top));
+  width:min(560px, calc(100vw - 16px)); background:var(--card); border:1px solid var(--border);
+  border-radius:16px; z-index:21; display:none; padding:14px; overflow-y:auto}
+.map-head{display:flex; align-items:center; gap:8px; margin-bottom:12px}
+.map-head b{flex:1; font-size:16px; min-width:0}
+.map-grid{display:grid; grid-template-columns:34px repeat(7, 1fr); gap:5px}
+.map-grid .rowlab{font-size:10.5px; color:var(--sub); display:flex; align-items:center; justify-content:center}
+.map-grid button{aspect-ratio:1.1; border-radius:8px; font-size:11.5px; font-weight:600;
+  background:var(--bg); border:1px solid var(--border); color:var(--sub); padding:0}
+.map-grid button.reg{background:var(--accent-soft); border-color:transparent; color:var(--text)}
+.map-grid button.cur{background:var(--accent); border-color:var(--accent); color:#fff}
+.map-grid button .g{font-size:8.5px; vertical-align:super}
 /* lesson content */
 .phrase{padding:12px 4px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:flex-start}
 .phrase:last-child{border-bottom:none}
@@ -199,9 +219,10 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     </div>
     <div style="display:flex; gap:8px; margin-top:12px; align-items:stretch">
       <button class="compare-btn" id="compareBtn" style="margin-top:0; flex:1">全言語でこのレッスンを見る</button>
+      <button class="obs-btn" id="mapBtn" title="カバレッジマップ">🗺</button>
       <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button>
     </div>
-    <div class="reg" id="regList"></div>
+    <div class="week-strip" id="weekStrip"></div>
   </div>
   <div id="content"></div>
   <button class="btn soft full" id="editBtn">このレッスンを編集</button>
@@ -293,6 +314,8 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 </section>
 </main>
 
+<div id="mapBack"></div>
+<div id="mapPanel"></div>
 <div id="trPop" class="tr-pop" style="display:none"></div>
 <div id="selPop" class="sel-pop" style="display:none"></div>
 
@@ -523,9 +546,10 @@ function renderLesson(){
 
   if(typeof updatePlayBtn === "function") updatePlayBtn();
 
+  renderWeekStrip();
+
   if(compareMode){
     $("lessonTitle").textContent = "L" + currentNo + " 全言語";
-    $("regList").innerHTML = "";
     $("editBtn").style.display = "none";
     const Ls = db.lessons.filter(x=>x.lesson===currentNo)
       .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang));
@@ -540,21 +564,6 @@ function renderLesson(){
   $("editBtn").style.display = "";
   const L = findLesson(currentLang, currentNo);
   $("lessonTitle").textContent = ""; // タイトルは本文側の見出しに表示(▶・速度ボタンと重なるため)
-  const lessonNos = new Set(db.lessons.filter(x=>x.lang===currentLang).map(x=>x.lesson));
-  // フレーズ未登録でも文法解説だけあるレッスン(復習回など)もチップに出す
-  const gramOnlyNos = new Set(
-    db.grammar.filter(g=>g.lang===currentLang && g.lesson!=null && !lessonNos.has(g.lesson)).map(g=>g.lesson)
-  );
-  const regs = [...lessonNos, ...gramOnlyNos].sort((a,b)=>a-b);
-  const reg = $("regList");
-  reg.innerHTML = "";
-  regs.forEach(n=>{
-    const b = document.createElement("button");
-    b.textContent = (gramOnlyNos.has(n) ? "§L" : "L") + n;
-    b.className = (n===currentNo) ? "on" : "";
-    b.onclick = ()=>{ currentNo = n; renderLesson(); };
-    reg.appendChild(b);
-  });
   if(!L){
     appendGrammarCard(box);
     appendObsCard(box);
@@ -652,6 +661,79 @@ function appendGrammarCard(box){
   });
   box.appendChild(c);
 }
+/* ---------- 週ストリップとカバレッジマップ ---------- */
+function hasLessonAt(lang, n){ return db.lessons.some(x=>x.lang===lang && x.lesson===n); }
+function hasGrammarAt(lang, n){ return db.grammar.some(g=>g.lang===lang && g.lesson===n); }
+function lessonCellHTML(n){
+  return n + (hasGrammarAt(currentLang, n) ? '<span class="g">§</span>' : '');
+}
+function renderWeekStrip(){
+  const el = $("weekStrip");
+  el.innerHTML = "";
+  const w = Math.floor((currentNo-1)/7);
+  const prev = document.createElement("button");
+  prev.className = "wnav";
+  prev.textContent = "◀";
+  prev.disabled = (w===0);
+  prev.onclick = ()=>{ currentNo = Math.max(1, currentNo - 7); renderLesson(); };
+  el.appendChild(prev);
+  for(let i=1; i<=7; i++){
+    const n = w*7 + i;
+    const b = document.createElement("button");
+    b.className = "wcell"
+      + (hasLessonAt(currentLang, n) || hasGrammarAt(currentLang, n) ? " reg" : "")
+      + (n===currentNo ? " cur" : "");
+    b.innerHTML = lessonCellHTML(n);
+    b.onclick = ()=>{ currentNo = n; renderLesson(); };
+    el.appendChild(b);
+  }
+  const next = document.createElement("button");
+  next.className = "wnav";
+  next.textContent = "▶";
+  next.onclick = ()=>{ currentNo = currentNo + 7; renderLesson(); };
+  el.appendChild(next);
+}
+function openMap(){
+  const nums = [70, currentNo]
+    .concat(db.lessons.filter(x=>x.lang===currentLang).map(x=>x.lesson))
+    .concat(db.grammar.filter(g=>g.lang===currentLang && g.lesson!=null).map(g=>g.lesson));
+  const maxL = Math.max.apply(null, nums);
+  const weeks = Math.ceil(maxL/7);
+  const panel = $("mapPanel");
+  panel.innerHTML = '<div class="map-head"><b>🗺 ' + esc(currentLang) + '</b>'
+    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  const grid = document.createElement("div");
+  grid.className = "map-grid";
+  for(let w=0; w<weeks; w++){
+    const lab = document.createElement("div");
+    lab.className = "rowlab";
+    lab.textContent = w*7 + 1;
+    grid.appendChild(lab);
+    for(let i=1; i<=7; i++){
+      const n = w*7 + i;
+      const b = document.createElement("button");
+      b.className = (hasLessonAt(currentLang, n) || hasGrammarAt(currentLang, n) ? "reg" : "")
+        + (n===currentNo ? " cur" : "");
+      b.innerHTML = lessonCellHTML(n);
+      b.onclick = ()=>{ closeMap(); currentNo = n; renderLesson(); };
+      grid.appendChild(b);
+    }
+  }
+  panel.appendChild(grid);
+  panel.style.display = "block";
+  $("mapBack").style.display = "block";
+  $("mapClose").onclick = closeMap;
+  // 現在地までスクロール
+  const cur = grid.querySelector(".cur");
+  if(cur) cur.scrollIntoView({block:"center"});
+}
+function closeMap(){
+  $("mapPanel").style.display = "none";
+  $("mapBack").style.display = "none";
+}
+$("mapBtn").onclick = openMap;
+$("mapBack").onclick = closeMap;
+
 $("prevBtn").onclick = ()=>{ if(currentNo>1){ currentNo--; renderLesson(); } };
 $("nextBtn").onclick = ()=>{ currentNo++; renderLesson(); };
 $("lessonNo").addEventListener("change", ()=>{
