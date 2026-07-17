@@ -96,10 +96,11 @@ input,textarea,select{font-family:inherit}
 .map-grid button.cur{background:var(--accent); border-color:var(--accent); color:#fff}
 .map-grid button .g{font-size:8.5px; vertical-align:super}
 /* 文法マトリクス */
-.mx-corner{position:sticky; left:0; z-index:2; background:var(--card)}
+.mx-corner{position:sticky; left:0; top:0; z-index:3; background:var(--card)}
 .mx-langh{writing-mode:vertical-rl; font-size:11px; color:var(--sub); font-weight:600;
-  display:flex; align-items:center; padding:4px 0; min-height:86px}
-.mx-lab{position:sticky; left:0; z-index:1; background:var(--card); text-align:left;
+  display:flex; align-items:center; padding:4px 0; min-height:86px;
+  position:sticky; top:0; z-index:1; background:var(--card)}
+.mx-lab{position:sticky; left:0; z-index:2; background:var(--card); text-align:left;
   font-size:12px; font-weight:600; color:var(--text); padding:6px 8px 6px 4px; line-height:1.4}
 .mx-cell{border-radius:6px; min-height:32px}
 .mx-cell.on{background:var(--accent); opacity:.82; border:1px solid transparent}
@@ -748,7 +749,8 @@ function openGramMatrix(){
   panel.innerHTML = '<div class="map-head"><b>🗺 topic × 言語</b>'
     + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
   const wrap = document.createElement("div");
-  wrap.style.overflowX = "auto";
+  wrap.style.overflow = "auto"; // 縦横ともこの中でスクロール(行・列ヘッダを固定するため)
+  wrap.style.maxHeight = Math.max(220, window.innerHeight - 210) + "px";
   const grid = document.createElement("div");
   grid.style.cssText = "display:grid; gap:4px; grid-template-columns:minmax(96px, 1.3fr) repeat("
     + langsWith.length + ", minmax(30px, 1fr)); min-width:" + (96 + langsWith.length*34) + "px";
