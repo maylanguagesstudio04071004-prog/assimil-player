@@ -729,6 +729,37 @@ function closeMap(){
 $("mapBtn").onclick = openMap;
 $("mapBack").onclick = closeMap;
 
+/* ---------- topicページ(文法の全言語比較ビュー) ---------- */
+function openTopicPage(topic){
+  const entries = db.grammar.filter(g=>g.topic===topic)
+    .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || (a.lesson||0)-(b.lesson||0));
+  if(!entries.length) return;
+  const panel = $("mapPanel");
+  panel.innerHTML = '<div class="map-head"><b>' + gMark(entries[0]) + ' ' + esc(topic) + '</b>'
+    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  entries.forEach(g=>{
+    const c = document.createElement("div");
+    c.className = "card";
+    c.style.background = "var(--bg)";
+    c.innerHTML = '<h2>' + esc(g.lang) + (g.lesson!=null ? ' · L' + g.lesson : '') + '</h2>'
+      + '<div style="white-space:pre-wrap; font-size:14px; line-height:1.75">' + esc(g.body||"") + '</div>';
+    (g.examples||[]).forEach(e=>{
+      const b = document.createElement("button");
+      b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; padding:9px 11px;"
+        + "border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--text);"
+        + "font-size:14px; line-height:1.5";
+      b.innerHTML = esc(e.text) + '<span style="color:var(--sub); font-size:11.5px"> — L' + e.lesson + '</span>';
+      b.onclick = ()=>{ closeMap(); jumpTo(e.lang, e.lesson); };
+      c.appendChild(b);
+    });
+    panel.appendChild(c);
+  });
+  panel.style.display = "block";
+  $("mapBack").style.display = "block";
+  $("mapClose").onclick = closeMap;
+  panel.scrollTop = 0;
+}
+
 $("prevBtn").onclick = ()=>{ if(currentNo>1){ currentNo--; renderLesson(); } };
 $("nextBtn").onclick = ()=>{ currentNo++; renderLesson(); };
 $("lessonNo").addEventListener("change", ()=>{
@@ -893,7 +924,9 @@ function renderFavs(){
         lastTopic = g.topic;
         const h = document.createElement("div");
         h.className = "lesson-head";
-        h.textContent = gMark(g) + " " + g.topic;
+        h.textContent = gMark(g) + " " + g.topic + " »";
+        h.style.cursor = "pointer";
+        h.onclick = ()=>openTopicPage(g.topic);
         box.appendChild(h);
       }
       const row = document.createElement("div");
@@ -1402,6 +1435,7 @@ function openGrammarPopup(g, anchorRect){
     html += '</div>';
   }
   html += '<div class="tr-actions">'
+    + '<button class="g-page btn soft">全言語で見る</button>'
     + '<button class="g-close btn soft">閉じる</button>'
     + '<button class="g-del" style="background:none; color:var(--danger); border:1px solid var(--danger)">削除</button>'
     + '</div>';
@@ -1411,6 +1445,7 @@ function openGrammarPopup(g, anchorRect){
   trJustOpened = true;
   setTimeout(()=>{ trJustOpened = false; }, 700);
   trPop.querySelector(".g-close").onclick = hideTrPop;
+  trPop.querySelector(".g-page").onclick = ()=>{ hideTrPop(); openTopicPage(g.topic); };
   trPop.querySelector(".g-del").onclick = ()=>{
     if(!confirm("§ " + g.topic + "(" + g.lang + ")を削除しますか?")) return;
     db.grammar = db.grammar.filter(x=>x!==g);
