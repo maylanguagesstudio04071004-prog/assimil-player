@@ -404,6 +404,7 @@ Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
 function jumpTo(lang, no){
   currentLang = lang; currentNo = no; compareMode = false;
   localStorage.setItem(KEY + ".lang", lang);
+  if(typeof closeMap === "function") closeMap(); // マトリクス/マップ経由のジャンプ時に重なりを残さない
   showTab("tabLesson");
 }
 
@@ -729,6 +730,57 @@ function closeMap(){
 $("mapBtn").onclick = openMap;
 $("mapBack").onclick = closeMap;
 
+/* ---------- 文法版カバレッジマトリクス(topic × 言語) ---------- */
+function openGramMatrix(){
+  const langsWith = db.langs.filter(l=>db.grammar.some(g=>g.lang===l));
+  const topics = [...new Set(db.grammar.map(g=>g.topic))].sort((a,b)=>a.localeCompare(b, "ja"));
+  if(!topics.length || !langsWith.length) return;
+  const panel = $("mapPanel");
+  panel.innerHTML = '<div class="map-head"><b>🗺 topic × 言語</b>'
+    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  const wrap = document.createElement("div");
+  wrap.style.overflowX = "auto";
+  const grid = document.createElement("div");
+  grid.style.cssText = "display:grid; gap:4px; grid-template-columns:minmax(96px, 1.3fr) repeat("
+    + langsWith.length + ", minmax(30px, 1fr)); min-width:" + (96 + langsWith.length*34) + "px";
+  grid.appendChild(document.createElement("div")); // 左上の角
+  langsWith.forEach(l=>{
+    const h = document.createElement("div");
+    h.style.cssText = "writing-mode:vertical-rl; font-size:11px; color:var(--sub); font-weight:600;"
+      + "display:flex; align-items:center; padding:4px 0; min-height:86px";
+    h.textContent = l;
+    grid.appendChild(h);
+  });
+  topics.forEach(t=>{
+    const first = db.grammar.find(g=>g.topic===t);
+    const lab = document.createElement("button");
+    lab.style.cssText = "text-align:left; font-size:12px; font-weight:600; color:var(--text);"
+      + "background:none; padding:6px 4px; line-height:1.4";
+    lab.textContent = gMark(first) + " " + t;
+    lab.onclick = ()=>openTopicPage(t);
+    grid.appendChild(lab);
+    langsWith.forEach(l=>{
+      const e = db.grammar.find(g=>g.topic===t && g.lang===l);
+      const c = document.createElement("button");
+      c.style.cssText = "border-radius:6px; min-height:32px; " + (e
+        ? "background:var(--accent-soft); border:1px solid transparent;"
+        : "background:var(--bg); border:1px dashed var(--border);");
+      if(e) c.onclick = ()=>openGrammarPopup(e, c.getBoundingClientRect());
+      grid.appendChild(c);
+    });
+  });
+  wrap.appendChild(grid);
+  panel.appendChild(wrap);
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = "塗り=登録済み(タップで解説)、点線=その言語の復習でまだ扱われていない。topic名タップで全言語ページへ。";
+  panel.appendChild(hint);
+  panel.style.display = "block";
+  $("mapBack").style.display = "block";
+  $("mapClose").onclick = closeMap;
+  panel.scrollTop = 0;
+}
+
 /* ---------- topicページ(文法の全言語比較ビュー) ---------- */
 function openTopicPage(topic){
   const entries = db.grammar.filter(g=>g.topic===topic)
@@ -918,6 +970,13 @@ function renderFavs(){
       box.innerHTML = '<div class="empty-msg">文法はまだ登録されていません。<br>解説ページの写真をClaudeに渡すと、<br>topic分割+フレーズへのリンク付きで取り込めます。</div>';
       return;
     }
+    const mbtn = document.createElement("button");
+    mbtn.className = "bulk-roman";
+    mbtn.style.marginTop = "0";
+    mbtn.style.marginBottom = "12px";
+    mbtn.textContent = "🗺 topic × 言語マトリクス";
+    mbtn.onclick = openGramMatrix;
+    box.appendChild(mbtn);
     let lastTopic = null;
     list.forEach(g=>{
       if(g.topic !== lastTopic){
