@@ -95,6 +95,15 @@ input,textarea,select{font-family:inherit}
 .map-grid button.reg{background:var(--accent-soft); border-color:transparent; color:var(--text)}
 .map-grid button.cur{background:var(--accent); border-color:var(--accent); color:#fff}
 .map-grid button .g{font-size:8.5px; vertical-align:super}
+/* 文法マトリクス */
+.mx-corner{position:sticky; left:0; z-index:2; background:var(--card)}
+.mx-langh{writing-mode:vertical-rl; font-size:11px; color:var(--sub); font-weight:600;
+  display:flex; align-items:center; padding:4px 0; min-height:86px}
+.mx-lab{position:sticky; left:0; z-index:1; background:var(--card); text-align:left;
+  font-size:12px; font-weight:600; color:var(--text); padding:6px 8px 6px 4px; line-height:1.4}
+.mx-cell{border-radius:6px; min-height:32px}
+.mx-cell.on{background:var(--accent); opacity:.82; border:1px solid transparent}
+.mx-cell.off{background:var(--bg); border:1px dashed var(--border)}
 /* lesson content */
 .phrase{padding:12px 4px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:flex-start}
 .phrase:last-child{border-bottom:none}
@@ -743,28 +752,26 @@ function openGramMatrix(){
   const grid = document.createElement("div");
   grid.style.cssText = "display:grid; gap:4px; grid-template-columns:minmax(96px, 1.3fr) repeat("
     + langsWith.length + ", minmax(30px, 1fr)); min-width:" + (96 + langsWith.length*34) + "px";
-  grid.appendChild(document.createElement("div")); // 左上の角
+  const corner = document.createElement("div");
+  corner.className = "mx-corner";
+  grid.appendChild(corner);
   langsWith.forEach(l=>{
     const h = document.createElement("div");
-    h.style.cssText = "writing-mode:vertical-rl; font-size:11px; color:var(--sub); font-weight:600;"
-      + "display:flex; align-items:center; padding:4px 0; min-height:86px";
+    h.className = "mx-langh";
     h.textContent = l;
     grid.appendChild(h);
   });
   topics.forEach(t=>{
     const first = db.grammar.find(g=>g.topic===t);
     const lab = document.createElement("button");
-    lab.style.cssText = "text-align:left; font-size:12px; font-weight:600; color:var(--text);"
-      + "background:none; padding:6px 4px; line-height:1.4";
+    lab.className = "mx-lab";
     lab.textContent = gMark(first) + " " + t;
     lab.onclick = ()=>openTopicPage(t);
     grid.appendChild(lab);
     langsWith.forEach(l=>{
       const e = db.grammar.find(g=>g.topic===t && g.lang===l);
       const c = document.createElement("button");
-      c.style.cssText = "border-radius:6px; min-height:32px; " + (e
-        ? "background:var(--accent-soft); border:1px solid transparent;"
-        : "background:var(--bg); border:1px dashed var(--border);");
+      c.className = "mx-cell " + (e ? "on" : "off");
       if(e) c.onclick = ()=>openGrammarPopup(e, c.getBoundingClientRect());
       grid.appendChild(c);
     });
