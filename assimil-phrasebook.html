@@ -1332,6 +1332,17 @@ function saveNoteField(lang, lesson, text, field, value, type){
   save();
 }
 function hideTrPop(){ trPop.style.display = "none"; trPop.innerHTML = ""; }
+// ポップアップ内の入力欄を内容に合わせて自動で伸ばす(長い訳も全文見えるように)
+function fitTextareas(root){
+  root.querySelectorAll("textarea").forEach(ta=>{
+    const fit = ()=>{
+      ta.style.height = "auto";
+      ta.style.height = Math.min(ta.scrollHeight + 4, Math.floor(window.innerHeight * 0.35)) + "px";
+    };
+    fit();
+    ta.addEventListener("input", fit);
+  });
+}
 function safeTopPad(){
   // ヘッダーのpadding-topにセーフエリア(時計・電池表示)分が含まれている
   const el = document.querySelector("header");
@@ -1398,6 +1409,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   trPop.className = "tr-pop";
   trPop.innerHTML = html;
   trPop.style.display = "block";
+  fitTextareas(trPop);
   placeTrPop(rect);
   trJustOpened = true;
   setTimeout(()=>{ trJustOpened = false; }, 700);
@@ -1555,6 +1567,7 @@ function openObsPopup(obs, anchorRect){
     + (isNew ? '' : '<button class="obs-del" style="background:none; color:var(--danger); border:1px solid var(--danger)">削除</button>')
     + '</div>';
   trPop.style.display = "block";
+  fitTextareas(trPop);
   placeTrPop(anchorRect || {left: window.innerWidth/2 - 150, width: 300, bottom: 150, top: 130});
   trJustOpened = true;
   setTimeout(()=>{ trJustOpened = false; }, 700);
