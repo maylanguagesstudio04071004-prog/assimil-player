@@ -120,9 +120,11 @@ input,textarea,select{font-family:inherit}
 #seekTime{font-size:12px; color:var(--sub); text-align:center; font-variant-numeric:tabular-nums}
 .words{display:flex; flex-wrap:wrap; gap:8px}
 .words button{padding:8px 14px; border-radius:12px; background:var(--accent-soft); color:var(--text);
-  font-size:15px; line-height:1.4; border:1px solid transparent}
+  font-size:15px; line-height:1.4; border:1px solid transparent;
+  display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left}
+.words button .wja{font-size:11px; color:var(--sub); font-weight:400; line-height:1.3}
 .words button.faved{border-color:var(--star)}
-.words button.faved::after{content:" ★"; color:var(--star); font-size:12px}
+.words button.faved .wtxt::after{content:" ★"; color:var(--star); font-size:12px}
 .lesson-note{font-size:13px; color:var(--sub); line-height:1.7}
 .empty-msg{text-align:center; color:var(--sub); font-size:14px; padding:40px 0; line-height:1.9}
 .hint{font-size:11px; color:var(--sub); margin-top:8px}
@@ -465,10 +467,30 @@ function phraseRow(lang, lesson, p, i){
 }
 function wordChip(lang, lesson, w){
   const b = document.createElement("button");
-  b.textContent = w;
   b.dataset.lang = lang;
   b.className = isFav(lang, lesson, w, "word") ? "faved" : "";
-  b.onclick = ()=>{ toggleFav(lang, lesson, w, "word"); b.classList.toggle("faved"); };
+  const note = getNote(lang, lesson, w, "word");
+  b.innerHTML = '<span class="wtxt">' + esc(w) + '</span>'
+    + (note && note.ja ? '<span class="wja">' + esc(note.ja) + '</span>' : '');
+  // タップ=お気に入り、長押し(0.5秒)=訳の編集
+  let timer = null, longPressed = false;
+  b.addEventListener("pointerdown", ()=>{
+    longPressed = false;
+    timer = setTimeout(()=>{
+      longPressed = true;
+      openNotePopup(lang, lesson, w, b, "word");
+    }, 500);
+  });
+  const cancel = ()=>clearTimeout(timer);
+  b.addEventListener("pointerup", cancel);
+  b.addEventListener("pointercancel", cancel);
+  b.addEventListener("pointerleave", cancel);
+  b.addEventListener("contextmenu", e=>e.preventDefault());
+  b.onclick = ()=>{
+    if(longPressed){ longPressed = false; return; }
+    toggleFav(lang, lesson, w, "word");
+    b.classList.toggle("faved");
+  };
   return b;
 }
 function lessonCards(L, withLangTitle){
@@ -532,7 +554,7 @@ function lessonCards(L, withLangTitle){
     c.appendChild(wc);
     const hint = document.createElement("div");
     hint.className = "hint";
-    hint.textContent = "単語はタップでお気に入りに追加/解除";
+    hint.textContent = "単語はタップでお気に入り、長押しで訳の編集";
     c.appendChild(hint);
     frag.appendChild(c);
   }
@@ -889,9 +911,11 @@ function renderSearch(){
   const results = [];
   // フレーズの日本語訳を高速に引けるようマップ化(langlessontext -> ja)
   const jaMap = new Map();
+  const wjaMap = new Map();
   db.notes.forEach(n=>{
-    if((n.type||"phrase")!=="phrase" || !n.ja) return;
-    jaMap.set(n.lang + "" + n.lesson + "" + n.text, n.ja);
+    if(!n.ja) return;
+    if((n.type||"phrase")==="phrase") jaMap.set(n.lang + "" + n.lesson + "" + n.text, n.ja);
+    else if(n.type==="word") wjaMap.set(n.lang + "" + n.lesson + "" + n.text, n.ja);
   });
   const sorted = [...db.lessons].sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || a.lesson-b.lesson);
   for(const L of sorted){
@@ -910,7 +934,9 @@ function renderSearch(){
     }
     if(searchType!=="phrase"){
       (L.words||[]).forEach(w=>{
-        if(w.toLowerCase().includes(ql)) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word", ja:"", hitJa:false});
+        const ja = wjaMap.get(L.lang + "" + L.lesson + "" + w) || "";
+        const hitJa = !!ja && ja.includes(q);
+        if(w.toLowerCase().includes(ql) || hitJa) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word", ja, hitJa});
       });
     }
     if(results.length>=300) break;
@@ -1421,7 +1447,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
       if(ta) saveNoteField(lang, lesson, text, f.key, ta.value, type);
     });
     hideTrPop();
-    if(type==="title") renderLesson(); // タイトル下の常時表示を更新
+    if(type==="title" || type==="word") renderLesson(); // 常時表示(タイトル訳・単語訳)を更新
     else refreshNoteButtons(lang, lesson, text);
   };
   const rBtn = trPop.querySelector(".tr-romanbtn");
