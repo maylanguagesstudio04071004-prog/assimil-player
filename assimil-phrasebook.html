@@ -882,6 +882,48 @@ function openRootModal(rootStr){
   panel.scrollTop = 0;
 }
 
+// √語根一覧: 既存データから毎回計算。アラビア文字(arKey)で集約し、ラテン表記の揺れは⚠で可視化
+function openRootIndex(){
+  const groups = new Map(); // arKey → {count, rootCounts, latins}
+  db.notes.forEach(n=>{
+    if(n.type!=="word" || !n.root) return;
+    const k = arKey(n.root);
+    if(!k) return;
+    let g = groups.get(k);
+    if(!g){ g = {count:0, rootCounts:new Map(), latins:new Set()}; groups.set(k, g); }
+    g.count++;
+    g.rootCounts.set(n.root, (g.rootCounts.get(n.root)||0)+1);
+    if(n.rootLatin && n.rootLatin.trim()) g.latins.add(n.rootLatin.trim());
+  });
+  if(!groups.size) return;
+  const list = [...groups.entries()].map(([k, g])=>{
+    let disp = "", best = 0;
+    g.rootCounts.forEach((c, raw)=>{ if(c>best){ best = c; disp = raw; } });
+    return {key:k, disp, count:g.count, latins:[...g.latins]};
+  }).sort((a,b)=>b.count-a.count || a.key.localeCompare(b.key));
+  const panel = $("mapPanel");
+  panel.innerHTML = '<div class="map-head"><b>√ 語根一覧(' + list.length + ')</b>'
+    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  list.forEach(r=>{
+    const warn = r.latins.length > 1;
+    const b = document.createElement("button");
+    b.style.cssText = "display:flex; align-items:baseline; gap:8px; width:100%; text-align:left;"
+      + "margin-bottom:8px; padding:12px 13px; border-radius:10px; background:var(--bg);"
+      + "border:1px solid " + (warn ? "var(--danger)" : "var(--border)") + "; color:var(--text); font-size:15px; line-height:1.5";
+    b.innerHTML = '<span style="unicode-bidi:plaintext; font-weight:600; flex:none">√ ' + esc(r.disp) + '</span>'
+      + '<span style="color:' + (warn ? "var(--danger)" : "var(--sub)") + '; font-size:12px; flex:1; min-width:0">'
+      + (r.latins.length ? '· ' + esc(r.latins.join(" / ")) : '')
+      + (warn ? ' ⚠表記が揺れています' : '') + '</span>'
+      + '<span style="color:var(--sub); font-size:12px; flex:none; margin-left:auto">' + r.count + '語</span>';
+    b.onclick = ()=>openRootModal(r.disp);
+    panel.appendChild(b);
+  });
+  panel.style.display = "block";
+  $("mapBack").style.display = "block";
+  $("mapClose").onclick = closeMap;
+  panel.scrollTop = 0;
+}
+
 /* ---------- topicページ(文法の全言語比較ビュー) ---------- */
 function openTopicPage(topic){
   const entries = db.grammar.filter(g=>g.topic===topic)
@@ -1076,11 +1118,24 @@ function renderFavs(){
   const box = $("favList");
   box.innerHTML = "";
   if(favView==="gram"){
+    // √語根一覧(語根が1件以上登録されているときだけ表示)
+    if(db.notes.some(n=>n.type==="word" && n.root && arKey(n.root))){
+      const rbtn = document.createElement("button");
+      rbtn.className = "bulk-roman";
+      rbtn.style.marginTop = "0";
+      rbtn.style.marginBottom = "12px";
+      rbtn.textContent = "√ 語根一覧";
+      rbtn.onclick = openRootIndex;
+      box.appendChild(rbtn);
+    }
     const list = db.grammar
       .filter(g=>!favFilter || g.lang===favFilter)
       .sort((a,b)=>a.topic.localeCompare(b.topic, "ja") || langOrder(a.lang)-langOrder(b.lang));
     if(!list.length){
-      box.innerHTML = '<div class="empty-msg">文法はまだ登録されていません。<br>解説ページの写真をClaudeに渡すと、<br>topic分割+フレーズへのリンク付きで取り込めます。</div>';
+      const d = document.createElement("div");
+      d.className = "empty-msg";
+      d.innerHTML = '文法はまだ登録されていません。<br>解説ページの写真をClaudeに渡すと、<br>topic分割+フレーズへのリンク付きで取り込めます。';
+      box.appendChild(d);
       return;
     }
     const mbtn = document.createElement("button");
