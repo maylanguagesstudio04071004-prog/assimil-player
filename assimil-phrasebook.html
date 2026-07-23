@@ -315,9 +315,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div class="f-label">タイトル(任意)</div>
     <input class="f-input" id="eTitle">
     <div class="f-label">フレーズ(1行に1つ)</div>
-    <textarea id="ePhrases"></textarea>
+    <textarea id="ePhrases" dir="auto"></textarea>
     <div class="f-label">単語(1行に1つ)</div>
-    <textarea id="eWords" style="min-height:90px"></textarea>
+    <textarea id="eWords" dir="auto" style="min-height:90px"></textarea>
     <div class="f-label">メモ(任意)</div>
     <input class="f-input" id="eNote">
     <div class="f-label">タグ(スペース区切り、#は不要。例: 挨拶 道案内)</div>
@@ -1429,7 +1429,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   let html = '<div class="tr-src">' + esc(text) + '</div>';
   NOTE_FIELDS.forEach(f=>{
     html += '<div class="tr-field"><div class="tr-label">' + esc(f.label) + '</div>'
-      + '<textarea class="tr-input" data-field="' + f.key + '" placeholder="未入力">' + esc(note[f.key]||"") + '</textarea></div>';
+      + '<textarea class="tr-input" dir="auto" data-field="' + f.key + '" placeholder="未入力">' + esc(note[f.key]||"") + '</textarea></div>';
   });
   html += '<div class="tr-actions">'
     + (note.ja ? '' : '<button class="tr-auto">自動翻訳を試す</button>')
@@ -1590,7 +1590,7 @@ function openObsPopup(obs, anchorRect){
   trPop.className = "tr-pop";
   trPop.innerHTML = '<div class="tr-src">✎ 気づき — ' + esc(ctx.lang || "全言語")
     + (ctx.lesson!=null ? ' · L' + ctx.lesson : '') + '</div>'
-    + '<textarea class="tr-input" id="obsText" placeholder="気づいたことを一行でも" style="min-height:96px">' + esc(ctx.text || "") + '</textarea>'
+    + '<textarea class="tr-input" id="obsText" dir="auto" placeholder="気づいたことを一行でも" style="min-height:96px">' + esc(ctx.text || "") + '</textarea>'
     + '<div class="tr-actions">'
     + '<button class="btn obs-save">保存</button>'
     + '<button class="btn soft obs-close">閉じる</button>'
