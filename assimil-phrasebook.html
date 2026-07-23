@@ -19,6 +19,9 @@
     --star:#f0b45a; }
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+/* RTL(アラビア語など)対応: 行ごとに文字方向を自動判定 */
+textarea, input[type=text], input[type=search], .f-input, .tr-input{unicode-bidi:plaintext}
+.phrase .txt, .words .wtxt, .result .txt{unicode-bidi:plaintext}
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
   background:var(--bg); color:var(--text); padding-bottom:env(safe-area-inset-bottom)}
 header{padding:calc(14px + env(safe-area-inset-top)) 20px 4px; font-size:18px; font-weight:700; position:relative}
