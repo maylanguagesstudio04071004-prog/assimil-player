@@ -127,6 +127,7 @@ input,textarea,select{font-family:inherit}
   display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left}
 .words button .wja{font-size:11px; color:var(--sub); font-weight:400; line-height:1.3}
 .words button .wroman{font-size:11px; color:var(--sub); font-weight:400; font-style:italic; line-height:1.3}
+.words button .wroot{font-size:11px; color:var(--accent); font-weight:600; line-height:1.4; unicode-bidi:plaintext}
 .words button.faved{border-color:var(--star)}
 .words button.faved .wtxt::after{content:" ★"; color:var(--star); font-size:12px}
 .lesson-note{font-size:13px; color:var(--sub); line-height:1.7}
@@ -476,7 +477,9 @@ function wordChip(lang, lesson, w){
   const note = getNote(lang, lesson, w, "word");
   b.innerHTML = '<span class="wtxt">' + esc(w) + '</span>'
     + (note && note.roman ? '<span class="wroman">' + esc(note.roman) + '</span>' : '')
-    + (note && note.ja ? '<span class="wja">' + esc(note.ja) + '</span>' : '');
+    + (note && note.ja ? '<span class="wja">' + esc(note.ja) + '</span>' : '')
+    + (note && note.root ? '<span class="wroot">√ ' + esc(note.root)
+        + (note.rootLatin ? ' · ' + esc(note.rootLatin) : '') + '</span>' : '');
   // タップ=お気に入り、長押し(0.5秒)=訳の編集
   let timer = null, longPressed = false;
   b.addEventListener("pointerdown", ()=>{
@@ -496,6 +499,14 @@ function wordChip(lang, lesson, w){
     toggleFav(lang, lesson, w, "word");
     b.classList.toggle("faved");
   };
+  const wr = b.querySelector(".wroot");
+  if(wr){
+    wr.addEventListener("click", ev=>{
+      ev.stopPropagation();
+      if(longPressed){ longPressed = false; return; }
+      openRootModal(note.root);
+    });
+  }
   return b;
 }
 function lessonCards(L, withLangTitle){
@@ -769,8 +780,10 @@ $("mapBack").onclick = closeMap;
 
 /* ---------- 文法版カバレッジマトリクス(topic × 言語) ---------- */
 function openGramMatrix(){
-  const langsWith = db.langs.filter(l=>db.grammar.some(g=>g.lang===l));
-  const topics = [...new Set(db.grammar.map(g=>g.topic))].sort((a,b)=>a.localeCompare(b, "ja"));
+  // √(語根)は言語内ネットワークなので、言語横断のマトリクスには出さない
+  const gm = db.grammar.filter(g=>g.type!=="root");
+  const langsWith = db.langs.filter(l=>gm.some(g=>g.lang===l));
+  const topics = [...new Set(gm.map(g=>g.topic))].sort((a,b)=>a.localeCompare(b, "ja"));
   if(!topics.length || !langsWith.length) return;
   const panel = $("mapPanel");
   panel.innerHTML = '<div class="map-head"><b>🗺 topic × 言語</b>'
@@ -791,14 +804,14 @@ function openGramMatrix(){
     grid.appendChild(h);
   });
   topics.forEach(t=>{
-    const first = db.grammar.find(g=>g.topic===t);
+    const first = gm.find(g=>g.topic===t);
     const lab = document.createElement("button");
     lab.className = "mx-lab";
     lab.textContent = gMark(first) + " " + t;
     lab.onclick = ()=>openTopicPage(t);
     grid.appendChild(lab);
     langsWith.forEach(l=>{
-      const e = db.grammar.find(g=>g.topic===t && g.lang===l);
+      const e = gm.find(g=>g.topic===t && g.lang===l);
       const c = document.createElement("button");
       c.className = "mx-cell " + (e ? "on" : "off");
       if(e) c.onclick = ()=>openGrammarPopup(e, c.getBoundingClientRect());
@@ -811,6 +824,58 @@ function openGramMatrix(){
   hint.className = "hint";
   hint.textContent = "塗り=登録済み(タップで解説)、点線=その言語の復習でまだ扱われていない。topic名タップで全言語ページへ。";
   panel.appendChild(hint);
+  panel.style.display = "block";
+  $("mapBack").style.display = "block";
+  $("mapClose").onclick = closeMap;
+  panel.scrollTop = 0;
+}
+
+/* ---------- √語根(アラビア語内部の語彙ネットワーク) ---------- */
+// アラビア文字部分だけを主キーとして照合(空白・ハイフン・ラテン表記の揺れを無視)
+function arKey(s){ return String(s||"").replace(/[^؀-ۿ]/g, ""); }
+function openRootModal(rootStr){
+  const key = arKey(rootStr);
+  if(!key) return;
+  // 関連語は保存せず毎回計算(語根の修正・削除に自動追従)
+  const items = db.notes
+    .filter(n=>n.type==="word" && n.root && arKey(n.root)===key)
+    .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || (a.lesson||0)-(b.lesson||0));
+  const hub = db.grammar.find(g=>g.type==="root" && arKey(g.topic)===key);
+  const latin = (items.find(n=>n.rootLatin)||{}).rootLatin || "";
+  const panel = $("mapPanel");
+  panel.innerHTML = '<div class="map-head"><b style="unicode-bidi:plaintext">√ ' + esc(rootStr)
+    + (latin ? ' · ' + esc(latin) : '') + '</b>'
+    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  if(hub && hub.body){
+    const bdy = document.createElement("div");
+    bdy.style.cssText = "white-space:pre-wrap; font-size:14px; line-height:1.75; margin-bottom:12px";
+    bdy.textContent = hub.body;
+    panel.appendChild(bdy);
+  }
+  const lab = document.createElement("div");
+  lab.className = "hint";
+  lab.style.marginBottom = "8px";
+  lab.textContent = "関連語(" + items.length + ") — タップでレッスンへ";
+  panel.appendChild(lab);
+  items.forEach(n=>{
+    const b = document.createElement("button");
+    b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:11px 13px;"
+      + "border-radius:10px; background:var(--bg); border:1px solid var(--border); color:var(--text);"
+      + "font-size:15px; line-height:1.5";
+    b.innerHTML = '<span style="unicode-bidi:plaintext">' + esc(n.text) + '</span>'
+      + (n.roman ? ' <span style="color:var(--sub); font-size:12px; font-style:italic">' + esc(n.roman) + '</span>' : '')
+      + (n.ja ? '<div style="color:var(--sub); font-size:12px; margin-top:2px">' + esc(n.ja) + '</div>' : '')
+      + '<div style="color:var(--sub); font-size:11px; margin-top:2px">' + esc(n.lang) + ' · L' + n.lesson + '</div>';
+    b.onclick = ()=>{ closeMap(); jumpTo(n.lang, n.lesson); };
+    panel.appendChild(b);
+  });
+  if(hub){
+    const hb = document.createElement("button");
+    hb.className = "bulk-roman";
+    hb.textContent = "√ ハブの詳細(意味領域・関連リンク)";
+    hb.onclick = ()=>openGrammarPopup(hub, hb.getBoundingClientRect());
+    panel.appendChild(hb);
+  }
   panel.style.display = "block";
   $("mapBack").style.display = "block";
   $("mapClose").onclick = closeMap;
@@ -917,10 +982,16 @@ function renderSearch(){
   // フレーズの日本語訳を高速に引けるようマップ化(langlessontext -> ja)
   const jaMap = new Map();
   const wjaMap = new Map();
+  const wrootMap = new Map(); // 単語→語根(検索補助: アラビア文字とラテン両方)
   db.notes.forEach(n=>{
-    if(!n.ja) return;
-    if((n.type||"phrase")==="phrase") jaMap.set(n.lang + "" + n.lesson + "" + n.text, n.ja);
-    else if(n.type==="word") wjaMap.set(n.lang + "" + n.lesson + "" + n.text, n.ja);
+    const k = n.lang + "" + n.lesson + "" + n.text;
+    if(n.ja){
+      if((n.type||"phrase")==="phrase") jaMap.set(k, n.ja);
+      else if(n.type==="word") wjaMap.set(k, n.ja);
+    }
+    if(n.type==="word" && (n.root || n.rootLatin)){
+      wrootMap.set(k, ((n.root||"") + " " + (n.rootLatin||"")).toLowerCase());
+    }
   });
   const sorted = [...db.lessons].sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || a.lesson-b.lesson);
   for(const L of sorted){
@@ -939,9 +1010,11 @@ function renderSearch(){
     }
     if(searchType!=="phrase"){
       (L.words||[]).forEach(w=>{
-        const ja = wjaMap.get(L.lang + "" + L.lesson + "" + w) || "";
+        const wk = L.lang + "" + L.lesson + "" + w;
+        const ja = wjaMap.get(wk) || "";
+        const rt = wrootMap.get(wk) || "";
         const hitJa = !!ja && ja.includes(q);
-        if(w.toLowerCase().includes(ql) || hitJa) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word", ja, hitJa});
+        if(w.toLowerCase().includes(ql) || hitJa || (rt && rt.includes(ql))) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word", ja, hitJa});
       });
     }
     if(results.length>=300) break;
@@ -1151,7 +1224,7 @@ function importData(raw, msgEl){
         topic: String(g.topic),
         lang: toNative(String(g.lang)),
         lesson: (g.lesson!=null && g.lesson!=="") ? Number(g.lesson) : null,
-        type: g.type==="concept" ? "concept" : "grammar",
+        type: (g.type==="concept" || g.type==="root") ? g.type : "grammar",
         related: Array.isArray(g.related) ? g.related.map(String).filter(Boolean) : [],
         body: g.body ? String(g.body) : "",
         examples: Array.isArray(g.examples)
@@ -1317,6 +1390,14 @@ const LANGCODE = {
 };
 // 将来ここに {key:"memo", label:"自分のメモ"} や {key:"explain", label:"Claudeの解説"} を
 // 追加すれば、ポップアップに自動で入力欄が並ぶ(データ側は既に任意フィールドを保存できる)
+// アラビア語のみ: 語根フィールド(語根はアラビア文字が主キー、ラテンは表示・検索補助)
+const ROOT_FIELDS = [
+  {key:"root", label:"語根(アラビア文字)"},
+  {key:"rootLatin", label:"語根(ラテン表記)"}
+];
+function fieldsFor(lang, type){
+  return (lang==="العربية" && type==="word") ? NOTE_FIELDS.concat(ROOT_FIELDS) : NOTE_FIELDS;
+}
 const NOTE_FIELDS = [
   {key:"ja", label:"日本語訳"},
   {key:"roman", label:"読み(ローマ字)"}
@@ -1352,11 +1433,11 @@ function saveNoteField(lang, lesson, text, field, value, type){
   if(i>=0){
     db.notes[i][field] = v;
     db.notes[i].updated = Date.now();
-    const empty = NOTE_FIELDS.every(f=>!String(db.notes[i][f.key]||"").trim());
+    const empty = fieldsFor(lang, type).every(f=>!String(db.notes[i][f.key]||"").trim());
     if(empty) db.notes.splice(i,1);
   } else if(v){
     const rec = {lang, lesson, text, type, updated: Date.now()};
-    NOTE_FIELDS.forEach(f=>rec[f.key] = "");
+    fieldsFor(lang, type).forEach(f=>rec[f.key] = "");
     rec[field] = v;
     db.notes.push(rec);
   }
@@ -1427,7 +1508,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   const rect = anchorEl.getBoundingClientRect();
   const note = getNote(lang, lesson, text, type) || {};
   let html = '<div class="tr-src">' + esc(text) + '</div>';
-  NOTE_FIELDS.forEach(f=>{
+  fieldsFor(lang, type).forEach(f=>{
     html += '<div class="tr-field"><div class="tr-label">' + esc(f.label) + '</div>'
       + '<textarea class="tr-input" dir="auto" data-field="' + f.key + '" placeholder="未入力">' + esc(note[f.key]||"") + '</textarea></div>';
   });
@@ -1447,7 +1528,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
 
   trPop.querySelector(".tr-close").onclick = hideTrPop;
   trPop.querySelector(".tr-save").onclick = ()=>{
-    NOTE_FIELDS.forEach(f=>{
+    fieldsFor(lang, type).forEach(f=>{
       const ta = trPop.querySelector('[data-field="' + f.key + '"]');
       if(ta) saveNoteField(lang, lesson, text, f.key, ta.value, type);
     });
@@ -1509,7 +1590,7 @@ document.addEventListener("scroll", ()=>{
 function grammarOf(lang, lesson, text){
   return db.grammar.filter(g=>(g.examples||[]).some(e=>e.lang===lang && e.lesson===lesson && e.text===text));
 }
-function gMark(g){ return g.type==="concept" ? "◇" : "§"; }
+function gMark(g){ return g.type==="concept" ? "◇" : (g.type==="root" ? "√" : "§"); }
 function openGrammarPopup(g, anchorRect){
   trPop.className = "tr-pop";
   let html = '<div class="tr-src">' + gMark(g) + ' ' + esc(g.topic) + ' — ' + esc(g.lang)
