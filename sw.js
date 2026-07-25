@@ -1,8 +1,11 @@
-const CACHE = 'assimil-player-v5';
-const ASSETS = ['./', './index.html', './manifest.json', './apple-touch-icon.png'];
+const CACHE = 'assimil-player-v6';
+const ASSETS = ['./', './index.html', './assimil-phrasebook.html', './manifest.json', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  // 1ファイルでも取得に失敗すると install ごと失敗するので、個別に入れる
+  e.waitUntil(caches.open(CACHE).then(c => Promise.all(
+    ASSETS.map(a => c.add(a).catch(() => null))
+  )));
   self.skipWaiting();
 });
 
@@ -22,11 +25,16 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(req)
         .then(r => {
+          // 取得したHTMLは「そのURL」のキーで保存する。
+          // 以前は全てのHTMLを './index.html' に上書きしていたため、
+          // Player と Atlas がオフライン時に入れ替わることがあった。
           const copy = r.clone();
-          caches.open(CACHE).then(c => c.put('./index.html', copy));
+          caches.open(CACHE).then(c => c.put(req, copy));
           return r;
         })
-        .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+        .catch(() => caches.match(req, { ignoreSearch: true })
+          .then(r => r || caches.match('./index.html'))
+          .then(r => r || caches.match('./')))
     );
     return;
   }

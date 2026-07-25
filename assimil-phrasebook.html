@@ -149,7 +149,21 @@ input,textarea,select{font-family:inherit}
 .result .meta{font-size:12px; color:var(--sub); margin-top:4px}
 .result .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0}
 .result .fav.on{color:var(--star)}
-#rcount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+#rcount, #rcount2{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+#rootQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
+  border-radius:12px; background:var(--card); color:var(--text)}
+.rchips{display:flex; flex-wrap:wrap; gap:5px; margin-top:5px}
+.rchip{font-size:11px; padding:3px 9px; border-radius:12px; background:var(--accent-soft);
+  color:var(--accent); font-weight:600}
+.rchip.warn{background:transparent; border:1px dashed var(--danger); color:var(--danger)}
+.rform{margin-top:10px; padding:10px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--border)}
+.rform-head{margin-bottom:6px}
+.rsurface{font-size:18px; font-weight:600; unicode-bidi:plaintext}
+.rocc{display:flex; gap:9px; width:100%; text-align:left; align-items:flex-start;
+  padding:8px 0; border-top:1px solid var(--border); background:none; color:var(--text)}
+.rocc-l{flex:none; font-size:11.5px; color:var(--sub); font-weight:700; padding-top:3px; min-width:32px}
+.rocc-t{font-size:14.5px; line-height:1.55; overflow-wrap:anywhere; unicode-bidi:plaintext}
+.phrase .txt .rtok{border-bottom:1px dashed var(--accent); cursor:pointer}
 /* forms */
 textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--border);
   border-radius:12px; background:var(--bg); color:var(--text); font-size:14px; resize:vertical; line-height:1.7}
@@ -212,6 +226,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <button id="tabLesson" class="on">レッスン</button>
   <button id="tabSearch">検索</button>
   <button id="tabFav">★</button>
+  <button id="tabRoots">語根</button>
   <button id="tabImport">取込</button>
   <button id="tabSettings">設定</button>
 </div>
@@ -266,6 +281,22 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   </div>
   <div class="langbar" id="favLangbar"></div>
   <div id="favList"></div>
+</section>
+
+<!-- 語根 -->
+<section id="pageRoots" style="display:none">
+  <div id="rootsList">
+    <div class="langbar" id="rootLangbar"></div>
+    <input id="rootQ" type="search" placeholder="語根・見出し語・意味で検索">
+    <div class="filterbar">
+      <button id="rfAll" class="on">すべて</button>
+      <button id="rfStudy">学習対象</button>
+      <button id="rfReview">要確認</button>
+    </div>
+    <div id="rcount2"></div>
+    <div id="rootResults"></div>
+  </div>
+  <div id="rootDetail" style="display:none"></div>
 </section>
 
 <!-- 取り込み -->
@@ -377,12 +408,18 @@ function load(){
   if(!Array.isArray(d.notes)) d.notes = [];
   d.notes.forEach(n=>{ n.lang = toNative(n.lang); });
   if(!Array.isArray(d.observations)) d.observations = [];
-  d.observations.forEach(o=>{ if(o.lang) o.lang = toNative(o.lang); });
+  d.observations.forEach(o=>{
+    if(o.lang) o.lang = toNative(o.lang);
+    if(Array.isArray(o.langs)) o.langs = [...new Set(o.langs.map(toNative))];
+  });
   if(!Array.isArray(d.grammar)) d.grammar = [];
   d.grammar.forEach(g=>{
     g.lang = toNative(g.lang);
     (g.examples||[]).forEach(e=>{ e.lang = toNative(e.lang); });
   });
+  // 語根索引。rootsを持たない従来データも空配列で問題なく読める
+  if(!Array.isArray(d.roots)) d.roots = [];
+  d.roots.forEach(r=>{ r.lang = toNative(r.lang); });
   return d;
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -390,6 +427,478 @@ function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function findLesson(lang, no){ return db.lessons.find(x=>x.lang===lang && x.lesson===no); }
 function langOrder(l){ const i = db.langs.indexOf(l); return i<0 ? 999 : i; }
+
+/* ---------- roots(語根索引) ----------
+   lessons / grammar とは独立したデータ。構造は
+   root → words[] → forms[] → occurrences[] の4層。
+   grammar の type:"root" は旧形式の簡易メモとしてそのまま残す。 */
+
+// 表記ゆれを吸収した照合キーを作る(タシュキール/تطويل/アリフ異体字/Unicode正規化/空白)
+// 冠詞 ال は意図的に除去しない(بَيْت と الْبَيْت は別formとして保持する)
+const AR_TASHKEEL = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;   // タシュキール各種
+const AR_ALIF     = /[\u0622\u0623\u0625\u0671]/g;             // alif異体字を統一
+const AR_TATWEEL  = /\u0640/g;
+const AR_TRIM     = /^[\s\u060C\u061B\u061F!.:"\u00AB\u00BB()\-]+|[\s\u060C\u061B\u061F!.:"\u00AB\u00BB()\-]+$/g;
+function normAr(s){
+  return String(s==null ? "" : s).normalize("NFC")
+    .replace(AR_ALIF, "\u0627")
+    .replace(AR_TASHKEEL, "")
+    .replace(AR_TATWEEL, "")
+    .replace(/\s+/g, " ").trim();
+}
+function normArWord(s){ return normAr(s).replace(AR_TRIM, ""); }
+
+// "ar-L22" のような lessonId から課番号を取り出す(本文からの逆引き用)
+function lessonNoOf(lessonId){
+  const m = /(\d+)/.exec(String(lessonId || ""));
+  return m ? Number(m[1]) : null;
+}
+
+function normOccRec(o){
+  const rec = {
+    lessonId: o.lessonId ? String(o.lessonId) : "",
+    phraseId: o.phraseId ? String(o.phraseId) : "",
+    text: o.text ? String(o.text) : ""
+  };
+  const n = (o.lesson != null && o.lesson !== "") ? Number(o.lesson) : lessonNoOf(rec.lessonId);
+  if(n != null && !isNaN(n)) rec.lesson = n;
+  if(o.tokenIndex != null && o.tokenIndex !== "") rec.tokenIndex = Number(o.tokenIndex);
+  if(o.start != null && o.start !== "") rec.start = Number(o.start);
+  if(o.end != null && o.end !== "") rec.end = Number(o.end);
+  if(rec.text) rec.normalizedText = o.normalizedText ? String(o.normalizedText) : normAr(rec.text);
+  return rec;
+}
+// 重複判定・マージ判定に使うキー。JSON側のnormalized*は保存・表示用として尊重するが、
+// 照合には必ずこの関数で再計算した値を使う(外部JSONが別の正規化規則でも誤統合しない)
+function mkRoot(r){ return normArWord(String(r.root || "").replace(/[-\s\u00B7\u30FB]+/g, "")); }
+function mkLemma(w){ return normArWord(w.lemma); }
+function mkSurface(f){ return normArWord(f.surface); }
+function occKey(o){
+  const k = o.lessonId + "|" + o.phraseId + "|" + (o.tokenIndex != null ? o.tokenIndex : "");
+  return k === "||" ? "t:" + normAr(o.text) : k;
+}
+
+function normFormRec(f){
+  const rec = {
+    surface: String(f.surface || ""),
+    surfaceRoman: f.surfaceRoman ? String(f.surfaceRoman) : "",
+    normalizedSurface: f.normalizedSurface ? String(f.normalizedSurface) : normArWord(f.surface),
+    occurrences: (Array.isArray(f.occurrences) ? f.occurrences : []).map(normOccRec)
+  };
+  // 任意項目。キーが無い場合は「未分析」を意味するので、勝手に補わない
+  if(f.formFeatures != null){
+    rec.formFeatures = Array.isArray(f.formFeatures) ? f.formFeatures.map(String) : [String(f.formFeatures)];
+  }
+  if(f.formNote != null) rec.formNote = String(f.formNote);
+  return rec;
+}
+
+function normWordRec(w){
+  return {
+    lemma: String(w.lemma || ""),
+    lemmaRoman: w.lemmaRoman ? String(w.lemmaRoman) : "",
+    normalizedLemma: w.normalizedLemma ? String(w.normalizedLemma) : normArWord(w.lemma),
+    meaning: w.meaning ? String(w.meaning) : "",
+    partOfSpeech: w.partOfSpeech ? String(w.partOfSpeech) : "",
+    status: w.status === "needsReview" ? "needsReview" : "confirmed",
+    includeInRootStudy: w.includeInRootStudy === false ? false : true,
+    note: w.note ? String(w.note) : "",
+    forms: (Array.isArray(w.forms) ? w.forms : []).map(normFormRec)
+  };
+}
+
+function normRootRec(r){
+  const root = String(r.root || "");
+  return {
+    id: r.id ? String(r.id) : uid(),
+    lang: toNative(String(r.lang || "")),
+    root: root,
+    normalizedRoot: r.normalizedRoot ? String(r.normalizedRoot) : mkRoot(r),
+    letters: Array.isArray(r.letters) && r.letters.length
+      ? r.letters.map(String)
+      : root.split("-").map(s=>s.trim()).filter(Boolean),
+    rootFeatures: Array.isArray(r.rootFeatures) ? r.rootFeatures.map(String)
+      : (r.rootFeatures ? [String(r.rootFeatures)] : []),
+    meaning: r.meaning ? String(r.meaning) : "",
+    notes: r.notes ? String(r.notes) : "",
+    status: r.status === "needsReview" ? "needsReview" : "confirmed",
+    words: (Array.isArray(r.words) ? r.words : []).map(normWordRec)
+  };
+}
+
+// 追記マージ。同じidに語・語形・出現箇所だけを追加する取り込みができる
+function mergeFormRec(dst, src){
+  let n = 0;
+  ["surfaceRoman","normalizedSurface","formNote"].forEach(k=>{ if(src[k]) dst[k] = src[k]; });
+  if(src.formFeatures) dst.formFeatures = src.formFeatures;
+  src.occurrences.forEach(o=>{
+    const k = occKey(o);
+    const i = dst.occurrences.findIndex(x=>occKey(x) === k);
+    if(i >= 0) dst.occurrences[i] = o; else { dst.occurrences.push(o); n++; }
+  });
+  return n;
+}
+function mergeWordRec(dst, src){
+  let n = 0;
+  ["lemma","lemmaRoman","normalizedLemma","meaning","partOfSpeech","note"].forEach(k=>{ if(src[k]) dst[k] = src[k]; });
+  if(src.status) dst.status = src.status;
+  if(src.includeInRootStudy === false) dst.includeInRootStudy = false;
+  src.forms.forEach(f=>{
+    const k = mkSurface(f);
+    const i = dst.forms.findIndex(x=>mkSurface(x) === k);
+    if(i < 0){ dst.forms.push(f); n += f.occurrences.length; }
+    else n += mergeFormRec(dst.forms[i], f);
+  });
+  return n;
+}
+function mergeRootRec(dst, src){
+  let n = 0;
+  ["root","normalizedRoot","meaning","notes"].forEach(k=>{ if(src[k]) dst[k] = src[k]; });
+  if(src.letters.length) dst.letters = src.letters;
+  if(src.rootFeatures.length) dst.rootFeatures = src.rootFeatures;
+  if(src.status) dst.status = src.status;
+  src.words.forEach(w=>{
+    const k = mkLemma(w);
+    const i = dst.words.findIndex(x=>mkLemma(x) === k);
+    if(i < 0){
+      dst.words.push(w);
+      w.forms.forEach(f=>{ n += f.occurrences.length; });
+    } else n += mergeWordRec(dst.words[i], w);
+  });
+  return n;
+}
+
+// idはグローバル一意を前提にせず、lang + id を照合キーとする(言語をまたいだ誤統合を防ぐ)
+function findRootIndex(rec){
+  const i = db.roots.findIndex(x=>x.lang === rec.lang && x.id === rec.id);
+  if(i >= 0) return i;
+  const k = mkRoot(rec);
+  return db.roots.findIndex(x=>x.lang === rec.lang && mkRoot(x) === k);
+}
+
+// 取り込み。既定は追記マージ。"mode":"replace" を付けた語根だけ丸ごと置き換える
+function importRoots(list){
+  const r = {added:0, updated:0, occAdded:0};
+  if(!Array.isArray(list)) return r;
+  list.forEach(raw=>{
+    if(!raw || !raw.root || !raw.lang) return;
+    const rec = normRootRec(raw);
+    const i = findRootIndex(rec);
+    if(i < 0){
+      db.roots.push(rec);
+      r.added++;
+      rec.words.forEach(w=>w.forms.forEach(f=>{ r.occAdded += f.occurrences.length; }));
+    } else if(raw.mode === "replace"){
+      rec.id = db.roots[i].id;
+      db.roots[i] = rec;
+      r.updated++;
+      rec.words.forEach(w=>w.forms.forEach(f=>{ r.occAdded += f.occurrences.length; }));
+    } else {
+      r.occAdded += mergeRootRec(db.roots[i], rec);
+      r.updated++;
+    }
+    if(rec.lang && !db.langs.includes(rec.lang)) db.langs.push(rec.lang);
+  });
+  if(r.added || r.updated) invalidateRootIndex();
+  return r;
+}
+
+function rootCount(lang){ return db.roots.filter(r=>!lang || r.lang === lang).length; }
+
+/* ---------- 言語に紐づくデータの削除 ----------
+   単一言語のデータは削除、複数言語を参照する項目は参照だけ外す、
+   言語に紐づかない共通データは残す。 */
+function obsLangs(o){
+  if(Array.isArray(o.langs) && o.langs.length) return o.langs.map(toNative);
+  return o.lang ? [toNative(o.lang)] : [];
+}
+function langDataCounts(l){
+  const c = {
+    lessons: db.lessons.filter(x=>x.lang===l).length,
+    roots:   db.roots.filter(x=>x.lang===l).length,
+    notes:   db.notes.filter(x=>x.lang===l).length,
+    grammar: db.grammar.filter(x=>x.lang===l).length,
+    favs:    db.favs.filter(x=>x.lang===l).length,
+    observations: 0,
+    // 項目自体は残し、該当言語の参照だけを外すもの
+    grammarRefs: db.grammar.filter(g=>g.lang!==l)
+      .reduce((n,g)=>n + (g.examples||[]).filter(e=>e.lang===l).length, 0),
+    observationRefs: 0
+  };
+  db.observations.forEach(o=>{
+    const ls = obsLangs(o);
+    if(!ls.includes(l)) return;
+    if(ls.length > 1) c.observationRefs++; else c.observations++;
+  });
+  c.total = c.lessons + c.roots + c.notes + c.grammar + c.favs
+          + c.observations + c.grammarRefs + c.observationRefs;
+  return c;
+}
+function langDeleteSummary(c){
+  const del = [];
+  if(c.lessons) del.push("レッスン " + c.lessons + " 件");
+  if(c.roots) del.push("語根 " + c.roots + " 件");
+  if(c.notes) del.push("日本語訳など " + c.notes + " 件");
+  if(c.grammar) del.push("文法 " + c.grammar + " 件");
+  if(c.observations) del.push("気づき " + c.observations + " 件");
+  if(c.favs) del.push("お気に入り " + c.favs + " 件");
+  let msg = del.length ? "削除: " + del.join(" / ") : "削除するデータはありません";
+  const keep = [];
+  if(c.grammarRefs) keep.push("他言語の文法の例文 " + c.grammarRefs + " 件");
+  if(c.observationRefs) keep.push("複数言語の気づき " + c.observationRefs + " 件");
+  if(keep.length) msg += "\n参照のみ除去(項目は残す): " + keep.join(" / ");
+  return msg;
+}
+function deleteLangData(l){
+  db.lessons = db.lessons.filter(x=>x.lang!==l);
+  db.favs    = db.favs.filter(x=>x.lang!==l);
+  db.roots   = db.roots.filter(x=>x.lang!==l);
+  db.notes   = db.notes.filter(x=>x.lang!==l);
+  // 該当言語の文法は削除。他言語の文法は、該当言語の例文参照だけ外す
+  db.grammar = db.grammar.filter(g=>g.lang!==l);
+  db.grammar.forEach(g=>{
+    if(Array.isArray(g.examples)) g.examples = g.examples.filter(e=>e.lang!==l);
+  });
+  db.observations = db.observations.filter(o=>{
+    const ls = obsLangs(o);
+    if(!ls.length) return true;                 // 言語に紐づかない共通データは残す
+    if(!ls.includes(l)) return true;
+    const rest = ls.filter(x=>x!==l);
+    if(!rest.length) return false;              // 単一言語データは削除
+    o.langs = rest;                             // 複数言語参照は参照だけ外す
+    if(o.lang === l) o.lang = rest[0];
+    return true;
+  });
+  invalidateRootIndex();
+}
+
+/* ---------- 語根(Roots)画面 ---------- */
+const FEATURE_JA = {sound:"健全", assimilated:"同化", hollow:"中弱", defective:"欠如",
+                    hamzated:"ハムザ", geminate:"重子音"};
+let rootLangFilter = "";   // "" = 全言語
+let rootMode = "all";      // all | study | review
+let currentRoot = null;
+
+function rootOccCount(r){
+  let n = 0;
+  (r.words||[]).forEach(w=>(w.forms||[]).forEach(f=>{ n += (f.occurrences||[]).length; }));
+  return n;
+}
+function rootLessons(r){
+  const s = new Set();
+  (r.words||[]).forEach(w=>(w.forms||[]).forEach(f=>(f.occurrences||[]).forEach(o=>{
+    if(o.lesson != null) s.add(o.lesson);
+  })));
+  return [...s].sort((a,b)=>a-b);
+}
+function studyWords(r){ return (r.words||[]).filter(w=>w.includeInRootStudy !== false); }
+function rootHasReview(r){
+  return r.status === "needsReview" || (r.words||[]).some(w=>w.status === "needsReview");
+}
+function featureChips(r){
+  return (r.rootFeatures||[]).map(f=>'<span class="rchip">' + esc(FEATURE_JA[f] || f) + '</span>').join("");
+}
+
+/* 本文中の語 → 語根 の索引。取り込み・削除のたびに作り直す */
+let rootTokenIndex = null;
+function invalidateRootIndex(){ rootTokenIndex = null; }
+function buildRootTokenIndex(){
+  const m = {};
+  db.roots.forEach(r=>{
+    (r.words||[]).forEach(w=>(w.forms||[]).forEach(f=>{
+      const k = mkSurface(f);
+      if(!k) return;
+      if(!m[r.lang]) m[r.lang] = new Map();
+      const arr = m[r.lang].get(k) || [];
+      if(!arr.some(x=>x.r===r && x.w===w && x.f===f)) arr.push({r:r, w:w, f:f});
+      m[r.lang].set(k, arr);
+    }));
+  });
+  return m;
+}
+function rootsForToken(lang, token){
+  if(!rootTokenIndex) rootTokenIndex = buildRootTokenIndex();
+  const m = rootTokenIndex[lang];
+  if(!m) return [];
+  return m.get(normArWord(token)) || [];
+}
+// 本文を空白で分け、語根が登録済みの語だけリンクにする(表記はそのまま)
+function phraseHtml(lang, p){
+  if(!db.roots.some(r=>r.lang===lang)) return esc(p);
+  return String(p).split(/(\s+)/).map(t=>{
+    if(!t || /^\s+$/.test(t)) return esc(t);
+    return rootsForToken(lang, t).length
+      ? '<span class="rtok" data-t="' + esc(t) + '">' + esc(t) + '</span>'
+      : esc(t);
+  }).join("");
+}
+function bindRootTokens(row, lang){
+  row.querySelectorAll(".rtok").forEach(sp=>{
+    sp.onclick = (ev)=>{
+      ev.stopPropagation();
+      openRootPopup(rootsForToken(lang, sp.dataset.t), sp.getBoundingClientRect());
+    };
+  });
+}
+
+/* 本文の語をタップしたときのポップアップ */
+function openRootPopup(hits, anchorRect){
+  if(!hits.length) return;
+  trPop.className = "tr-pop";
+  let html = "";
+  hits.forEach((h,i)=>{
+    html += '<div class="tr-src">√ ' + esc(h.r.root) + (h.r.meaning ? ' — ' + esc(h.r.meaning) : "")
+      + (rootHasReview(h.r) ? ' <span class="rchip warn">要確認</span>' : "") + '</div>'
+      + '<div style="font-size:15px; line-height:1.7; margin-bottom:8px">'
+      + '<b>' + esc(h.f.surface) + '</b>'
+      + (h.f.surfaceRoman ? ' <span style="color:var(--sub); font-style:italic">' + esc(h.f.surfaceRoman) + '</span>' : "")
+      + '<br><span style="color:var(--sub); font-size:13px">見出し形 ' + esc(h.w.lemma)
+      + (h.w.meaning ? ' — ' + esc(h.w.meaning) : "")
+      + (h.w.partOfSpeech ? ' · ' + esc(h.w.partOfSpeech) : "") + '</span></div>'
+      + '<button class="rgo btn soft" data-i="' + i + '" style="width:100%; margin-bottom:10px">'
+      + 'この語根のページへ(語 ' + (h.r.words||[]).length + ' / 出現 ' + rootOccCount(h.r) + ')</button>';
+  });
+  html += '<div class="tr-actions"><button class="r-close btn soft">閉じる</button></div>';
+  trPop.innerHTML = html;
+  trPop.style.display = "block";
+  placeTrPop(anchorRect || {left: window.innerWidth/2 - 150, width: 300, bottom: 150, top: 130});
+  trJustOpened = true;
+  setTimeout(()=>{ trJustOpened = false; }, 700);
+  trPop.querySelector(".r-close").onclick = hideTrPop;
+  trPop.querySelectorAll(".rgo").forEach(b=>{
+    b.onclick = ()=>{ hideTrPop(); openRootDetail(hits[Number(b.dataset.i)].r); };
+  });
+}
+
+/* 一覧 */
+function renderRootLangbar(){
+  const bar = $("rootLangbar");
+  bar.innerHTML = "";
+  const langs = db.langs.filter(l=>db.roots.some(r=>r.lang===l));
+  if(langs.length < 2){ bar.style.display = "none"; return; }
+  bar.style.display = "";
+  const mk = (label, val)=>{
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.className = (rootLangFilter===val) ? "on" : "";
+    b.onclick = ()=>{ rootLangFilter = val; renderRoots(); };
+    bar.appendChild(b);
+  };
+  mk("すべて", "");
+  langs.forEach(l=>mk(l, l));
+}
+function renderRoots(){
+  $("rootDetail").style.display = "none";
+  $("rootsList").style.display = "";
+  renderRootLangbar();
+  const q = ($("rootQ").value || "").trim();
+  const nq = normArWord(q);
+  const box = $("rootResults");
+  box.innerHTML = "";
+  let list = db.roots.filter(r=>!rootLangFilter || r.lang===rootLangFilter);
+  if(rootMode === "review") list = list.filter(rootHasReview);
+  if(rootMode === "study") list = list.filter(r=>studyWords(r).length);
+  if(q){
+    list = list.filter(r=>
+      mkRoot(r).includes(nq) || r.root.includes(q) || (r.meaning||"").includes(q)
+      || (r.words||[]).some(w=>mkLemma(w).includes(nq) || w.lemma.includes(q)
+           || (w.meaning||"").includes(q) || (w.lemmaRoman||"").toLowerCase().includes(q.toLowerCase())));
+  }
+  list.sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || mkRoot(a).localeCompare(mkRoot(b)));
+  $("rcount2").textContent = db.roots.length
+    ? list.length + " 件 / 登録 " + db.roots.length + " 件"
+    : "";
+  if(!list.length){
+    box.innerHTML = '<div class="empty-msg">' + (db.roots.length
+      ? "該当する語根はありません。"
+      : "語根はまだ登録されていません。<br>取込タブから roots を含むJSONを読み込めます。") + '</div>';
+    return;
+  }
+  list.forEach(r=>{
+    const ls = rootLessons(r);
+    const row = document.createElement("div");
+    row.className = "result";
+    row.dataset.lang = r.lang;
+    row.innerHTML = '<div class="body">'
+      + '<div class="txt"><b>' + esc(r.root) + '</b>'
+      + (r.meaning ? ' <span style="font-size:14px; color:var(--sub)">' + esc(r.meaning) + '</span>' : "")
+      + '</div>'
+      + '<div class="rchips">' + featureChips(r)
+      + (rootHasReview(r) ? '<span class="rchip warn">要確認</span>' : "") + '</div>'
+      + '<div class="meta">' + esc(r.lang) + ' · 語 ' + (r.words||[]).length
+      + ' · 出現 ' + rootOccCount(r)
+      + (ls.length ? ' · L' + (ls.length>6 ? ls.slice(0,6).join(",") + "…" : ls.join(",")) : "")
+      + '</div></div>';
+    row.onclick = ()=>openRootDetail(r);
+    box.appendChild(row);
+  });
+}
+
+/* 詳細 */
+function openRootDetail(r){
+  currentRoot = r;
+  showTab("tabRoots");
+  $("rootsList").style.display = "none";
+  const box = $("rootDetail");
+  box.style.display = "";
+  let html = '<button class="btn soft" id="rootBack" style="margin-bottom:10px">← 語根一覧へ</button>'
+    + '<div class="card"><div style="font-size:26px; font-weight:700; line-height:1.4; unicode-bidi:plaintext">'
+    + esc(r.root) + '</div>'
+    + '<div class="meta" style="margin-top:4px">' + esc(r.lang)
+    + (r.normalizedRoot ? ' · 照合キー ' + esc(mkRoot(r)) : "") + ' · ' + esc(r.id) + '</div>'
+    + '<div class="rchips">' + featureChips(r)
+    + (r.status==="needsReview" ? '<span class="rchip warn">要確認</span>' : "") + '</div>'
+    + (r.meaning ? '<div style="margin-top:8px; font-size:15px">' + esc(r.meaning) + '</div>' : "")
+    + (r.notes ? '<div style="margin-top:6px; font-size:13.5px; color:var(--sub); line-height:1.7; white-space:pre-wrap">'
+        + esc(r.notes) + '</div>' : "")
+    + '</div>';
+  const words = (r.words||[]).slice().sort((a,b)=>
+    (a.includeInRootStudy===false) - (b.includeInRootStudy===false));
+  words.forEach((w,wi)=>{
+    html += '<div class="card"><div style="font-size:20px; font-weight:600; unicode-bidi:plaintext">'
+      + esc(w.lemma)
+      + (w.lemmaRoman ? ' <span style="font-size:14px; color:var(--sub); font-style:italic">'
+          + esc(w.lemmaRoman) + '</span>' : "") + '</div>'
+      + '<div class="meta">' + [w.meaning, w.partOfSpeech].filter(Boolean).map(esc).join(" · ") + '</div>'
+      + '<div class="rchips">'
+      + (w.status==="needsReview" ? '<span class="rchip warn">要確認</span>' : "")
+      + (w.includeInRootStudy===false ? '<span class="rchip">学習一覧に出さない</span>' : "")
+      + '</div>'
+      + (w.note ? '<div style="font-size:13px; color:var(--sub); margin-top:6px; line-height:1.7">'
+          + esc(w.note) + '</div>' : "");
+    (w.forms||[]).forEach((f,fi)=>{
+      html += '<div class="rform"><div class="rform-head"><span class="rsurface">' + esc(f.surface) + '</span>'
+        + (f.surfaceRoman ? ' <span style="font-size:13px; color:var(--sub); font-style:italic">'
+            + esc(f.surfaceRoman) + '</span>' : "")
+        + ((f.formFeatures||[]).length || f.formNote
+            ? '<div class="meta">' + esc([(f.formFeatures||[]).join(" / "), f.formNote].filter(Boolean).join(" · ")) + '</div>'
+            : "")
+        + '</div>';
+      (f.occurrences||[]).forEach((o,oi)=>{
+        html += '<button class="rocc" data-w="' + wi + '" data-f="' + fi + '" data-o="' + oi + '">'
+          + '<span class="rocc-l">L' + (o.lesson != null ? o.lesson : "?") + '</span>'
+          + '<span class="rocc-t">' + esc(o.text || o.phraseId || "") + '</span></button>';
+      });
+      if(!(f.occurrences||[]).length){
+        html += '<div class="meta" style="padding:4px 0">出現箇所は未登録</div>';
+      }
+      html += '</div>';
+    });
+    if(!(w.forms||[]).length) html += '<div class="meta" style="margin-top:8px">語形は未登録</div>';
+    html += '</div>';
+  });
+  if(!words.length) html += '<div class="empty-msg">語はまだ登録されていません。</div>';
+  box.innerHTML = html;
+  $("rootBack").onclick = ()=>renderRoots();
+  box.querySelectorAll(".rocc").forEach(b=>{
+    b.onclick = ()=>{
+      const o = words[Number(b.dataset.w)].forms[Number(b.dataset.f)].occurrences[Number(b.dataset.o)];
+      if(o.lesson != null) jumpTo(r.lang, o.lesson);
+    };
+  });
+}
+
+
 
 /* ---------- favorites ---------- */
 function favIndex(lang, lesson, text, type){
@@ -405,7 +914,7 @@ function toggleFav(lang, lesson, text, type){
 
 /* ---------- tabs ---------- */
 const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
-               tabImport:"pageImport", tabSettings:"pageSettings"};
+               tabRoots:"pageRoots", tabImport:"pageImport", tabSettings:"pageSettings"};
 function showTab(t){
   $("pageEdit").style.display = "none";
   Object.keys(pages).forEach(k=>{
@@ -415,9 +924,18 @@ function showTab(t){
   if(t==="tabLesson") renderLesson();
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
+  if(t==="tabRoots" && $("rootDetail").style.display === "none") renderRoots();
   if(t==="tabSettings") renderLangs();
 }
 Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
+$("rootQ").oninput = ()=>renderRoots();
+[["rfAll","all"],["rfStudy","study"],["rfReview","review"]].forEach(([id,mode])=>{
+  $(id).onclick = ()=>{
+    rootMode = mode;
+    ["rfAll","rfStudy","rfReview"].forEach(x=>$(x).classList.toggle("on", x===id));
+    renderRoots();
+  };
+});
 function jumpTo(lang, no){
   currentLang = lang; currentNo = no; compareMode = false;
   localStorage.setItem(KEY + ".lang", lang);
@@ -445,7 +963,7 @@ function phraseRow(lang, lesson, p, i){
   const fav = isFav(lang, lesson, p, "phrase");
   const note = getNote(lang, lesson, p);
   row.innerHTML = '<span class="no">' + (i+1) + '</span>'
-    + '<div style="flex:1; min-width:0"><span class="txt">' + esc(p) + '</span>'
+    + '<div style="flex:1; min-width:0"><span class="txt">' + phraseHtml(lang, p) + '</span>'
     + (note && note.roman ? '<div class="roman">' + esc(note.roman) + '</div>' : '')
     + '</div>';
   const hasNote = !!(note && NOTE_FIELDS.some(f=>note[f.key]));
@@ -467,6 +985,7 @@ function phraseRow(lang, lesson, p, i){
   btn.textContent = "★";
   btn.onclick = (ev)=>{ ev.stopPropagation(); toggleFav(lang, lesson, p, "phrase"); btn.classList.toggle("on"); };
   row.appendChild(btn);
+  bindRootTokens(row, lang);
   // フレーズ全体の訳は「訳」ボタンのタップのみで開く(長押し/単語選択と競合させない)
   return row;
 }
@@ -1267,9 +1786,11 @@ function importData(raw, msgEl){
   const list = Array.isArray(data) ? data : (data.lessons || data.entries || []);
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
-     && !Array.isArray(data.grammar) && !Array.isArray(data.observations)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
+     && !Array.isArray(data.roots)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
+  const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
   if(Array.isArray(data.grammar)){
     data.grammar.forEach(g=>{
@@ -1306,13 +1827,19 @@ function importData(raw, msgEl){
     data.observations.forEach(o=>{
       if(!o || !o.text) return;
       if(o.id && db.observations.some(x=>x.id===o.id)) return;
-      db.observations.push({
+      const orec = {
         id: o.id || uid(),
         text: String(o.text),
         lang: o.lang ? toNative(String(o.lang)) : "",
         lesson: (o.lesson!=null && o.lesson!=="") ? Number(o.lesson) : null,
         date: o.date || Date.now()
-      });
+      };
+      // 複数言語を参照する気づきは langs で保持する(言語削除時は参照だけを外す)
+      if(Array.isArray(o.langs) && o.langs.length){
+        orec.langs = [...new Set(o.langs.map(x=>toNative(String(x))))];
+        if(!orec.lang) orec.lang = orec.langs[0];
+      }
+      db.observations.push(orec);
     });
   }
   let notesAdded = 0, notesUpdated = 0;
@@ -1348,9 +1875,16 @@ function importData(raw, msgEl){
     } else { db.lessons.push(rec); added++; }
   });
   save();
-  let msg = "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件";
+  const other = notesAdded || notesUpdated || gAdded || gUpdated || rootRes.added || rootRes.updated;
+  let msg = (added || updated || !other)
+    ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
+    : "取り込み完了:";
   if(notesAdded || notesUpdated) msg += "(日本語訳など: 新規 " + notesAdded + " 件 / 上書き " + notesUpdated + " 件)";
   if(gAdded || gUpdated) msg += "(文法: 新規 " + gAdded + " 件 / 上書き " + gUpdated + " 件)";
+  if(rootRes.added || rootRes.updated){
+    msg += "(語根: 新規 " + rootRes.added + " 件 / 追記 " + rootRes.updated + " 件"
+         + " · 出現箇所 " + rootRes.occAdded + " 件追加)";
+  }
   msgEl.textContent = msg;
   msgEl.className = "msg";
   return true;
@@ -1365,9 +1899,11 @@ function renderLangs(){
   box.innerHTML = "";
   db.langs.forEach((l,i)=>{
     const n = db.lessons.filter(x=>x.lang===l).length;
+    const nr = rootCount(l);
     const row = document.createElement("div");
     row.className = "lang-item";
-    row.innerHTML = '<b>' + esc(l) + '</b><span>' + n + ' レッスン</span>';
+    row.innerHTML = '<b>' + esc(l) + '</b><span>' + n + ' レッスン'
+      + (nr ? ' · 語根 ' + nr : '') + '</span>';
     const ren = document.createElement("button"); ren.textContent = "✎";
     ren.onclick = ()=>{
       const nn = prompt("言語名を変更(表記ゆれの修正など。プレーヤー側と綴りを揃えてください)", l);
@@ -1380,10 +1916,11 @@ function renderLangs(){
     dn.onclick = ()=>{ if(i<db.langs.length-1){ [db.langs[i+1],db.langs[i]]=[db.langs[i],db.langs[i+1]]; save(); renderLangs(); } };
     const del = document.createElement("button"); del.textContent = "×"; del.className = "del";
     del.onclick = ()=>{
-      if(n>0){
-        if(!confirm('「' + l + '」の ' + n + ' レッスン分のデータも削除されます。よろしいですか?')) return;
-        db.lessons = db.lessons.filter(x=>x.lang!==l);
-        db.favs = db.favs.filter(f=>f.lang!==l);
+      const c = langDataCounts(l);
+      if(c.total){
+        if(!confirm("「" + l + "」に紐づく以下のデータも削除されます。\n\n" + langDeleteSummary(c)
+          + "\n\nよろしいですか?")) return;
+        deleteLangData(l);
       }
       db.langs.splice(i,1); save(); renderLangs();
     };
@@ -1400,11 +1937,15 @@ function renameLang(oldName, newName){
   db.lessons.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
   db.notes.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
   db.favs.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
-  db.observations.forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
+  db.observations.forEach(x=>{
+    if(x.lang===oldName) x.lang = newName;
+    if(Array.isArray(x.langs)) x.langs = [...new Set(x.langs.map(l=>l===oldName ? newName : l))];
+  });
   db.grammar.forEach(g=>{
     if(g.lang===oldName) g.lang = newName;
     (g.examples||[]).forEach(e=>{ if(e.lang===oldName) e.lang = newName; });
   });
+  db.roots.forEach(r=>{ if(r.lang===oldName) r.lang = newName; });
   const spd = localStorage.getItem(KEY + ".spd." + oldName);
   if(spd!=null){ localStorage.setItem(KEY + ".spd." + newName, spd); localStorage.removeItem(KEY + ".spd." + oldName); }
   if(currentLang===oldName){ currentLang = newName; localStorage.setItem(KEY + ".lang", newName); }
