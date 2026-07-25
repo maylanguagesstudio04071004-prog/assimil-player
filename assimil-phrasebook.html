@@ -473,6 +473,10 @@ function normOccRec(o){
 function mkRoot(r){ return normArWord(String(r.root || "").replace(/[-\s\u00B7\u30FB]+/g, "")); }
 function mkLemma(w){ return normArWord(w.lemma); }
 function mkSurface(f){ return normArWord(f.surface); }
+// 同一性の判定キー。Unicode正規化の差だけを吸収し、母音記号や表記の違いは別項目として残す
+// (ذَهَبَ「行った」と ذَهَب「金」、أَلْوَالِدُ と ٱلْوَالِدُ を潰さない)
+function mkForm(f){ return String(f.surface || "").normalize("NFC"); }
+function mkWord(w){ return String(w.lemma || "").normalize("NFC"); }
 function occKey(o){
   const k = o.lessonId + "|" + o.phraseId + "|" + (o.tokenIndex != null ? o.tokenIndex : "");
   return k === "||" ? "t:" + normAr(o.text) : k;
@@ -544,8 +548,8 @@ function mergeWordRec(dst, src){
   if(src.status) dst.status = src.status;
   if(src.includeInRootStudy === false) dst.includeInRootStudy = false;
   src.forms.forEach(f=>{
-    const k = mkSurface(f);
-    const i = dst.forms.findIndex(x=>mkSurface(x) === k);
+    const k = mkForm(f);
+    const i = dst.forms.findIndex(x=>mkForm(x) === k);
     if(i < 0){ dst.forms.push(f); n += f.occurrences.length; }
     else n += mergeFormRec(dst.forms[i], f);
   });
@@ -558,8 +562,8 @@ function mergeRootRec(dst, src){
   if(src.rootFeatures.length) dst.rootFeatures = src.rootFeatures;
   if(src.status) dst.status = src.status;
   src.words.forEach(w=>{
-    const k = mkLemma(w);
-    const i = dst.words.findIndex(x=>mkLemma(x) === k);
+    const k = mkWord(w);
+    const i = dst.words.findIndex(x=>mkWord(x) === k);
     if(i < 0){
       dst.words.push(w);
       w.forms.forEach(f=>{ n += f.occurrences.length; });
@@ -720,7 +724,16 @@ function rootsForToken(lang, token){
   if(!rootTokenIndex) rootTokenIndex = buildRootTokenIndex();
   const m = rootTokenIndex[lang];
   if(!m) return [];
-  return m.get(normArWord(token)) || [];
+  const hits = m.get(normArWord(token)) || [];
+  if(hits.length < 2) return hits;
+  const raw = String(token).normalize("NFC").replace(AR_TRIM, "");
+  const exact = hits.filter(h=>mkForm(h.f).replace(AR_TRIM, "") === raw);
+  const pool = exact.length ? exact : hits;
+  const seen = [];
+  return pool.filter(h=>{
+    if(seen.some(x=>x.r === h.r && x.w === h.w)) return false;
+    seen.push(h); return true;
+  });
 }
 // 本文を空白で分け、語根が登録済みの語だけリンクにする(表記はそのまま)
 function phraseHtml(lang, p){
