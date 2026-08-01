@@ -1900,9 +1900,13 @@ function renderFavs(){
   const box = $("favList");
   box.innerHTML = "";
   if(favView==="gram"){
+    // ◇概念は数が少なく言語横断の軸なので、§に埋もれないよう先頭に固める
     const list = db.grammar
       .filter(g=>!favFilter || g.lang===favFilter)
-      .sort((a,b)=>a.topic.localeCompare(b.topic, "ja") || langOrder(a.lang)-langOrder(b.lang));
+      .sort((a,b)=>
+        (a.type==="concept" ? 0 : 1) - (b.type==="concept" ? 0 : 1)
+        || a.topic.localeCompare(b.topic, "ja")
+        || langOrder(a.lang)-langOrder(b.lang));
     if(!list.length){
       const d = document.createElement("div");
       d.className = "empty-msg";
@@ -1917,8 +1921,20 @@ function renderFavs(){
     mbtn.textContent = "🗺 topic × 言語マトリクス";
     mbtn.onclick = openGramMatrix;
     box.appendChild(mbtn);
-    let lastTopic = null;
+    let lastTopic = null, lastType = null;
     list.forEach(g=>{
+      // ◇の塊と§の塊の境目に見出しを1つ入れる
+      const kind = (g.type==="concept") ? "concept" : "grammar";
+      if(kind !== lastType){
+        lastType = kind;
+        const sec = document.createElement("div");
+        sec.className = "small-note";
+        sec.style.cssText = "margin:14px 4px 4px; font-weight:600; color:var(--accent)";
+        sec.textContent = (kind==="concept")
+          ? "◇ 概念 — 各言語が同じことをどう捉えるか"
+          : "§ 文法 — 各言語の中の記述";
+        box.appendChild(sec);
+      }
       if(g.topic !== lastTopic){
         lastTopic = g.topic;
         const h = document.createElement("div");
