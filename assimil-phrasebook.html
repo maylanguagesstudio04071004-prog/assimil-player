@@ -1435,8 +1435,10 @@ function renderLesson(){
     tr.className = "tagrow";
     L.tags.forEach(t=>{
       const b = document.createElement("button");
-      b.textContent = "#" + t;
-      b.onclick = ()=>{ $("q").value = "#" + t; searchType = "tag"; showTab("tabSearch"); };
+      const n = tagLangCount(t);
+      // 2言語以上にまたがるタグは「橋」。何言語つながっているかを肩に出す
+      b.innerHTML = "#" + esc(t) + (n > 1 ? '<span style="font-size:10px; vertical-align:super; margin-left:2px">' + n + '</span>' : '');
+      b.onclick = ()=>openTagPage(t);
       tr.appendChild(b);
     });
     box.appendChild(tr);
@@ -1610,6 +1612,80 @@ function openGramMatrix(){
    語根は db.roots(語根→lemma→語形→出現箇所)に一本化し、√タブが正式な入口。 */
 
 /* ---------- topicページ(文法の全言語比較ビュー) ---------- */
+/* ---------- タグページ(同じ場面を各言語がどう処理するかの並置) ----------
+   L番号で並べる比較(旧compareMode)と違い、タグは意味でつながっているので
+   言語間の橋になる。2026-07-26時点でタグ66個中18個が2言語以上にまたがる。 */
+function tagLangCount(t){
+  return new Set(db.lessons.filter(L=>(L.tags||[]).includes(t)).map(L=>L.lang)).size;
+}
+function openTagPage(tag){
+  const Ls = db.lessons.filter(L=>(L.tags||[]).includes(tag))
+    .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || a.lesson-b.lesson);
+  if(!Ls.length) return;
+  const nLang = new Set(Ls.map(L=>L.lang)).size;
+  const panel = $("mapPanel");
+  panel.innerHTML = '<div class="map-head"><b>#' + esc(tag) + '</b>'
+    + '<span style="font-size:12px; color:var(--sub); flex:none">' + nLang + ' 言語 / ' + Ls.length + ' 課</span>'
+    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  Ls.forEach(L=>{
+    const c = document.createElement("div");
+    c.className = "card";
+    c.style.background = "var(--bg)";
+    const tNote = L.title ? getNote(L.lang, L.lesson, L.title, "title") : null;
+    let html = '<h2>' + esc(L.lang) + ' · L' + L.lesson + '</h2>';
+    if(L.title){
+      html += '<div style="font-size:16px; font-weight:700; line-height:1.5" dir="auto">' + esc(L.title) + '</div>';
+      if(tNote && tNote.roman) html += '<div class="lesson-heading-roman">' + esc(tNote.roman) + '</div>';
+      if(tNote && tNote.ja) html += '<div class="lesson-heading-ja">' + esc(tNote.ja) + '</div>';
+    }
+    c.innerHTML = html;
+    // 冒頭の数文だけ。続きはレッスンへ
+    (L.phrases||[]).slice(0,3).forEach(p=>{
+      const n = getNote(L.lang, L.lesson, p, "phrase");
+      const b = document.createElement("button");
+      b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; padding:9px 11px;"
+        + "border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--text);"
+        + "font-size:14px; line-height:1.55";
+      b.innerHTML = '<span dir="auto" style="unicode-bidi:plaintext">' + esc(p) + '</span>'
+        + (n && n.roman ? '<div style="color:var(--sub); font-size:11.5px; font-style:italic; margin-top:2px">' + esc(n.roman) + '</div>' : '')
+        + (n && n.ja ? '<div style="color:var(--sub); font-size:12px; margin-top:2px">' + esc(n.ja) + '</div>' : '');
+      b.onclick = ()=>{ closeMap(); jumpTo(L.lang, L.lesson); };
+      c.appendChild(b);
+    });
+    const more = (L.phrases||[]).length - 3;
+    const go = document.createElement("button");
+    go.className = "bulk-roman";
+    go.textContent = more > 0 ? ("L" + L.lesson + " を開く(あと " + more + " 文)") : ("L" + L.lesson + " を開く");
+    go.onclick = ()=>{ closeMap(); jumpTo(L.lang, L.lesson); };
+    c.appendChild(go);
+    panel.appendChild(c);
+  });
+  // 他の橋(2言語以上にまたがるタグ)へ渡れるようにしておく
+  const others = [...new Set(db.lessons.flatMap(L=>L.tags||[]))]
+    .filter(t=>t!==tag && tagLangCount(t) > 1)
+    .sort((a,b)=>tagLangCount(b)-tagLangCount(a) || a.localeCompare(b, "ja"));
+  if(others.length){
+    const box = document.createElement("div");
+    box.className = "card";
+    box.style.background = "var(--bg)";
+    box.innerHTML = '<h2>言語をまたぐ他のタグ</h2>';
+    const tr = document.createElement("div");
+    tr.className = "tagrow";
+    tr.style.margin = "0";
+    others.forEach(t=>{
+      const b = document.createElement("button");
+      b.textContent = "#" + t + " " + tagLangCount(t);
+      b.onclick = ()=>openTagPage(t);
+      tr.appendChild(b);
+    });
+    box.appendChild(tr);
+    panel.appendChild(box);
+  }
+  panel.style.display = "block";
+  $("mapBack").style.display = "block";
+  $("mapClose").onclick = closeMap;
+  panel.scrollTop = 0;
+}
 function openTopicPage(topic){
   const entries = db.grammar.filter(g=>g.topic===topic)
     .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || (a.lesson||0)-(b.lesson||0));
@@ -1699,6 +1775,32 @@ function renderSearch(){
   box.innerHTML = "";
   if(!q){
     $("rcount").textContent = "";
+    // #タグ表示のときは、言語をまたぐタグの一覧を出す(言語間の橋の入口)
+    if(searchType==="tag"){
+      const bridges = [...new Set(db.lessons.flatMap(L=>L.tags||[]))]
+        .filter(t=>tagLangCount(t) > 1)
+        .sort((a,b)=>tagLangCount(b)-tagLangCount(a) || a.localeCompare(b, "ja"));
+      if(bridges.length){
+        const c = document.createElement("div");
+        c.className = "card";
+        c.innerHTML = '<h2>言語をまたぐタグ</h2>'
+          + '<div class="small-note" style="margin:0 0 10px">タップすると、そのタグが付いた各言語のレッスンが縦に並びます。</div>';
+        const tr = document.createElement("div");
+        tr.className = "tagrow";
+        tr.style.margin = "0";
+        bridges.forEach(t=>{
+          const b = document.createElement("button");
+          b.innerHTML = "#" + esc(t) + '<span style="font-size:10px; vertical-align:super; margin-left:2px">'
+            + tagLangCount(t) + '</span>';
+          b.onclick = ()=>openTagPage(t);
+          tr.appendChild(b);
+        });
+        c.appendChild(tr);
+        box.appendChild(c);
+        $("rcount").textContent = bridges.length + " 個のタグが2言語以上にまたがっています";
+        return;
+      }
+    }
     box.innerHTML = '<div class="empty-msg">原文または日本語訳の一部を入力すると、全言語・全レッスンから探します。<br>「#挨拶」のように入力するとタグ検索になります。<br>結果をタップすると該当レッスンにジャンプします。</div>';
     return;
   }
