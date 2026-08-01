@@ -35,8 +35,9 @@ header .hlink{position:absolute; right:14px; top:calc(8px + env(safe-area-inset-
   header{padding-top:max(calc(14px + env(safe-area-inset-top)), 64px)}
   header .hlink{top:max(calc(8px + env(safe-area-inset-top)), 58px)}
 }
-.tabs{display:flex; gap:6px; padding:12px 16px}
-.tabs button{flex:1; padding:13px 2px; border:1px solid var(--border); background:var(--card);
+.tabs{display:flex; gap:6px; padding:12px 16px; overflow-x:auto; -webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto; padding:13px 12px; border:1px solid var(--border); background:var(--card);
   color:var(--sub); border-radius:12px; font-size:14px; font-weight:600; white-space:nowrap}
 .tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff}
 main{padding:0 16px 40px; max-width:560px; margin:0 auto}
@@ -127,7 +128,6 @@ input,textarea,select{font-family:inherit}
   display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left}
 .words button .wja{font-size:11px; color:var(--sub); font-weight:400; line-height:1.3}
 .words button .wroman{font-size:11px; color:var(--sub); font-weight:400; font-style:italic; line-height:1.3}
-.words button .wroot{font-size:11px; color:var(--accent); font-weight:600; line-height:1.4; unicode-bidi:plaintext}
 .words button.faved{border-color:var(--star)}
 .words button.faved .wtxt::after{content:" ★"; color:var(--star); font-size:12px}
 .lesson-note{font-size:13px; color:var(--sub); line-height:1.7}
@@ -150,8 +150,9 @@ input,textarea,select{font-family:inherit}
 .result .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0}
 .result .fav.on{color:var(--star)}
 #rcount, #rcount2{font-size:12px; color:var(--sub); margin:6px 4px 10px}
-#rootQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
+#rootQ, #wfQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
   border-radius:12px; background:var(--card); color:var(--text)}
+#wfCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
 .rchips{display:flex; flex-wrap:wrap; gap:5px; margin-top:5px}
 .rchip{font-size:11px; padding:3px 9px; border-radius:12px; background:var(--accent-soft);
   color:var(--accent); font-weight:600}
@@ -227,6 +228,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <button id="tabSearch">検索</button>
   <button id="tabFav">★</button>
   <button id="tabRoots">語根</button>
+  <button id="tabWf">接辞</button>
   <button id="tabImport">取込</button>
   <button id="tabSettings">設定</button>
 </div>
@@ -297,6 +299,21 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="rootResults"></div>
   </div>
   <div id="rootDetail" style="display:none"></div>
+</section>
+
+<!-- 語形成(インドネシア語) -->
+<section id="pageWf" style="display:none">
+  <div id="wfList">
+    <input id="wfQ" type="search" placeholder="基語・派生語・意味・接辞で検索">
+    <div class="filterbar">
+      <button id="wfAll" class="on">すべて</button>
+      <button id="wfDialog">出会った語</button>
+    </div>
+    <div class="langbar" id="wfAffixbar"></div>
+    <div id="wfCount"></div>
+    <div id="wfResults"></div>
+  </div>
+  <div id="wfDetail" style="display:none"></div>
 </section>
 
 <!-- 取り込み -->
@@ -420,6 +437,9 @@ function load(){
   // 語根索引。rootsを持たない従来データも空配列で問題なく読める
   if(!Array.isArray(d.roots)) d.roots = [];
   d.roots.forEach(r=>{ r.lang = toNative(r.lang); });
+  // 語形成(基語→派生語)。今はインドネシア語専用。同じく空配列で従来データも読める
+  if(!Array.isArray(d.bases)) d.bases = [];
+  d.bases.forEach(b=>{ b.lang = toNative(b.lang); });
   return d;
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -735,21 +755,59 @@ function rootsForToken(lang, token){
     seen.push(h); return true;
   });
 }
-// 本文を空白で分け、語根が登録済みの語だけリンクにする(表記はそのまま)
+/* 本文中の語 → 基語(語形成)の索引。語根と同じ役割だが、
+   基語そのものも見出しに含める(bawa も membawa もタップできる) */
+let baseTokenIndex = null;
+function invalidateBaseIndex(){ baseTokenIndex = null; }
+function baseWordKey(s){ return String(s||"").toLowerCase().replace(/[^a-zà-ÿ-]/g, ""); }
+function buildBaseTokenIndex(){
+  const idx = {};
+  db.bases.forEach(b=>{
+    const m = idx[b.lang] || (idx[b.lang] = new Map());
+    const put = (k, w)=>{
+      const key = baseWordKey(k);
+      if(!key) return;
+      if(!m.has(key)) m.set(key, []);
+      if(!m.get(key).some(h=>h.b === b && h.w === w)) m.get(key).push({b, w});
+    };
+    put(b.base, null);
+    (b.words||[]).forEach(w=>put(w.lemma, w));
+  });
+  return idx;
+}
+function basesForToken(lang, token){
+  if(!db.bases.length) return [];
+  if(!baseTokenIndex) baseTokenIndex = buildBaseTokenIndex();
+  const m = baseTokenIndex[lang];
+  if(!m) return [];
+  return m.get(baseWordKey(token)) || [];
+}
+// 本文を空白で分け、語根または基語が登録済みの語だけリンクにする(表記はそのまま)
 function phraseHtml(lang, p){
-  if(!db.roots.some(r=>r.lang===lang)) return esc(p);
+  const hasRoot = db.roots.some(r=>r.lang===lang);
+  const hasBase = db.bases.some(b=>b.lang===lang);
+  if(!hasRoot && !hasBase) return esc(p);
   return String(p).split(/(\s+)/).map(t=>{
     if(!t || /^\s+$/.test(t)) return esc(t);
-    return rootsForToken(lang, t).length
-      ? '<span class="rtok" data-t="' + esc(t) + '">' + esc(t) + '</span>'
-      : esc(t);
+    if(hasRoot && rootsForToken(lang, t).length)
+      return '<span class="rtok" data-t="' + esc(t) + '">' + esc(t) + '</span>';
+    if(hasBase && basesForToken(lang, t).length)
+      return '<span class="rtok btok" data-t="' + esc(t) + '">' + esc(t) + '</span>';
+    return esc(t);
   }).join("");
 }
 function bindRootTokens(row, lang){
-  row.querySelectorAll(".rtok").forEach(sp=>{
+  row.querySelectorAll(".rtok:not(.btok)").forEach(sp=>{
     sp.onclick = (ev)=>{
       ev.stopPropagation();
       openRootPopup(rootsForToken(lang, sp.dataset.t), sp.getBoundingClientRect());
+    };
+  });
+  row.querySelectorAll(".btok").forEach(sp=>{
+    sp.onclick = (ev)=>{
+      ev.stopPropagation();
+      const hits = basesForToken(lang, sp.dataset.t);
+      if(hits.length) openBase(hits[0].b);
     };
   });
 }
@@ -925,9 +983,151 @@ function toggleFav(lang, lesson, text, type){
   save();
 }
 
+/* ---------- 語形成(インドネシア語の接辞) ----------
+   基語(kata dasar)を軸に派生語を束ねる。アラビア語の語根と同型だが、
+   基語そのものが単語として実在する点と、各派生語が「どの接辞で作られたか」を持つ点が違う。
+   他言語に広げるときは、この画面を写すのではなく、その言語の語形成単位で作り直すこと。 */
+let wfAffix = "", wfMode = "all", currentBase = null;
+function wfWords(b){
+  return (b.words||[]).filter(w=>{
+    if(wfMode==="dialog" && w.source!=="dialog") return false;
+    if(wfAffix && w.affix!==wfAffix) return false;
+    return true;
+  });
+}
+function wfOccCount(b){ return (b.words||[]).reduce((n,w)=>n + (w.occurrences||[]).length, 0); }
+function srcMark(s){ return s==="dialog" ? "◎" : (s==="exercise" ? "○" : "·"); }
+function srcLabel(s){ return s==="dialog" ? "本文で出会った" : (s==="exercise" ? "練習文で出会った" : "解説に載っていた"); }
+function renderWfAffixbar(){
+  const bar = $("wfAffixbar");
+  bar.innerHTML = "";
+  const c = new Map();
+  db.bases.forEach(b=>(b.words||[]).forEach(w=>{
+    if(wfMode==="dialog" && w.source!=="dialog") return;
+    c.set(w.affix, (c.get(w.affix)||0) + 1);
+  }));
+  if(!c.size){ bar.style.display = "none"; return; }
+  bar.style.display = "";
+  const mk = (label, val)=>{
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.className = (wfAffix===val) ? "on" : "";
+    b.onclick = ()=>{ wfAffix = val; renderWf(); };
+    bar.appendChild(b);
+  };
+  mk("すべての接辞", "");
+  [...c.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0]))
+    .forEach(([a,n])=>mk(a + " " + n, a));
+}
+function renderWf(){
+  $("wfDetail").style.display = "none";
+  $("wfList").style.display = "";
+  renderWfAffixbar();
+  const q = ($("wfQ").value || "").trim().toLowerCase();
+  const box = $("wfResults");
+  box.innerHTML = "";
+  let list = db.bases.filter(b=>wfWords(b).length);
+  if(q){
+    list = list.filter(b=>
+      b.base.toLowerCase().includes(q) || (b.baseMeaning||"").includes(q)
+      || (b.class||"").includes(q)
+      || wfWords(b).some(w=>w.lemma.toLowerCase().includes(q)
+           || (w.meaning||"").includes(q) || (w.affix||"").toLowerCase().includes(q)));
+  }
+  list.sort((a,b)=>wfWords(b).length - wfWords(a).length || a.base.localeCompare(b.base));
+  $("wfCount").textContent = db.bases.length
+    ? list.length + " 基語 / 派生語 " + list.reduce((n,b)=>n + wfWords(b).length, 0) + " 語"
+    : "";
+  if(!list.length){
+    box.innerHTML = '<div class="empty-msg">' + (db.bases.length
+      ? "該当する基語はありません。"
+      : "語形成はまだ登録されていません。<br>取込タブから bases を含むJSONを読み込めます。") + '</div>';
+    return;
+  }
+  list.forEach(b=>{
+    const ws = wfWords(b);
+    const dia = ws.filter(w=>w.source==="dialog").length;
+    const row = document.createElement("div");
+    row.className = "result";
+    row.dataset.lang = b.lang;
+    row.innerHTML = '<div class="body">'
+      + '<div class="txt"><b>' + esc(b.base) + '</b>'
+      + (b.baseMeaning ? ' <span style="font-size:14px; color:var(--sub)">' + esc(b.baseMeaning) + '</span>' : "")
+      + '</div>'
+      + '<div class="meta">' + esc(b.class || "") + ' · 派生 ' + ws.length + ' 語'
+      + (dia ? ' · ◎本文 ' + dia : "") + '</div>'
+      + '<div class="meta" style="margin-top:3px">'
+      + ws.slice(0,6).map(w=>esc(w.lemma)).join(" · ")
+      + (ws.length>6 ? " …" : "") + '</div></div>';
+    row.onclick = ()=>openBase(b);
+    box.appendChild(row);
+  });
+}
+function openBase(b){
+  currentBase = b;
+  showTab("tabWf");
+  $("wfList").style.display = "none";
+  const box = $("wfDetail");
+  box.style.display = "";
+  const ws = wfWords(b);
+  let html = '<button class="btn soft" id="wfBack" style="margin-bottom:10px">← 語形成一覧へ</button>'
+    + '<div class="card"><div style="font-size:26px; font-weight:700; line-height:1.4">' + esc(b.base) + '</div>'
+    + (b.baseMeaning ? '<div style="margin-top:4px; font-size:15px">' + esc(b.baseMeaning) + '</div>' : "")
+    + '<div class="meta" style="margin-top:4px">' + esc(b.lang) + ' · ' + esc(b.class || "") + '</div>';
+  // 基語そのものが本文に出ていれば、そこへ飛べる(語根と違い基語は単語として実在する)
+  if((b.baseOccurrences||[]).length){
+    html += '<div class="hint" style="margin-top:10px">基語が出てくるレッスン</div><div class="rchips">';
+    b.baseOccurrences.forEach((o,i)=>{
+      html += '<button class="rchip wfjump" data-b="' + i + '">L' + o.lesson + '</button>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  if(b.notes) html += '<div class="card" style="white-space:pre-wrap; font-size:14px; line-height:1.75">' + esc(b.notes) + '</div>';
+  // 接辞ごとにまとめる
+  const byAffix = new Map();
+  ws.forEach(w=>{ if(!byAffix.has(w.affix)) byAffix.set(w.affix, []); byAffix.get(w.affix).push(w); });
+  let wi = 0;
+  const flat = [];
+  byAffix.forEach((arr, affix)=>{
+    html += '<div class="card"><div style="font-weight:700; font-size:15px; margin-bottom:8px">' + esc(affix) + '</div>';
+    arr.forEach(w=>{
+      flat.push(w);
+      html += '<div style="padding:9px 0; border-top:1px solid var(--border)">'
+        + '<div style="font-size:16px"><b>' + esc(w.lemma) + '</b>'
+        + ' <span style="font-size:12px; color:var(--sub)" title="' + esc(srcLabel(w.source)) + '">' + srcMark(w.source) + '</span></div>'
+        + (w.meaning ? '<div style="font-size:13.5px; color:var(--sub); margin-top:2px">' + esc(w.meaning) + '</div>' : "");
+      if((w.occurrences||[]).length){
+        html += '<div class="rchips" style="margin-top:5px">';
+        w.occurrences.forEach((o,oi)=>{
+          html += '<button class="rchip wfocc" data-w="' + wi + '" data-o="' + oi + '">L' + o.lesson
+            + (o.kind==="exercise" ? " 練習" : "") + '</button>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+      wi++;
+    });
+    html += '</div>';
+  });
+  box.innerHTML = html;
+  box.scrollTop = 0;
+  window.scrollTo(0,0);
+  $("wfBack").onclick = ()=>renderWf();
+  box.querySelectorAll(".wfjump").forEach(el=>{
+    el.onclick = ()=>{ const o = b.baseOccurrences[Number(el.dataset.b)]; jumpTo(b.lang, o.lesson); };
+  });
+  box.querySelectorAll(".wfocc").forEach(el=>{
+    el.onclick = ()=>{
+      const o = flat[Number(el.dataset.w)].occurrences[Number(el.dataset.o)];
+      jumpTo(b.lang, o.lesson);
+    };
+  });
+}
+
 /* ---------- tabs ---------- */
 const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
-               tabRoots:"pageRoots", tabImport:"pageImport", tabSettings:"pageSettings"};
+               tabRoots:"pageRoots", tabWf:"pageWf", tabImport:"pageImport", tabSettings:"pageSettings"};
 function showTab(t){
   $("pageEdit").style.display = "none";
   Object.keys(pages).forEach(k=>{
@@ -938,10 +1138,20 @@ function showTab(t){
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
   if(t==="tabRoots" && $("rootDetail").style.display === "none") renderRoots();
+  if(t==="tabWf" && $("wfDetail").style.display === "none") renderWf();
   if(t==="tabSettings") renderLangs();
 }
 Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
 $("rootQ").oninput = ()=>renderRoots();
+$("wfQ").oninput = ()=>renderWf();
+[["wfAll","all"],["wfDialog","dialog"]].forEach(([id,mode])=>{
+  $(id).onclick = ()=>{
+    wfMode = mode;
+    ["wfAll","wfDialog"].forEach(x=>$(x).classList.toggle("on", x===id));
+    wfAffix = "";
+    renderWf();
+  };
+});
 [["rfAll","all"],["rfStudy","study"],["rfReview","review"]].forEach(([id,mode])=>{
   $(id).onclick = ()=>{
     rootMode = mode;
@@ -1009,9 +1219,7 @@ function wordChip(lang, lesson, w){
   const note = getNote(lang, lesson, w, "word");
   b.innerHTML = '<span class="wtxt">' + esc(w) + '</span>'
     + (note && note.roman ? '<span class="wroman">' + esc(note.roman) + '</span>' : '')
-    + (note && note.ja ? '<span class="wja">' + esc(note.ja) + '</span>' : '')
-    + (note && note.root ? '<span class="wroot">√ ' + esc(note.root)
-        + (note.rootLatin ? ' · ' + esc(note.rootLatin) : '') + '</span>' : '');
+    + (note && note.ja ? '<span class="wja">' + esc(note.ja) + '</span>' : '');
   // タップ=お気に入り、長押し(0.5秒)=訳の編集
   let timer = null, longPressed = false;
   b.addEventListener("pointerdown", ()=>{
@@ -1031,14 +1239,6 @@ function wordChip(lang, lesson, w){
     toggleFav(lang, lesson, w, "word");
     b.classList.toggle("faved");
   };
-  const wr = b.querySelector(".wroot");
-  if(wr){
-    wr.addEventListener("click", ev=>{
-      ev.stopPropagation();
-      if(longPressed){ longPressed = false; return; }
-      openRootModal(note.root);
-    });
-  }
   return b;
 }
 function lessonCards(L, withLangTitle){
@@ -1362,99 +1562,8 @@ function openGramMatrix(){
   panel.scrollTop = 0;
 }
 
-/* ---------- √語根(アラビア語内部の語彙ネットワーク) ---------- */
-// アラビア文字部分だけを主キーとして照合(空白・ハイフン・ラテン表記の揺れを無視)
-function arKey(s){ return String(s||"").replace(/[^؀-ۿ]/g, ""); }
-function openRootModal(rootStr){
-  const key = arKey(rootStr);
-  if(!key) return;
-  // 関連語は保存せず毎回計算(語根の修正・削除に自動追従)
-  const items = db.notes
-    .filter(n=>n.type==="word" && n.root && arKey(n.root)===key)
-    .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || (a.lesson||0)-(b.lesson||0));
-  const hub = db.grammar.find(g=>g.type==="root" && arKey(g.topic)===key);
-  const latin = (items.find(n=>n.rootLatin)||{}).rootLatin || "";
-  const panel = $("mapPanel");
-  panel.innerHTML = '<div class="map-head"><b style="unicode-bidi:plaintext">√ ' + esc(rootStr)
-    + (latin ? ' · ' + esc(latin) : '') + '</b>'
-    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
-  if(hub && hub.body){
-    const bdy = document.createElement("div");
-    bdy.style.cssText = "white-space:pre-wrap; font-size:14px; line-height:1.75; margin-bottom:12px";
-    bdy.textContent = hub.body;
-    panel.appendChild(bdy);
-  }
-  const lab = document.createElement("div");
-  lab.className = "hint";
-  lab.style.marginBottom = "8px";
-  lab.textContent = "関連語(" + items.length + ") — タップでレッスンへ";
-  panel.appendChild(lab);
-  items.forEach(n=>{
-    const b = document.createElement("button");
-    b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:11px 13px;"
-      + "border-radius:10px; background:var(--bg); border:1px solid var(--border); color:var(--text);"
-      + "font-size:15px; line-height:1.5";
-    b.innerHTML = '<span style="unicode-bidi:plaintext">' + esc(n.text) + '</span>'
-      + (n.roman ? ' <span style="color:var(--sub); font-size:12px; font-style:italic">' + esc(n.roman) + '</span>' : '')
-      + (n.ja ? '<div style="color:var(--sub); font-size:12px; margin-top:2px">' + esc(n.ja) + '</div>' : '')
-      + '<div style="color:var(--sub); font-size:11px; margin-top:2px">' + esc(n.lang) + ' · L' + n.lesson + '</div>';
-    b.onclick = ()=>{ closeMap(); jumpTo(n.lang, n.lesson); };
-    panel.appendChild(b);
-  });
-  if(hub){
-    const hb = document.createElement("button");
-    hb.className = "bulk-roman";
-    hb.textContent = "√ ハブの詳細(意味領域・関連リンク)";
-    hb.onclick = ()=>openGrammarPopup(hub, hb.getBoundingClientRect());
-    panel.appendChild(hb);
-  }
-  panel.style.display = "block";
-  $("mapBack").style.display = "block";
-  $("mapClose").onclick = closeMap;
-  panel.scrollTop = 0;
-}
-
-// √語根一覧: 既存データから毎回計算。アラビア文字(arKey)で集約し、ラテン表記の揺れは⚠で可視化
-function openRootIndex(){
-  const groups = new Map(); // arKey → {count, rootCounts, latins}
-  db.notes.forEach(n=>{
-    if(n.type!=="word" || !n.root) return;
-    const k = arKey(n.root);
-    if(!k) return;
-    let g = groups.get(k);
-    if(!g){ g = {count:0, rootCounts:new Map(), latins:new Set()}; groups.set(k, g); }
-    g.count++;
-    g.rootCounts.set(n.root, (g.rootCounts.get(n.root)||0)+1);
-    if(n.rootLatin && n.rootLatin.trim()) g.latins.add(n.rootLatin.trim());
-  });
-  if(!groups.size) return;
-  const list = [...groups.entries()].map(([k, g])=>{
-    let disp = "", best = 0;
-    g.rootCounts.forEach((c, raw)=>{ if(c>best){ best = c; disp = raw; } });
-    return {key:k, disp, count:g.count, latins:[...g.latins]};
-  }).sort((a,b)=>b.count-a.count || a.key.localeCompare(b.key));
-  const panel = $("mapPanel");
-  panel.innerHTML = '<div class="map-head"><b>√ 語根一覧(' + list.length + ')</b>'
-    + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
-  list.forEach(r=>{
-    const warn = r.latins.length > 1;
-    const b = document.createElement("button");
-    b.style.cssText = "display:flex; align-items:baseline; gap:8px; width:100%; text-align:left;"
-      + "margin-bottom:8px; padding:12px 13px; border-radius:10px; background:var(--bg);"
-      + "border:1px solid " + (warn ? "var(--danger)" : "var(--border)") + "; color:var(--text); font-size:15px; line-height:1.5";
-    b.innerHTML = '<span style="unicode-bidi:plaintext; font-weight:600; flex:none">√ ' + esc(r.disp) + '</span>'
-      + '<span style="color:' + (warn ? "var(--danger)" : "var(--sub)") + '; font-size:12px; flex:1; min-width:0">'
-      + (r.latins.length ? '· ' + esc(r.latins.join(" / ")) : '')
-      + (warn ? ' ⚠表記が揺れています' : '') + '</span>'
-      + '<span style="color:var(--sub); font-size:12px; flex:none; margin-left:auto">' + r.count + '語</span>';
-    b.onclick = ()=>openRootModal(r.disp);
-    panel.appendChild(b);
-  });
-  panel.style.display = "block";
-  $("mapBack").style.display = "block";
-  $("mapClose").onclick = closeMap;
-  panel.scrollTop = 0;
-}
+/* 旧√語根レイヤー(notes[].root / rootLatin 方式)は2026-07-26に撤去。
+   語根は db.roots(語根→lemma→語形→出現箇所)に一本化し、√タブが正式な入口。 */
 
 /* ---------- topicページ(文法の全言語比較ビュー) ---------- */
 function openTopicPage(topic){
@@ -1556,15 +1665,11 @@ function renderSearch(){
   // フレーズの日本語訳を高速に引けるようマップ化(langlessontext -> ja)
   const jaMap = new Map();
   const wjaMap = new Map();
-  const wrootMap = new Map(); // 単語→語根(検索補助: アラビア文字とラテン両方)
   db.notes.forEach(n=>{
     const k = n.lang + "" + n.lesson + "" + n.text;
     if(n.ja){
       if((n.type||"phrase")==="phrase") jaMap.set(k, n.ja);
       else if(n.type==="word") wjaMap.set(k, n.ja);
-    }
-    if(n.type==="word" && (n.root || n.rootLatin)){
-      wrootMap.set(k, ((n.root||"") + " " + (n.rootLatin||"")).toLowerCase());
     }
   });
   const sorted = [...db.lessons].sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || a.lesson-b.lesson);
@@ -1586,9 +1691,8 @@ function renderSearch(){
       (L.words||[]).forEach(w=>{
         const wk = L.lang + "" + L.lesson + "" + w;
         const ja = wjaMap.get(wk) || "";
-        const rt = wrootMap.get(wk) || "";
         const hitJa = !!ja && ja.includes(q);
-        if(w.toLowerCase().includes(ql) || hitJa || (rt && rt.includes(ql))) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word", ja, hitJa});
+        if(w.toLowerCase().includes(ql) || hitJa) results.push({lang:L.lang, lesson:L.lesson, text:w, type:"word", ja, hitJa});
       });
     }
     if(results.length>=300) break;
@@ -1650,16 +1754,6 @@ function renderFavs(){
   const box = $("favList");
   box.innerHTML = "";
   if(favView==="gram"){
-    // √語根一覧(語根が1件以上登録されているときだけ表示)
-    if(db.notes.some(n=>n.type==="word" && n.root && arKey(n.root))){
-      const rbtn = document.createElement("button");
-      rbtn.className = "bulk-roman";
-      rbtn.style.marginTop = "0";
-      rbtn.style.marginBottom = "12px";
-      rbtn.textContent = "√ 語根一覧";
-      rbtn.onclick = openRootIndex;
-      box.appendChild(rbtn);
-    }
     const list = db.grammar
       .filter(g=>!favFilter || g.lang===favFilter)
       .sort((a,b)=>a.topic.localeCompare(b.topic, "ja") || langOrder(a.lang)-langOrder(b.lang));
@@ -1800,8 +1894,8 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
@@ -1855,14 +1949,16 @@ function importData(raw, msgEl){
       db.observations.push(orec);
     });
   }
-  let notesAdded = 0, notesUpdated = 0;
+  let notesAdded = 0, notesUpdated = 0, notesDeleted = 0;
   if(Array.isArray(data.notes)){
     data.notes.forEach(n=>{
       if(!n || !n.lang || n.lesson==null || !n.text) return;
       const lang = toNative(String(n.lang)), lesson = Number(n.lesson), text = String(n.text);
       const fields = {};
-      Object.keys(n).forEach(k=>{ if(!["lang","lesson","text"].includes(k)) fields[k] = String(n[k]); });
+      Object.keys(n).forEach(k=>{ if(!["lang","lesson","text","delete"].includes(k)) fields[k] = String(n[k]); });
       const i = db.notes.findIndex(x=>x.lang===lang && x.lesson===lesson && x.text===text);
+      // "delete":true は掃除用。本体テキストが書き換わって迷子になった訳を消せる
+      if(n.delete === true){ if(i>=0){ db.notes.splice(i,1); notesDeleted++; } return; }
       if(i>=0){ Object.assign(db.notes[i], fields, {updated:Date.now()}); notesUpdated++; }
       else { db.notes.push({lang, lesson, text, ...fields, updated:Date.now()}); notesAdded++; }
     });
@@ -1887,17 +1983,47 @@ function importData(raw, msgEl){
       db.lessons[i] = rec; updated++;
     } else { db.lessons.push(rec); added++; }
   });
+  // 語形成(基語)。lang+base で照合し、丸ごと差し替える(語根の追記マージより単純でよい)
+  let bAdded = 0, bUpdated = 0;
+  if(Array.isArray(data.bases)){
+    data.bases.forEach(b=>{
+      if(!b || !b.base || !b.lang) return;
+      const rec = {
+        id: b.id || uid(),
+        lang: toNative(String(b.lang)),
+        base: String(b.base),
+        baseMeaning: b.baseMeaning ? String(b.baseMeaning) : "",
+        class: b.class ? String(b.class) : "",
+        status: b.status ? String(b.status) : "confirmed",
+        notes: b.notes ? String(b.notes) : "",
+        baseOccurrences: Array.isArray(b.baseOccurrences) ? b.baseOccurrences : [],
+        words: Array.isArray(b.words) ? b.words.map(w=>({
+          lemma: String(w.lemma || ""),
+          affix: String(w.affix || ""),
+          meaning: w.meaning ? String(w.meaning) : "",
+          source: (w.source==="dialog" || w.source==="exercise") ? w.source : "grammar",
+          occurrences: Array.isArray(w.occurrences) ? w.occurrences : []
+        })).filter(w=>w.lemma) : []
+      };
+      const i = db.bases.findIndex(x=>x.lang===rec.lang && x.base===rec.base);
+      if(i>=0){ rec.id = db.bases[i].id; db.bases[i] = rec; bUpdated++; }
+      else { db.bases.push(rec); bAdded++; }
+    });
+    invalidateBaseIndex();
+  }
   save();
-  const other = notesAdded || notesUpdated || gAdded || gUpdated || rootRes.added || rootRes.updated;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated;
   let msg = (added || updated || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
     : "取り込み完了:";
-  if(notesAdded || notesUpdated) msg += "(日本語訳など: 新規 " + notesAdded + " 件 / 上書き " + notesUpdated + " 件)";
+  if(notesAdded || notesUpdated || notesDeleted) msg += "(日本語訳など: 新規 " + notesAdded + " 件 / 上書き " + notesUpdated + " 件"
+    + (notesDeleted ? " / 掃除 " + notesDeleted + " 件" : "") + ")";
   if(gAdded || gUpdated) msg += "(文法: 新規 " + gAdded + " 件 / 上書き " + gUpdated + " 件)";
   if(rootRes.added || rootRes.updated){
     msg += "(語根: 新規 " + rootRes.added + " 件 / 追記 " + rootRes.updated + " 件"
          + " · 出現箇所 " + rootRes.occAdded + " 件追加)";
   }
+  if(bAdded || bUpdated) msg += "(語形成: 新規 " + bAdded + " 基語 / 上書き " + bUpdated + " 基語)";
   msgEl.textContent = msg;
   msgEl.className = "msg";
   return true;
@@ -1999,14 +2125,8 @@ const LANGCODE = {
 };
 // 将来ここに {key:"memo", label:"自分のメモ"} や {key:"explain", label:"Claudeの解説"} を
 // 追加すれば、ポップアップに自動で入力欄が並ぶ(データ側は既に任意フィールドを保存できる)
-// アラビア語のみ: 語根フィールド(語根はアラビア文字が主キー、ラテンは表示・検索補助)
-const ROOT_FIELDS = [
-  {key:"root", label:"語根(アラビア文字)"},
-  {key:"rootLatin", label:"語根(ラテン表記)"}
-];
-function fieldsFor(lang, type){
-  return (lang==="العربية" && type==="word") ? NOTE_FIELDS.concat(ROOT_FIELDS) : NOTE_FIELDS;
-}
+// 言語・種別ごとに入力欄を出し分けたくなったらここで分岐する(2026-07-26時点は全て共通)
+function fieldsFor(lang, type){ return NOTE_FIELDS; }
 const NOTE_FIELDS = [
   {key:"ja", label:"日本語訳"},
   {key:"roman", label:"読み(ローマ字)"}
