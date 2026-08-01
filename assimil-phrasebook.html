@@ -1070,7 +1070,7 @@ function openBase(b){
   const box = $("wfDetail");
   box.style.display = "";
   const ws = wfWords(b);
-  let html = '<button class="btn soft" id="wfBack" style="margin-bottom:10px">← 語形成一覧へ</button>'
+  let html = '<button class="btn soft" id="wfBack" style="margin-bottom:10px">← 基語一覧へ</button>'
     + '<div class="card"><div style="font-size:26px; font-weight:700; line-height:1.4">' + esc(b.base) + '</div>'
     + (b.baseMeaning ? '<div style="margin-top:4px; font-size:15px">' + esc(b.baseMeaning) + '</div>' : "")
     + '<div class="meta" style="margin-top:4px">' + esc(b.lang) + ' · ' + esc(b.class || "") + '</div>';
