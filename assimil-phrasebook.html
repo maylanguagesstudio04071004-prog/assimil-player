@@ -158,6 +158,8 @@ input,textarea,select{font-family:inherit}
 .cmp-rule .cr-p{font-size:14px; font-weight:700}
 .cmp-rule .cr-e{font-size:14px; margin-top:3px}
 .cmp-rule .cr-m{font-size:12px; color:var(--sub); margin-top:2px}
+.prof-head{font-size:19px; font-weight:700; line-height:1.65; margin-top:2px}
+.prof-note{font-size:13.5px; color:var(--sub); line-height:1.8; margin-top:9px}
 /* 接尾辞: スロットの鎖 */
 .suf-chain{display:flex; flex-wrap:wrap; align-items:flex-end; gap:2px; margin-top:4px}
 .suf-part{display:flex; flex-direction:column; align-items:center; padding:6px 9px;
@@ -274,7 +276,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="lessonActions" style="display:flex; gap:8px; margin-top:12px; align-items:stretch">
       <button class="obs-btn" id="mapBtn" title="カバレッジマップ">🗺</button>
       <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button>
-      <button class="obs-btn" id="wordFormBtn" style="display:none" title="語形成">√</button>
+      <button class="obs-btn" id="wordFormBtn" style="display:none" title="この言語のキモ">✦</button>
     </div>
     <!-- 比較モードのボタンは2026-07-26に撤去(本人が使わないため)。
          compareMode の仕組み自体は残してあるので、下の1行を戻せば復活する:
@@ -312,7 +314,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <!-- 語根 -->
 <section id="pageRoots" style="display:none">
   <div id="rootsList">
-    <button class="btn soft" id="rootsToLesson" style="margin-bottom:12px">← レッスンへ</button>
+    <button class="btn soft" id="rootsToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
     <div class="langbar" id="rootLangbar"></div>
     <input id="rootQ" type="search" placeholder="語根・見出し語・意味で検索">
     <div class="filterbar">
@@ -329,7 +331,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <!-- 語形成(インドネシア語) -->
 <section id="pageWf" style="display:none">
   <div id="wfList">
-    <button class="btn soft" id="wfToLesson" style="margin-bottom:12px">← レッスンへ</button>
+    <button class="btn soft" id="wfToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
     <input id="wfQ" type="search" placeholder="基語・派生語・意味・接辞で検索">
     <div class="filterbar">
       <button id="wfAll" class="on">すべて</button>
@@ -344,7 +346,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <!-- 接尾辞(トルコ語) -->
 <section id="pageSuf" style="display:none">
-  <button class="btn soft" id="sufToLesson" style="margin-bottom:12px">← レッスンへ</button>
+  <button class="btn soft" id="sufToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
   <div id="sufSlots"></div>
   <input id="sufQ" type="search" placeholder="接尾辞・形・意味で検索">
   <div class="filterbar">
@@ -357,13 +359,19 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <!-- 複合語・類別詞(タイ語) -->
 <section id="pageCmp" style="display:none">
-  <button class="btn soft" id="cmpToLesson" style="margin-bottom:12px">← レッスンへ</button>
+  <button class="btn soft" id="cmpToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
   <div class="filterbar">
     <button id="cfCls" class="on">類別詞</button>
     <button id="cfPart">語をつくる語</button>
   </div>
   <div id="cmpCount"></div>
   <div id="cmpList"></div>
+</section>
+
+<!-- この言語のキモ -->
+<section id="pageProf" style="display:none">
+  <button class="btn soft" id="profToLesson" style="margin-bottom:12px">← レッスンへ</button>
+  <div id="profBody"></div>
 </section>
 
 <!-- 取り込み -->
@@ -499,6 +507,9 @@ function load(){
   if(!Array.isArray(d.classifiers)) d.classifiers = [];
   d.classifiers.forEach(c=>{ c.lang = toNative(c.lang); });
   if(!Array.isArray(d.classifierRules)) d.classifierRules = [];
+  // この言語のキモ(言語ごとのプロフィール)
+  if(!Array.isArray(d.profiles)) d.profiles = [];
+  d.profiles.forEach(p=>{ p.lang = toNative(p.lang); });
   return d;
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -1362,7 +1373,7 @@ const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings"};
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
-const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp"];
+const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pageProf"];
 function showTab(t){
   subPages.forEach(p=>$(p).style.display = "none");
   Object.keys(pages).forEach(k=>{
@@ -1384,8 +1395,89 @@ function openSubPage(id){
   subPages.forEach(p=>$(p).style.display = (p===id) ? "" : "none");
   window.scrollTo(0,0);
 }
-// その言語の語形成を開く。単位は言語ごとに違う(阿=語根 / 尼=基語 / 土=接尾辞)
-function openWordFormation(lang){
+/* ---------- この言語のキモ ----------
+   語形成の単位が言語ごとに違うことが分かった(阿=語根/尼=基語/土=接尾辞/泰=語)ので、
+   共通レイヤーは立てず、言語ごとに「効くこと」を一枚にまとめる入口にした。2026-08-02 */
+function profileFor(lang){ return db.profiles.find(p=>p.lang===lang); }
+function openLangProfile(lang){
+  const p = profileFor(lang);
+  if(!p && !hasSpecialView(lang)) return;
+  openSubPage("pageProf");
+  const box = $("profBody");
+  box.innerHTML = "";
+  if(p){
+    const head = document.createElement("div");
+    head.className = "card";
+    head.innerHTML = '<h2>' + esc(lang) + '</h2>'
+      + '<div class="prof-head">' + esc(p.headline) + '</div>'
+      + (p.note ? '<div class="prof-note">' + esc(p.note) + '</div>' : "");
+    box.appendChild(head);
+  }
+  // その言語だけの画面(語根/接辞/接尾辞/複合語・類別詞)への入口
+  const sv = specialLabel(lang);
+  if(sv){
+    const b = document.createElement("button");
+    b.className = "btn full";
+    b.style.marginTop = "0";
+    b.textContent = "√ " + sv + " を見る";
+    b.onclick = ()=>openSpecialView(lang);
+    box.appendChild(b);
+  }
+  // 根拠になる§
+  if(p && (p.picks||[]).length){
+    const c = document.createElement("div");
+    c.className = "card";
+    c.style.marginTop = "14px";
+    c.innerHTML = '<h2>この言語を支えている§</h2>';
+    p.picks.forEach(topic=>{
+      const gs = db.grammar.filter(g=>g.lang===lang && g.topic===topic)
+        .sort((a,b)=>(a.lesson||0)-(b.lesson||0));
+      if(!gs.length) return;
+      const g = gs[0];
+      const b = document.createElement("button");
+      b.className = "suf-ex";
+      b.style.display = "block";
+      b.innerHTML = '<div style="font-size:15px; font-weight:700">' + gMark(g) + ' ' + esc(topic) + '</div>'
+        + '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:3px">'
+        + esc((g.body||"").split("\n")[0].slice(0,80)) + ((g.body||"").length>80 ? "…" : "") + '</div>'
+        + '<div style="font-size:11px; color:var(--sub); margin-top:3px">'
+        + gs.map(x=>'L' + x.lesson).join(" · ") + '</div>';
+      b.onclick = ()=>openGrammarPopup(g, b.getBoundingClientRect());
+      c.appendChild(b);
+    });
+    box.appendChild(c);
+  }
+  // ほかの言語のキモへ渡る
+  const others = db.profiles.filter(x=>x.lang!==lang)
+    .sort((a,b)=>(a.order||0)-(b.order||0));
+  if(others.length){
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<h2>ほかの言語</h2>';
+    const tr = document.createElement("div");
+    tr.className = "tagrow";
+    tr.style.margin = "0";
+    others.forEach(o=>{
+      const b = document.createElement("button");
+      b.textContent = o.lang;
+      b.onclick = ()=>openLangProfile(o.lang);
+      tr.appendChild(b);
+    });
+    c.appendChild(tr);
+    box.appendChild(c);
+  }
+  window.scrollTo(0,0);
+}
+function specialLabel(lang){
+  if(db.roots.some(r=>r.lang===lang)) return "語根";
+  if(db.bases.some(b=>b.lang===lang)) return "接辞";
+  if(db.suffixes.some(s=>s.lang===lang)) return "接尾辞";
+  if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)) return "複合語・類別詞";
+  return "";
+}
+function hasSpecialView(lang){ return !!specialLabel(lang); }
+// その言語の語形成を開く。単位は言語ごとに違う(阿=語根 / 尼=基語 / 土=接尾辞 / 泰=語)
+function openSpecialView(lang){
   if(db.roots.some(r=>r.lang===lang)){
     rootLangFilter = lang;
     openSubPage("pageRoots");
@@ -1403,19 +1495,13 @@ function openWordFormation(lang){
     renderCmp();
   }
 }
-function wfLabel(lang){
-  if(db.roots.some(r=>r.lang===lang)) return "語根";
-  if(db.bases.some(b=>b.lang===lang)) return "接辞";
-  if(db.suffixes.some(s=>s.lang===lang)) return "接尾辞";
-  if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)) return "複合語・類別詞";
-  return "";
-}
-function hasWordFormation(lang){ return !!wfLabel(lang); }
-$("wordFormBtn").onclick = ()=>openWordFormation(currentLang);
-$("rootsToLesson").onclick = ()=>showTab("tabLesson");
-$("wfToLesson").onclick = ()=>showTab("tabLesson");
-$("sufToLesson").onclick = ()=>showTab("tabLesson");
-$("cmpToLesson").onclick = ()=>showTab("tabLesson");
+function hasWordFormation(lang){ return !!profileFor(lang) || hasSpecialView(lang); }
+$("wordFormBtn").onclick = ()=>openLangProfile(currentLang);
+$("rootsToLesson").onclick = ()=>openLangProfile(currentLang);
+$("wfToLesson").onclick = ()=>openLangProfile(currentLang);
+$("sufToLesson").onclick = ()=>openLangProfile(currentLang);
+$("cmpToLesson").onclick = ()=>openLangProfile(currentLang);
+$("profToLesson").onclick = ()=>showTab("tabLesson");
 [["cfCls","cls"],["cfPart","part"]].forEach(([id,v])=>{
   $(id).onclick = ()=>{ cmpView = v; renderCmp(); };
 });
@@ -1613,7 +1699,7 @@ function renderLesson(){
   const wfb = $("wordFormBtn");
   if(!compareMode && hasWordFormation(currentLang)){
     wfb.style.display = "";
-    wfb.title = wfLabel(currentLang);
+    wfb.title = "この言語のキモ";
   } else {
     wfb.style.display = "none";
   }
@@ -2304,8 +2390,8 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
@@ -2467,8 +2553,21 @@ function importData(raw, msgEl){
     });
   }
   if(Array.isArray(data.classifierRules) && data.classifierRules.length) db.classifierRules = data.classifierRules;
+  // この言語のキモ
+  let fAdded = 0, fUpdated = 0;
+  if(Array.isArray(data.profiles)){
+    data.profiles.forEach(p=>{
+      if(!p || !p.lang || !p.headline) return;
+      const rec = {id: p.id || uid(), lang: toNative(String(p.lang)), order: Number(p.order) || 0,
+        headline: String(p.headline), note: p.note ? String(p.note) : "",
+        picks: Array.isArray(p.picks) ? p.picks.map(String) : []};
+      const i = db.profiles.findIndex(x=>x.lang===rec.lang);
+      if(i>=0){ rec.id = db.profiles[i].id; db.profiles[i] = rec; fUpdated++; }
+      else { db.profiles.push(rec); fAdded++; }
+    });
+  }
   save();
-  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated;
   let msg = (added || updated || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
     : "取り込み完了:";
@@ -2483,6 +2582,7 @@ function importData(raw, msgEl){
   if(sAdded || sUpdated) msg += "(接尾辞: 新規 " + sAdded + " 個 / 上書き " + sUpdated + " 個)";
   if(pAdded || pUpdated) msg += "(語をつくる語: 新規 " + pAdded + " 個 / 上書き " + pUpdated + " 個)";
   if(cAdded || cUpdated) msg += "(類別詞: 新規 " + cAdded + " 個 / 上書き " + cUpdated + " 個)";
+  if(fAdded || fUpdated) msg += "(この言語のキモ: 新規 " + fAdded + " 言語 / 上書き " + fUpdated + " 言語)";
   msgEl.textContent = msg;
   msgEl.className = "msg";
   return true;
