@@ -248,11 +248,13 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <div id="seekTime">0:00 / 0:00</div>
     </div>
     <div style="display:flex; gap:8px; margin-top:12px; align-items:stretch">
-      <button class="compare-btn" id="compareBtn" style="margin-top:0; flex:1">全言語でこのレッスンを見る</button>
       <button class="obs-btn" id="mapBtn" title="カバレッジマップ">🗺</button>
       <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button>
       <button class="obs-btn" id="wordFormBtn" style="display:none" title="語形成">√</button>
     </div>
+    <!-- 比較モードのボタンは2026-07-26に撤去(本人が使わないため)。
+         compareMode の仕組み自体は残してあるので、下の1行を戻せば復活する:
+         <button class="compare-btn" id="compareBtn" style="margin-top:0; flex:1">全言語でこのレッスンを見る</button> -->
     <div class="week-strip" id="weekStrip"></div>
   </div>
   <div id="content"></div>
@@ -1347,9 +1349,11 @@ function renderLesson(){
   renderLangbar();
   $("lessonNo").value = currentNo;
   localStorage.setItem(KEY + ".no", currentNo);
-  const cmp = $("compareBtn");
-  cmp.textContent = compareMode ? "1言語表示に戻る" : "全言語でこのレッスンを見る";
-  cmp.className = "compare-btn" + (compareMode ? " on" : "");
+  const cmp = $("compareBtn");   // ボタンは撤去済み。復活させたときだけ効く
+  if(cmp){
+    cmp.textContent = compareMode ? "1言語表示に戻る" : "全言語でこのレッスンを見る";
+    cmp.className = "compare-btn" + (compareMode ? " on" : "");
+  }
   const box = $("content");
   box.innerHTML = "";
 
@@ -1640,7 +1644,7 @@ $("lessonNo").addEventListener("change", ()=>{
   const v = Math.max(1, Math.floor(Number($("lessonNo").value) || 1));
   currentNo = v; renderLesson();
 });
-$("compareBtn").onclick = ()=>{ compareMode = !compareMode; renderLesson(); };
+if($("compareBtn")) $("compareBtn").onclick = ()=>{ compareMode = !compareMode; renderLesson(); };
 
 /* ---------- search ---------- */
 function highlight(text, q){
