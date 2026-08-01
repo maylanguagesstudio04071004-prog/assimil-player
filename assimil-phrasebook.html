@@ -151,9 +151,27 @@ input,textarea,select{font-family:inherit}
 .result .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0}
 .result .fav.on{color:var(--star)}
 #rcount, #rcount2{font-size:12px; color:var(--sub); margin:6px 4px 10px}
-#rootQ, #wfQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
+#rootQ, #wfQ, #sufQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
   border-radius:12px; background:var(--card); color:var(--text)}
-#wfCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+#wfCount, #sufCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+/* 接尾辞: スロットの鎖 */
+.suf-chain{display:flex; flex-wrap:wrap; align-items:flex-end; gap:2px; margin-top:4px}
+.suf-part{display:flex; flex-direction:column; align-items:center; padding:6px 9px;
+  border-radius:9px; background:var(--accent-soft); color:var(--accent); font-size:16px; font-weight:700}
+.suf-part.stem{background:var(--accent); color:#fff}
+.suf-part b{font-size:9.5px; font-weight:600; opacity:.8; margin-top:2px}
+.suf-plus{align-self:center; color:var(--sub); font-size:14px; padding-bottom:12px}
+.suf-chain-ja{font-size:13px; color:var(--sub); margin-top:6px}
+.suf-forms{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
+.suf-forms span{font-size:13px; font-weight:600; padding:3px 9px; border-radius:11px;
+  background:var(--bg); border:1px solid var(--border); color:var(--text)}
+.suf-ex{display:flex; flex-wrap:wrap; align-items:baseline; gap:7px; width:100%; text-align:left;
+  margin-top:7px; padding:8px 10px; border-radius:9px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); font-size:14px; line-height:1.5}
+.suf-ex .sx-w{font-weight:700}
+.suf-ex .sx-p{font-size:12px; color:var(--accent)}
+.suf-ex .sx-m{font-size:12px; color:var(--sub); flex:1; min-width:0}
+.suf-ex .sx-l{font-size:11px; color:var(--sub); margin-left:auto; flex:none}
 .rchips{display:flex; flex-wrap:wrap; gap:5px; margin-top:5px}
 .rchip{font-size:11px; padding:3px 9px; border-radius:12px; background:var(--accent-soft);
   color:var(--accent); font-weight:600}
@@ -320,6 +338,19 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div id="wfDetail" style="display:none"></div>
 </section>
 
+<!-- 接尾辞(トルコ語) -->
+<section id="pageSuf" style="display:none">
+  <button class="btn soft" id="sufToLesson" style="margin-bottom:12px">← レッスンへ</button>
+  <div id="sufSlots"></div>
+  <input id="sufQ" type="search" placeholder="接尾辞・形・意味で検索">
+  <div class="filterbar">
+    <button id="sfNoun" class="on">名詞に付く</button>
+    <button id="sfVerb">動詞に付く</button>
+  </div>
+  <div id="sufCount"></div>
+  <div id="sufList"></div>
+</section>
+
 <!-- 取り込み -->
 <section id="pageImport" style="display:none">
   <div class="card">
@@ -444,6 +475,9 @@ function load(){
   // 語形成(基語→派生語)。今はインドネシア語専用。同じく空配列で従来データも読める
   if(!Array.isArray(d.bases)) d.bases = [];
   d.bases.forEach(b=>{ b.lang = toNative(b.lang); });
+  // 接尾辞(スロット順)。今はトルコ語専用
+  if(!Array.isArray(d.suffixes)) d.suffixes = [];
+  d.suffixes.forEach(s=>{ s.lang = toNative(s.lang); });
   return d;
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -1129,12 +1163,99 @@ function openBase(b){
   });
 }
 
+/* ---------- 接尾辞(トルコ語) ----------
+   膠着語なので主役は接尾辞そのもの。個々の意味より「どの順に付くか」が要なので、
+   スロット表を頭に置き、一覧も語幹に近い順に並べる。
+   ev-ler-im-de = 語幹-複数-所有-格 */
+let sufGroup = "名詞";
+function sufLangs(){ return [...new Set(db.suffixes.map(s=>s.lang))]; }
+function renderSufSlots(){
+  const box = $("sufSlots");
+  const list = db.suffixes.filter(s=>s.group===sufGroup);
+  const slots = [];
+  list.forEach(s=>{ if(!slots.some(x=>x.slot===s.slot)) slots.push({slot:s.slot, order:s.slotOrder}); });
+  slots.sort((a,b)=>a.order-b.order);
+  const sample = sufGroup==="名詞"
+    ? {word:"ev-ler-im-de", ja:"私の家々で", parts:["ev","ler","im","de"], labels:["語幹","複数","所有","格"]}
+    : {word:"gel-mi-yor-um", ja:"私は来ない", parts:["gel","mi","yor","um"], labels:["語幹","否定","時制","人称"]};
+  box.innerHTML = '<div class="card"><h2>付く順番</h2>'
+    + '<div class="suf-chain">'
+    + '<span class="suf-part stem">' + esc(sample.parts[0]) + '<b>' + esc(sample.labels[0]) + '</b></span>'
+    + sample.parts.slice(1).map((p,i)=>
+        '<span class="suf-plus">-</span><span class="suf-part">' + esc(p)
+        + '<b>' + esc(sample.labels[i+1]) + '</b></span>').join("")
+    + '</div>'
+    + '<div class="suf-chain-ja">' + esc(sample.ja) + '</div>'
+    + '<div class="hint">スロットの順番は入れ替わらない</div>'
+    + '<div class="rchips" style="margin-top:10px">'
+    + slots.map(s=>'<span class="rchip">' + s.order + ' ' + esc(s.slot) + '</span>').join("")
+    + '</div></div>';
+}
+function renderSuf(){
+  ["sfNoun","sfVerb"].forEach(id=>$(id).classList.toggle("on",
+    (id==="sfNoun" && sufGroup==="名詞") || (id==="sfVerb" && sufGroup==="動詞")));
+  renderSufSlots();
+  const q = ($("sufQ").value || "").trim().toLowerCase();
+  const box = $("sufList");
+  box.innerHTML = "";
+  let list = db.suffixes.filter(s=>s.group===sufGroup);
+  if(q){
+    list = list.filter(s=>
+      s.name.toLowerCase().includes(q) || (s.gloss||"").includes(q) || (s.note||"").includes(q)
+      || (s.forms||[]).some(f=>f.toLowerCase().includes(q))
+      || (s.examples||[]).some(e=>e.surface.toLowerCase().includes(q) || (e.meaning||"").includes(q)));
+  }
+  list.sort((a,b)=>a.slotOrder-b.slotOrder || a.name.localeCompare(b.name, "ja"));
+  $("sufCount").textContent = list.length + " 個 / 実例 "
+    + list.reduce((n,s)=>n + (s.examples||[]).length, 0) + " 語";
+  if(!list.length){
+    box.innerHTML = '<div class="empty-msg">' + (db.suffixes.length
+      ? "該当する接尾辞はありません。"
+      : "接尾辞はまだ登録されていません。<br>取込タブから suffixes を含むJSONを読み込めます。") + '</div>';
+    return;
+  }
+  let lastSlot = null;
+  list.forEach(s=>{
+    if(s.slot !== lastSlot){
+      lastSlot = s.slot;
+      const h = document.createElement("div");
+      h.className = "small-note";
+      h.style.cssText = "margin:16px 4px 6px; font-weight:600; color:var(--accent)";
+      h.textContent = s.slotOrder + ". " + s.slot;
+      box.appendChild(h);
+    }
+    const c = document.createElement("div");
+    c.className = "card";
+    const dia = (s.examples||[]).filter(e=>e.source==="dialog").length;
+    c.innerHTML = '<div style="font-size:17px; font-weight:700">' + esc(s.name) + '</div>'
+      + '<div class="suf-forms">' + (s.forms||[]).map(f=>'<span>' + esc(f) + '</span>').join("") + '</div>'
+      + (s.gloss ? '<div style="font-size:14px; margin-top:7px">' + esc(s.gloss) + '</div>' : "")
+      + (s.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(s.note) + '</div>' : "")
+      + '<div class="meta" style="margin-top:6px">'
+      + ((s.lessons||[]).length ? 'L' + s.lessons.join(", L") : "")
+      + (dia ? ' · ◎本文 ' + dia : "") + '</div>';
+    (s.examples||[]).forEach(e=>{
+      const b = document.createElement("button");
+      b.className = "suf-ex";
+      b.innerHTML = '<span class="sx-w">' + esc(e.surface) + '</span>'
+        + '<span class="sx-p">' + esc(e.parse || "") + '</span>'
+        + (e.meaning ? '<span class="sx-m">' + esc(e.meaning) + '</span>' : "")
+        + (e.source==="dialog" ? '<span class="sx-l">◎L' + e.lesson + '</span>' : "");
+      if(e.lesson != null) b.onclick = ()=>jumpTo(s.lang, e.lesson);
+      else b.style.cursor = "default";
+      c.appendChild(b);
+    });
+    box.appendChild(c);
+  });
+  window.scrollTo(0,0);
+}
+
 /* ---------- tabs ---------- */
 const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings"};
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
-const subPages = ["pageEdit", "pageRoots", "pageWf"];
+const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf"];
 function showTab(t){
   subPages.forEach(p=>$(p).style.display = "none");
   Object.keys(pages).forEach(k=>{
@@ -1156,7 +1277,7 @@ function openSubPage(id){
   subPages.forEach(p=>$(p).style.display = (p===id) ? "" : "none");
   window.scrollTo(0,0);
 }
-// その言語に登録があるものを開く(両方あれば語根を優先)
+// その言語の語形成を開く。単位は言語ごとに違う(阿=語根 / 尼=基語 / 土=接尾辞)
 function openWordFormation(lang){
   if(db.roots.some(r=>r.lang===lang)){
     rootLangFilter = lang;
@@ -1167,14 +1288,26 @@ function openWordFormation(lang){
     openSubPage("pageWf");
     $("wfDetail").style.display = "none";
     renderWf();
+  } else if(db.suffixes.some(s=>s.lang===lang)){
+    openSubPage("pageSuf");
+    renderSuf();
   }
 }
-function hasWordFormation(lang){
-  return db.roots.some(r=>r.lang===lang) || db.bases.some(b=>b.lang===lang);
+function wfLabel(lang){
+  if(db.roots.some(r=>r.lang===lang)) return "語根";
+  if(db.bases.some(b=>b.lang===lang)) return "接辞";
+  if(db.suffixes.some(s=>s.lang===lang)) return "接尾辞";
+  return "";
 }
+function hasWordFormation(lang){ return !!wfLabel(lang); }
 $("wordFormBtn").onclick = ()=>openWordFormation(currentLang);
 $("rootsToLesson").onclick = ()=>showTab("tabLesson");
 $("wfToLesson").onclick = ()=>showTab("tabLesson");
+$("sufToLesson").onclick = ()=>showTab("tabLesson");
+$("sufQ").oninput = ()=>renderSuf();
+[["sfNoun","名詞"],["sfVerb","動詞"]].forEach(([id,grp])=>{
+  $(id).onclick = ()=>{ sufGroup = grp; renderSuf(); };
+});
 $("rootQ").oninput = ()=>renderRoots();
 $("wfQ").oninput = ()=>renderWf();
 [["wfAll","all"],["wfDialog","dialog"]].forEach(([id,mode])=>{
@@ -1365,7 +1498,7 @@ function renderLesson(){
   const wfb = $("wordFormBtn");
   if(!compareMode && hasWordFormation(currentLang)){
     wfb.style.display = "";
-    wfb.title = db.roots.some(r=>r.lang===currentLang) ? "語根" : "接辞";
+    wfb.title = wfLabel(currentLang);
   } else {
     wfb.style.display = "none";
   }
@@ -2056,8 +2189,8 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
@@ -2173,8 +2306,31 @@ function importData(raw, msgEl){
     });
     invalidateBaseIndex();
   }
+  // 接尾辞(スロット順)。lang+name で照合して丸ごと差し替える
+  let sAdded = 0, sUpdated = 0;
+  if(Array.isArray(data.suffixes)){
+    data.suffixes.forEach(s=>{
+      if(!s || !s.name || !s.lang) return;
+      const rec = {
+        id: s.id || uid(),
+        lang: toNative(String(s.lang)),
+        group: s.group ? String(s.group) : "",
+        slot: s.slot ? String(s.slot) : "",
+        slotOrder: Number(s.slotOrder) || 0,
+        name: String(s.name),
+        forms: Array.isArray(s.forms) ? s.forms.map(String) : [],
+        gloss: s.gloss ? String(s.gloss) : "",
+        note: s.note ? String(s.note) : "",
+        lessons: Array.isArray(s.lessons) ? s.lessons.map(Number) : [],
+        examples: Array.isArray(s.examples) ? s.examples : []
+      };
+      const i = db.suffixes.findIndex(x=>x.lang===rec.lang && x.name===rec.name);
+      if(i>=0){ rec.id = db.suffixes[i].id; db.suffixes[i] = rec; sUpdated++; }
+      else { db.suffixes.push(rec); sAdded++; }
+    });
+  }
   save();
-  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated;
   let msg = (added || updated || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
     : "取り込み完了:";
@@ -2186,6 +2342,7 @@ function importData(raw, msgEl){
          + " · 出現箇所 " + rootRes.occAdded + " 件追加)";
   }
   if(bAdded || bUpdated) msg += "(語形成: 新規 " + bAdded + " 基語 / 上書き " + bUpdated + " 基語)";
+  if(sAdded || sUpdated) msg += "(接尾辞: 新規 " + sAdded + " 個 / 上書き " + sUpdated + " 個)";
   msgEl.textContent = msg;
   msgEl.className = "msg";
   return true;
