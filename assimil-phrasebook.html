@@ -153,7 +153,7 @@ input,textarea,select{font-family:inherit}
 #rcount, #rcount2{font-size:12px; color:var(--sub); margin:6px 4px 10px}
 #rootQ, #wfQ, #sufQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
   border-radius:12px; background:var(--card); color:var(--text)}
-#wfCount, #sufCount, #cmpCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+#wfCount, #sufCount, #cmpCount, #preCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
 .cmp-rule{padding:8px 0; border-top:1px solid var(--border)}
 .cmp-rule .cr-p{font-size:14px; font-weight:700}
 .cmp-rule .cr-e{font-size:14px; margin-top:3px}
@@ -368,6 +368,18 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div id="cmpList"></div>
 </section>
 
+<!-- 分離・非分離動詞(ドイツ語) -->
+<section id="pagePre" style="display:none">
+  <button class="btn soft" id="preToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
+  <div id="preRules"></div>
+  <div class="filterbar">
+    <button id="pfSep" class="on">分離する</button>
+    <button id="pfIns">分離しない</button>
+  </div>
+  <div id="preCount"></div>
+  <div id="preList"></div>
+</section>
+
 <!-- この言語のキモ -->
 <section id="pageProf" style="display:none">
   <button class="btn soft" id="profToLesson" style="margin-bottom:12px">← レッスンへ</button>
@@ -507,6 +519,10 @@ function load(){
   if(!Array.isArray(d.classifiers)) d.classifiers = [];
   d.classifiers.forEach(c=>{ c.lang = toNative(c.lang); });
   if(!Array.isArray(d.classifierRules)) d.classifierRules = [];
+  // 前綴り動詞(分離・非分離)。今はドイツ語専用
+  if(!Array.isArray(d.prefixes)) d.prefixes = [];
+  d.prefixes.forEach(p=>{ p.lang = toNative(p.lang); });
+  if(!Array.isArray(d.prefixRules)) d.prefixRules = [];
   // この言語のキモ(言語ごとのプロフィール)
   if(!Array.isArray(d.profiles)) d.profiles = [];
   d.profiles.forEach(p=>{ p.lang = toNative(p.lang); });
@@ -1373,7 +1389,7 @@ const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings"};
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
-const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pageProf"];
+const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageProf"];
 function showTab(t){
   subPages.forEach(p=>$(p).style.display = "none");
   Object.keys(pages).forEach(k=>{
@@ -1395,6 +1411,64 @@ function openSubPage(id){
   subPages.forEach(p=>$(p).style.display = (p===id) ? "" : "none");
   window.scrollTo(0,0);
 }
+/* ---------- 分離・非分離動詞(ドイツ語) ----------
+   語形成の第5言語目。節点は前綴りだが、トルコ語の接尾辞と違って
+   「動詞にくっついたまま動くか、文末へ飛ぶか」という振る舞いの差が主役。
+   この言語のキモ「動詞は2番目に立ち、残りは文末へ送られる」の語彙側の顔。 */
+let preKind = "分離";
+function renderPre(){
+  $("pfSep").classList.toggle("on", preKind==="分離");
+  $("pfIns").classList.toggle("on", preKind==="非分離");
+  const rb = $("preRules");
+  rb.innerHTML = "";
+  const rules = db.prefixRules.filter(r=>r.kind===preKind);
+  if(rules.length){
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<h2>ふるまい</h2>'
+      + rules.map(r=>'<div class="cmp-rule"><div class="cr-p">' + esc(r.pattern) + '</div>'
+          + '<div class="cr-e">' + esc(r.example) + '</div>'
+          + (r.meaning ? '<div class="cr-m">' + esc(r.meaning) + '</div>' : '') + '</div>').join("");
+    rb.appendChild(c);
+  }
+  const box = $("preList");
+  box.innerHTML = "";
+  const list = db.prefixes.filter(p=>p.kind===preKind);
+  $("preCount").textContent = list.length + " 個 / 動詞 "
+    + list.reduce((n,p)=>n + (p.verbs||[]).length, 0) + " 語";
+  if(!list.length){
+    box.innerHTML = '<div class="empty-msg">前綴りはまだ登録されていません。</div>';
+    return;
+  }
+  list.forEach(p=>{
+    const c = document.createElement("div");
+    c.className = "card";
+    const dia = (p.verbs||[]).filter(v=>v.source==="dialog").length;
+    c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px">'
+      + '<span style="font-size:22px; font-weight:700">' + esc(p.prefix) + '</span>'
+      + '<span style="font-size:15px">' + esc(p.gloss || "") + '</span></div>'
+      + (p.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(p.note) + '</div>' : '')
+      + '<div class="meta" style="margin-top:5px">' + ((p.lessons||[]).length ? 'L' + p.lessons.join(", L") : '')
+      + (dia ? ' · ◎本文 ' + dia : '') + '</div>';
+    (p.verbs||[]).forEach(v=>{
+      const b = document.createElement("button");
+      b.className = "suf-ex";
+      b.style.display = "block";
+      b.innerHTML = '<div><span style="font-size:16px; font-weight:700">' + esc(v.verb) + '</span>'
+        + (v.meaning ? ' <span style="font-size:13px">' + esc(v.meaning) + '</span>' : '') + '</div>'
+        + (v.split ? '<div style="font-size:12.5px; color:var(--accent); margin-top:2px">' + esc(v.split) + '</div>' : '')
+        + (v.text ? '<div style="font-size:13px; color:var(--sub); margin-top:3px; line-height:1.5">' + esc(v.text) + '</div>' : '')
+        + (v.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(v.ja) + '</div>' : '')
+        + (v.lesson != null ? '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + v.lesson + '</div>' : '');
+      if(v.lesson != null) b.onclick = ()=>jumpTo(p.lang, v.lesson);
+      else b.style.cursor = "default";
+      c.appendChild(b);
+    });
+    box.appendChild(c);
+  });
+  window.scrollTo(0,0);
+}
+
 /* ---------- この言語のキモ ----------
    語形成の単位が言語ごとに違うことが分かった(阿=語根/尼=基語/土=接尾辞/泰=語)ので、
    共通レイヤーは立てず、言語ごとに「効くこと」を一枚にまとめる入口にした。2026-08-02 */
@@ -1473,6 +1547,7 @@ function specialLabel(lang){
   if(db.bases.some(b=>b.lang===lang)) return "接辞";
   if(db.suffixes.some(s=>s.lang===lang)) return "接尾辞";
   if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)) return "複合語・類別詞";
+  if(db.prefixes.some(p=>p.lang===lang)) return "分離・非分離動詞";
   return "";
 }
 function hasSpecialView(lang){ return !!specialLabel(lang); }
@@ -1493,6 +1568,9 @@ function openSpecialView(lang){
   } else if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)){
     openSubPage("pageCmp");
     renderCmp();
+  } else if(db.prefixes.some(p=>p.lang===lang)){
+    openSubPage("pagePre");
+    renderPre();
   }
 }
 function hasWordFormation(lang){ return !!profileFor(lang) || hasSpecialView(lang); }
@@ -1502,6 +1580,10 @@ $("wfToLesson").onclick = ()=>openLangProfile(currentLang);
 $("sufToLesson").onclick = ()=>openLangProfile(currentLang);
 $("cmpToLesson").onclick = ()=>openLangProfile(currentLang);
 $("profToLesson").onclick = ()=>showTab("tabLesson");
+$("preToLesson").onclick = ()=>openLangProfile(currentLang);
+[["pfSep","分離"],["pfIns","非分離"]].forEach(([id,k])=>{
+  $(id).onclick = ()=>{ preKind = k; renderPre(); };
+});
 [["cfCls","cls"],["cfPart","part"]].forEach(([id,v])=>{
   $(id).onclick = ()=>{ cmpView = v; renderCmp(); };
 });
@@ -2390,8 +2472,8 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
@@ -2553,6 +2635,19 @@ function importData(raw, msgEl){
     });
   }
   if(Array.isArray(data.classifierRules) && data.classifierRules.length) db.classifierRules = data.classifierRules;
+  // 前綴り動詞(ドイツ語)
+  let xAdded = 0, xUpdated = 0;
+  if(Array.isArray(data.prefixes)){
+    data.prefixes.forEach(p=>{
+      if(!p || !p.prefix || !p.lang) return;
+      const rec = Object.assign({}, p, {id: p.id || uid(), lang: toNative(String(p.lang)),
+        verbs: Array.isArray(p.verbs) ? p.verbs : []});
+      const i = db.prefixes.findIndex(x=>x.lang===rec.lang && x.prefix===rec.prefix);
+      if(i>=0){ rec.id = db.prefixes[i].id; db.prefixes[i] = rec; xUpdated++; }
+      else { db.prefixes.push(rec); xAdded++; }
+    });
+  }
+  if(Array.isArray(data.prefixRules) && data.prefixRules.length) db.prefixRules = data.prefixRules;
   // この言語のキモ
   let fAdded = 0, fUpdated = 0;
   if(Array.isArray(data.profiles)){
@@ -2567,7 +2662,7 @@ function importData(raw, msgEl){
     });
   }
   save();
-  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated;
   let msg = (added || updated || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
     : "取り込み完了:";
@@ -2582,6 +2677,7 @@ function importData(raw, msgEl){
   if(sAdded || sUpdated) msg += "(接尾辞: 新規 " + sAdded + " 個 / 上書き " + sUpdated + " 個)";
   if(pAdded || pUpdated) msg += "(語をつくる語: 新規 " + pAdded + " 個 / 上書き " + pUpdated + " 個)";
   if(cAdded || cUpdated) msg += "(類別詞: 新規 " + cAdded + " 個 / 上書き " + cUpdated + " 個)";
+  if(xAdded || xUpdated) msg += "(前綴り: 新規 " + xAdded + " 個 / 上書き " + xUpdated + " 個)";
   if(fAdded || fUpdated) msg += "(この言語のキモ: 新規 " + fAdded + " 言語 / 上書き " + fUpdated + " 言語)";
   msgEl.textContent = msg;
   msgEl.className = "msg";
