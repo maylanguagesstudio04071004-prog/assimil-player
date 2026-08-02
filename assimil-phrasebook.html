@@ -153,11 +153,19 @@ input,textarea,select{font-family:inherit}
 #rcount, #rcount2{font-size:12px; color:var(--sub); margin:6px 4px 10px}
 #rootQ, #wfQ, #sufQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
   border-radius:12px; background:var(--card); color:var(--text)}
-#wfCount, #sufCount, #cmpCount, #preCount, #caseCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+#wfCount, #sufCount, #cmpCount, #preCount, #caseCount, #stackCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
 .cmp-rule{padding:8px 0; border-top:1px solid var(--border)}
 .cmp-rule .cr-p{font-size:14px; font-weight:700}
 .cmp-rule .cr-e{font-size:14px; margin-top:3px}
 .cmp-rule .cr-m{font-size:12px; color:var(--sub); margin-top:2px}
+.stk-chain{display:flex; flex-wrap:wrap; align-items:flex-end; gap:3px; margin-top:10px}
+.stk-part{display:flex; flex-direction:column; align-items:center; padding:6px 10px;
+  border-radius:9px; background:var(--accent-soft); color:var(--accent); font-size:16px; font-weight:700}
+.stk-part.stem{background:var(--accent); color:#fff}
+.stk-part b{font-size:9.5px; font-weight:600; opacity:.85; margin-top:2px}
+.stk-plus{align-self:center; color:var(--sub); font-size:13px; padding-bottom:12px}
+.stk-slots{font-size:13px; color:var(--sub); margin-top:6px; line-height:1.7}
+.stk-slots span{color:var(--accent)}
 .case-pair{padding:10px 0; border-top:1px solid var(--border)}
 .case-pair .cp-prep{font-size:20px; font-weight:700; color:var(--accent); margin-bottom:5px}
 .case-pair .cp-row{display:flex; align-items:baseline; gap:8px; margin-top:8px}
@@ -375,6 +383,14 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div id="cmpList"></div>
 </section>
 
+<!-- 動詞の積み木(ヒンディー語) -->
+<section id="pageStack" style="display:none">
+  <button class="btn soft" id="stackToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
+  <div id="stackChain"></div>
+  <div id="stackCount"></div>
+  <div id="stackList"></div>
+</section>
+
 <!-- 格の要求表(ロシア語) -->
 <section id="pageCase" style="display:none">
   <button class="btn soft" id="caseToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
@@ -542,6 +558,10 @@ function load(){
   if(!Array.isArray(d.cases)) d.cases = [];
   d.cases.forEach(c=>{ c.lang = toNative(c.lang); });
   if(!Array.isArray(d.caseContrast)) d.caseContrast = [];
+  // 動詞の積み木。今はヒンディー語専用
+  if(!Array.isArray(d.stacks)) d.stacks = [];
+  d.stacks.forEach(x=>{ x.lang = toNative(x.lang); });
+  if(!d.stackChain || typeof d.stackChain !== "object") d.stackChain = null;
   // この言語のキモ(言語ごとのプロフィール)
   if(!Array.isArray(d.profiles)) d.profiles = [];
   d.profiles.forEach(p=>{ p.lang = toNative(p.lang); });
@@ -1408,7 +1428,7 @@ const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings"};
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
-const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageCase", "pageProf"];
+const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageCase", "pageStack", "pageProf"];
 function showTab(t){
   subPages.forEach(p=>$(p).style.display = "none");
   Object.keys(pages).forEach(k=>{
@@ -1430,6 +1450,68 @@ function openSubPage(id){
   subPages.forEach(p=>$(p).style.display = (p===id) ? "" : "none");
   window.scrollTo(0,0);
 }
+/* ---------- 動詞の積み木(ヒンディー語) ----------
+   語形成の第7言語目。トルコ語のスロットと同じ「順番が要」だが、
+   トルコ語が語尾を積んで1語に融合するのに対し、こちらは語のまま並ぶ。
+   積み終わりの honā が性・数・人称を背負う。 */
+function stackBlocks(parts){
+  return '<div class="stk-chain">' + (parts||[]).map((p,i)=>
+    (i ? '<span class="stk-plus">+</span>' : '')
+    + '<span class="stk-part' + (i===0 ? ' stem' : '') + '">' + esc(p.w)
+    + '<b>' + esc(p.g || "") + '</b></span>').join("") + '</div>';
+}
+function renderStack(){
+  const cb = $("stackChain");
+  cb.innerHTML = "";
+  const ch = db.stackChain;
+  if(ch && ch.example){
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<h2>ひとつの文に、積み木が2つ</h2>'
+      + '<div style="font-size:15.5px; line-height:1.7">' + esc(ch.example) + '</div>'
+      + (ch.ja ? '<div style="font-size:13px; color:var(--sub); margin-top:4px">' + esc(ch.ja) + '</div>' : '')
+      + (ch.stacks||[]).map(s=>stackBlocks(s.parts)).join("")
+      + '<div class="hint">動詞のうしろに語を積んでいく。最後の語が性・数を背負う</div>';
+    const b = document.createElement("button");
+    b.className = "bulk-roman";
+    b.textContent = "L" + ch.lesson + " を開く";
+    b.onclick = ()=>jumpTo("हिन्दी", ch.lesson);
+    c.appendChild(b);
+    cb.appendChild(c);
+  }
+  const box = $("stackList");
+  box.innerHTML = "";
+  const list = db.stacks;
+  $("stackCount").textContent = list.length + " 通りの積み方";
+  if(!list.length){
+    box.innerHTML = '<div class="empty-msg">積み木はまだ登録されていません。</div>';
+    return;
+  }
+  list.forEach(s=>{
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap">'
+      + '<span style="font-size:18px; font-weight:700">' + esc(s.name) + '</span>'
+      + '<span style="font-size:14px">' + esc(s.gloss || "") + '</span></div>'
+      + '<div class="stk-slots">' + (s.slots||[]).map(x=>esc(x)).join(' <span>+</span> ') + '</div>'
+      + (s.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:6px">' + esc(s.note) + '</div>' : '')
+      + stackBlocks(s.parts);
+    if(s.example){
+      const b = document.createElement("button");
+      b.className = "suf-ex";
+      b.style.display = "block";
+      b.innerHTML = '<div style="font-size:14.5px; line-height:1.6">' + esc(s.example.text) + '</div>'
+        + (s.example.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(s.example.roman) + '</div>' : '')
+        + (s.example.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(s.example.ja) + '</div>' : '')
+        + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + s.example.lesson + '</div>';
+      b.onclick = ()=>jumpTo(s.lang, s.example.lesson);
+      c.appendChild(b);
+    }
+    box.appendChild(c);
+  });
+  window.scrollTo(0,0);
+}
+
 /* ---------- 格の要求表(ロシア語) ----------
    語形成の第6言語目。ロシア語は前綴りも体も教材がまだ扱っていないので、
    代わりに「何がその格を呼ぶか」を節点にした。キモ「格が意味を決める」の実務面。 */
@@ -1635,6 +1717,7 @@ function specialLabel(lang){
   if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)) return "複合語・類別詞";
   if(db.prefixes.some(p=>p.lang===lang)) return "分離・非分離動詞";
   if(db.cases.some(c=>c.lang===lang)) return "格の要求表";
+  if(db.stacks.some(x=>x.lang===lang)) return "動詞の積み木";
   return "";
 }
 function hasSpecialView(lang){ return !!specialLabel(lang); }
@@ -1661,6 +1744,9 @@ function openSpecialView(lang){
   } else if(db.cases.some(c=>c.lang===lang)){
     openSubPage("pageCase");
     renderCase();
+  } else if(db.stacks.some(x=>x.lang===lang)){
+    openSubPage("pageStack");
+    renderStack();
   }
 }
 function hasWordFormation(lang){ return !!profileFor(lang) || hasSpecialView(lang); }
@@ -1672,6 +1758,7 @@ $("cmpToLesson").onclick = ()=>openLangProfile(currentLang);
 $("profToLesson").onclick = ()=>showTab("tabLesson");
 $("preToLesson").onclick = ()=>openLangProfile(currentLang);
 $("caseToLesson").onclick = ()=>openLangProfile(currentLang);
+$("stackToLesson").onclick = ()=>openLangProfile(currentLang);
 [["pfSep","分離"],["pfIns","非分離"]].forEach(([id,k])=>{
   $(id).onclick = ()=>{ preKind = k; renderPre(); };
 });
@@ -2563,8 +2650,8 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
@@ -2739,6 +2826,18 @@ function importData(raw, msgEl){
     });
   }
   if(Array.isArray(data.prefixRules) && data.prefixRules.length) db.prefixRules = data.prefixRules;
+  // 動詞の積み木(ヒンディー語)
+  let zAdded = 0, zUpdated = 0;
+  if(Array.isArray(data.stacks)){
+    data.stacks.forEach(x=>{
+      if(!x || !x.name || !x.lang) return;
+      const rec = Object.assign({}, x, {id: x.id || uid(), lang: toNative(String(x.lang))});
+      const i = db.stacks.findIndex(y=>y.lang===rec.lang && y.name===rec.name);
+      if(i>=0){ rec.id = db.stacks[i].id; db.stacks[i] = rec; zUpdated++; }
+      else { db.stacks.push(rec); zAdded++; }
+    });
+  }
+  if(data.stackChain && typeof data.stackChain === "object") db.stackChain = data.stackChain;
   // 格の要求表(ロシア語)
   let yAdded = 0, yUpdated = 0;
   if(Array.isArray(data.cases)){
@@ -2766,7 +2865,7 @@ function importData(raw, msgEl){
     });
   }
   save();
-  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated;
   let msg = (added || updated || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
     : "取り込み完了:";
@@ -2782,6 +2881,7 @@ function importData(raw, msgEl){
   if(pAdded || pUpdated) msg += "(語をつくる語: 新規 " + pAdded + " 個 / 上書き " + pUpdated + " 個)";
   if(cAdded || cUpdated) msg += "(類別詞: 新規 " + cAdded + " 個 / 上書き " + cUpdated + " 個)";
   if(xAdded || xUpdated) msg += "(前綴り: 新規 " + xAdded + " 個 / 上書き " + xUpdated + " 個)";
+  if(zAdded || zUpdated) msg += "(積み木: 新規 " + zAdded + " 個 / 上書き " + zUpdated + " 個)";
   if(yAdded || yUpdated) msg += "(格: 新規 " + yAdded + " 個 / 上書き " + yUpdated + " 個)";
   if(fAdded || fUpdated) msg += "(この言語のキモ: 新規 " + fAdded + " 言語 / 上書き " + fUpdated + " 言語)";
   msgEl.textContent = msg;
