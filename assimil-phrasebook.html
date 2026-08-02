@@ -153,11 +153,13 @@ input,textarea,select{font-family:inherit}
 #rcount, #rcount2{font-size:12px; color:var(--sub); margin:6px 4px 10px}
 #rootQ, #wfQ, #sufQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
   border-radius:12px; background:var(--card); color:var(--text)}
-#wfCount, #sufCount, #cmpCount, #preCount, #caseCount, #stackCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+#wfCount, #sufCount, #cmpCount, #preCount, #caseCount, #stackCount, #addCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
 .cmp-rule{padding:8px 0; border-top:1px solid var(--border)}
 .cmp-rule .cr-p{font-size:14px; font-weight:700}
 .cmp-rule .cr-e{font-size:14px; margin-top:3px}
 .cmp-rule .cr-m{font-size:12px; color:var(--sub); margin-top:2px}
+.cn-pair{margin-top:8px; padding:8px 11px; border-radius:9px; background:var(--bg); border:1px solid var(--border)}
+.cn-pair div{font-size:14px; line-height:1.7}
 .stk-chain{display:flex; flex-wrap:wrap; align-items:flex-end; gap:3px; margin-top:10px}
 .stk-part{display:flex; flex-direction:column; align-items:center; padding:6px 10px;
   border-radius:9px; background:var(--accent-soft); color:var(--accent); font-size:16px; font-weight:700}
@@ -383,6 +385,17 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div id="cmpList"></div>
 </section>
 
+<!-- 足すもの・量詞(中国語) -->
+<section id="pageAdd" style="display:none">
+  <button class="btn soft" id="addToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
+  <div class="filterbar">
+    <button id="afAdd" class="on">動詞に足すもの</button>
+    <button id="afCls">量詞</button>
+  </div>
+  <div id="addCount"></div>
+  <div id="addList"></div>
+</section>
+
 <!-- 動詞の積み木(ヒンディー語) -->
 <section id="pageStack" style="display:none">
   <button class="btn soft" id="stackToLesson" style="margin-bottom:12px">← この言語のキモへ</button>
@@ -550,6 +563,9 @@ function load(){
   if(!Array.isArray(d.classifiers)) d.classifiers = [];
   d.classifiers.forEach(c=>{ c.lang = toNative(c.lang); });
   if(!Array.isArray(d.classifierRules)) d.classifierRules = [];
+  // 動詞に足すもの。今は中国語専用
+  if(!Array.isArray(d.adds)) d.adds = [];
+  d.adds.forEach(a=>{ a.lang = toNative(a.lang); });
   // 前綴り動詞(分離・非分離)。今はドイツ語専用
   if(!Array.isArray(d.prefixes)) d.prefixes = [];
   d.prefixes.forEach(p=>{ p.lang = toNative(p.lang); });
@@ -1341,13 +1357,15 @@ function renderSuf(){
    屈折も接辞も無い言語なので、語をつくるのは語の足し算しかない。
    節点は「ごく普通の単語」。คน は複合語の頭にも人の類別詞にもなる。 */
 let cmpView = "cls";
-function renderCmp(){
+function renderCmp(lang){
+  if(lang) renderCmp.lang = lang;
+  const L = renderCmp.lang || "ไทย";
   $("cfCls").classList.toggle("on", cmpView==="cls");
   $("cfPart").classList.toggle("on", cmpView==="part");
   const box = $("cmpList");
   box.innerHTML = "";
   if(cmpView === "cls"){
-    const list = db.classifiers;
+    const list = db.classifiers.filter(c=>c.lang===L);
     $("cmpCount").textContent = list.length + " 個の類別詞";
     if(db.classifierRules.length){
       const c = document.createElement("div");
@@ -1387,7 +1405,7 @@ function renderCmp(){
     });
     return;
   }
-  const list = db.parts;
+  const list = db.parts.filter(p=>p.lang===L);
   $("cmpCount").textContent = list.length + " 個 / 複合語 "
     + list.reduce((n,p)=>n + (p.compounds||[]).length, 0) + " 語";
   if(!list.length){
@@ -1428,7 +1446,7 @@ const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings"};
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
-const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageCase", "pageStack", "pageProf"];
+const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageCase", "pageStack", "pageAdd", "pageProf"];
 function showTab(t){
   subPages.forEach(p=>$(p).style.display = "none");
   Object.keys(pages).forEach(k=>{
@@ -1450,6 +1468,87 @@ function openSubPage(id){
   subPages.forEach(p=>$(p).style.display = (p===id) ? "" : "none");
   window.scrollTo(0,0);
 }
+/* ---------- 足すもの・量詞(中国語) ----------
+   語形成の第8言語目。語形が一切変わらないので、変化のかわりに語を足す。
+   足す位置(動詞の前 / 後ろ / 文末)が意味を決める。 */
+let addView = "add";
+function clsCard(cl){
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap">'
+    + '<span style="font-size:22px; font-weight:700">' + esc(cl.form) + '</span>'
+    + (cl.roman ? '<span style="font-size:13px; color:var(--sub); font-style:italic">' + esc(cl.roman) + '</span>' : '')
+    + '<span style="font-size:15px">' + esc(cl.gloss || "") + '</span></div>'
+    + (cl.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(cl.note) + '</div>' : '')
+    + (cl.pair ? '<div class="cn-pair"><div>' + esc(cl.pair.content) + '</div><div>' + esc(cl.pair.container) + '</div></div>' : '')
+    + '<div class="meta" style="margin-top:5px">' + ((cl.lessons||[]).length ? 'L' + cl.lessons.join(", L") : '') + '</div>';
+  (cl.examples||[]).forEach(e=>{
+    const b = document.createElement("button");
+    b.className = "suf-ex";
+    b.style.display = "block";
+    b.innerHTML = '<div style="font-size:15px">' + esc(e.text) + '</div>'
+      + (e.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
+      + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
+      + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
+    b.onclick = ()=>jumpTo(cl.lang, e.lesson);
+    c.appendChild(b);
+  });
+  return c;
+}
+function renderAdd(lang){
+  if(lang) renderAdd.lang = lang;
+  const L = renderAdd.lang || "中文";
+  $("afAdd").classList.toggle("on", addView==="add");
+  $("afCls").classList.toggle("on", addView==="cls");
+  const box = $("addList");
+  box.innerHTML = "";
+  if(addView === "cls"){
+    const list = db.classifiers.filter(c=>c.lang===L);
+    $("addCount").textContent = list.length + " 個の量詞";
+    if(!list.length){ box.innerHTML = '<div class="empty-msg">量詞はまだ登録されていません。</div>'; return; }
+    list.forEach(cl=>box.appendChild(clsCard(cl)));
+    return;
+  }
+  const list = db.adds.filter(a=>a.lang===L);
+  $("addCount").textContent = list.length + " 種類 / 実例 "
+    + list.reduce((n,a)=>n + (a.examples||[]).length, 0) + " 文";
+  if(!list.length){ box.innerHTML = '<div class="empty-msg">まだ登録されていません。</div>'; return; }
+  const order = {"動詞の前":1, "動詞の後ろ":2, "文末":3};
+  list.sort((a,b)=>(order[a.position]||9)-(order[b.position]||9));
+  let lastPos = null;
+  list.forEach(a=>{
+    if(a.position !== lastPos){
+      lastPos = a.position;
+      const h = document.createElement("div");
+      h.className = "small-note";
+      h.style.cssText = "margin:16px 4px 6px; font-weight:600; color:var(--accent)";
+      h.textContent = a.position;
+      box.appendChild(h);
+    }
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap">'
+      + '<span style="font-size:17px; font-weight:700">' + esc(a.name) + '</span>'
+      + '<span style="font-size:14px">' + esc(a.gloss || "") + '</span></div>'
+      + '<div class="suf-forms">' + (a.forms||[]).map(f=>'<span>' + esc(f) + '</span>').join("") + '</div>'
+      + (a.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:6px">' + esc(a.note) + '</div>' : '')
+      + '<div class="meta" style="margin-top:5px">' + ((a.lessons||[]).length ? 'L' + a.lessons.join(", L") : '') + '</div>';
+    (a.examples||[]).forEach(e=>{
+      const b = document.createElement("button");
+      b.className = "suf-ex";
+      b.style.display = "block";
+      b.innerHTML = '<div style="font-size:15px">' + esc(e.text) + '</div>'
+        + (e.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
+        + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
+        + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
+      b.onclick = ()=>jumpTo(a.lang, e.lesson);
+      c.appendChild(b);
+    });
+    box.appendChild(c);
+  });
+  window.scrollTo(0,0);
+}
+
 /* ---------- 動詞の積み木(ヒンディー語) ----------
    語形成の第7言語目。トルコ語のスロットと同じ「順番が要」だが、
    トルコ語が語尾を積んで1語に融合するのに対し、こちらは語のまま並ぶ。
@@ -1714,6 +1813,7 @@ function specialLabel(lang){
   if(db.roots.some(r=>r.lang===lang)) return "語根";
   if(db.bases.some(b=>b.lang===lang)) return "接辞";
   if(db.suffixes.some(s=>s.lang===lang)) return "接尾辞";
+  if(db.adds.some(a=>a.lang===lang)) return "足すもの・量詞";
   if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)) return "複合語・類別詞";
   if(db.prefixes.some(p=>p.lang===lang)) return "分離・非分離動詞";
   if(db.cases.some(c=>c.lang===lang)) return "格の要求表";
@@ -1735,9 +1835,12 @@ function openSpecialView(lang){
   } else if(db.suffixes.some(s=>s.lang===lang)){
     openSubPage("pageSuf");
     renderSuf();
+  } else if(db.adds.some(a=>a.lang===lang)){
+    openSubPage("pageAdd");
+    renderAdd(lang);
   } else if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)){
     openSubPage("pageCmp");
-    renderCmp();
+    renderCmp(lang);
   } else if(db.prefixes.some(p=>p.lang===lang)){
     openSubPage("pagePre");
     renderPre();
@@ -1759,6 +1862,10 @@ $("profToLesson").onclick = ()=>showTab("tabLesson");
 $("preToLesson").onclick = ()=>openLangProfile(currentLang);
 $("caseToLesson").onclick = ()=>openLangProfile(currentLang);
 $("stackToLesson").onclick = ()=>openLangProfile(currentLang);
+$("addToLesson").onclick = ()=>openLangProfile(currentLang);
+[["afAdd","add"],["afCls","cls"]].forEach(([id,v])=>{
+  $(id).onclick = ()=>{ addView = v; renderAdd(); };
+});
 [["pfSep","分離"],["pfIns","非分離"]].forEach(([id,k])=>{
   $(id).onclick = ()=>{ preKind = k; renderPre(); };
 });
@@ -2650,8 +2757,8 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / adds / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
@@ -2826,6 +2933,17 @@ function importData(raw, msgEl){
     });
   }
   if(Array.isArray(data.prefixRules) && data.prefixRules.length) db.prefixRules = data.prefixRules;
+  // 動詞に足すもの(中国語)
+  let aAdded = 0, aUpdated = 0;
+  if(Array.isArray(data.adds)){
+    data.adds.forEach(a=>{
+      if(!a || !a.name || !a.lang) return;
+      const rec = Object.assign({}, a, {id: a.id || uid(), lang: toNative(String(a.lang))});
+      const i = db.adds.findIndex(x=>x.lang===rec.lang && x.name===rec.name);
+      if(i>=0){ rec.id = db.adds[i].id; db.adds[i] = rec; aUpdated++; }
+      else { db.adds.push(rec); aAdded++; }
+    });
+  }
   // 動詞の積み木(ヒンディー語)
   let zAdded = 0, zUpdated = 0;
   if(Array.isArray(data.stacks)){
@@ -2865,7 +2983,7 @@ function importData(raw, msgEl){
     });
   }
   save();
-  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated || aAdded || aUpdated;
   let msg = (added || updated || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
     : "取り込み完了:";
@@ -2881,6 +2999,7 @@ function importData(raw, msgEl){
   if(pAdded || pUpdated) msg += "(語をつくる語: 新規 " + pAdded + " 個 / 上書き " + pUpdated + " 個)";
   if(cAdded || cUpdated) msg += "(類別詞: 新規 " + cAdded + " 個 / 上書き " + cUpdated + " 個)";
   if(xAdded || xUpdated) msg += "(前綴り: 新規 " + xAdded + " 個 / 上書き " + xUpdated + " 個)";
+  if(aAdded || aUpdated) msg += "(足すもの: 新規 " + aAdded + " 個 / 上書き " + aUpdated + " 個)";
   if(zAdded || zUpdated) msg += "(積み木: 新規 " + zAdded + " 個 / 上書き " + zUpdated + " 個)";
   if(yAdded || yUpdated) msg += "(格: 新規 " + yAdded + " 個 / 上書き " + yUpdated + " 個)";
   if(fAdded || fUpdated) msg += "(この言語のキモ: 新規 " + fAdded + " 言語 / 上書き " + fUpdated + " 言語)";
