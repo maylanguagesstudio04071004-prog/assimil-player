@@ -1496,8 +1496,13 @@ function clsCard(cl){
   return c;
 }
 function renderAdd(lang){
-  if(lang) renderAdd.lang = lang;
+  if(lang){ renderAdd.lang = lang; addView = "add"; }
   const L = renderAdd.lang || "中文";
+  // 量詞タブは、その言語に量詞があるときだけ出す(英仏伊西は「足すもの」だけ)
+  const hasCls = db.classifiers.some(c=>c.lang===L);
+  $("afCls").style.display = hasCls ? "" : "none";
+  $("afAdd").style.display = hasCls ? "" : "none";
+  if(!hasCls) addView = "add";
   $("afAdd").classList.toggle("on", addView==="add");
   $("afCls").classList.toggle("on", addView==="cls");
   const box = $("addList");
@@ -1813,7 +1818,12 @@ function specialLabel(lang){
   if(db.roots.some(r=>r.lang===lang)) return "語根";
   if(db.bases.some(b=>b.lang===lang)) return "接辞";
   if(db.suffixes.some(s=>s.lang===lang)) return "接尾辞";
-  if(db.adds.some(a=>a.lang===lang)) return "足すもの・量詞";
+  // adds は器を共有しているので、画面の名前は言語ごとに変える
+  if(db.adds.some(a=>a.lang===lang)){
+    const p = profileFor(lang);
+    if(p && p.viewLabel) return p.viewLabel;
+    return db.classifiers.some(c=>c.lang===lang) ? "足すもの・量詞" : "この言語の要";
+  }
   if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)) return "複合語・類別詞";
   if(db.prefixes.some(p=>p.lang===lang)) return "分離・非分離動詞";
   if(db.cases.some(c=>c.lang===lang)) return "格の要求表";
@@ -2976,6 +2986,7 @@ function importData(raw, msgEl){
       if(!p || !p.lang || !p.headline) return;
       const rec = {id: p.id || uid(), lang: toNative(String(p.lang)), order: Number(p.order) || 0,
         headline: String(p.headline), note: p.note ? String(p.note) : "",
+        viewLabel: p.viewLabel ? String(p.viewLabel) : "",
         picks: Array.isArray(p.picks) ? p.picks.map(String) : []};
       const i = db.profiles.findIndex(x=>x.lang===rec.lang);
       if(i>=0){ rec.id = db.profiles[i].id; db.profiles[i] = rec; fUpdated++; }
