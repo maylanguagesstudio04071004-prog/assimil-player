@@ -1824,13 +1824,15 @@ function openLangProfile(lang){
   window.scrollTo(0,0);
 }
 function specialLabel(lang){
+  // 画面の名前は言語ごとに決められる。まず profiles の viewLabel を見る
+  if(hasSpecialData(lang)){
+    const p = profileFor(lang);
+    if(p && p.viewLabel) return p.viewLabel;
+  }
   if(db.roots.some(r=>r.lang===lang)) return "語根";
   if(db.bases.some(b=>b.lang===lang)) return "接辞";
   if(db.suffixes.some(s=>s.lang===lang)) return "接尾辞";
-  // adds は器を共有しているので、画面の名前は言語ごとに変える
   if(db.adds.some(a=>a.lang===lang)){
-    const p = profileFor(lang);
-    if(p && p.viewLabel) return p.viewLabel;
     return db.classifiers.some(c=>c.lang===lang) ? "足すもの・量詞" : "この言語の要";
   }
   if(db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)) return "複合語・類別詞";
@@ -1838,6 +1840,14 @@ function specialLabel(lang){
   if(db.cases.some(c=>c.lang===lang)) return "格の要求表";
   if(db.stacks.some(x=>x.lang===lang)) return "動詞の積み木";
   return "";
+}
+// その言語に専用画面のデータがあるか(名前を決める前の判定に使う)
+function hasSpecialData(lang){
+  return db.roots.some(r=>r.lang===lang) || db.bases.some(b=>b.lang===lang)
+    || db.suffixes.some(s=>s.lang===lang) || db.adds.some(a=>a.lang===lang)
+    || db.parts.some(p=>p.lang===lang) || db.classifiers.some(c=>c.lang===lang)
+    || db.prefixes.some(p=>p.lang===lang) || db.cases.some(c=>c.lang===lang)
+    || db.stacks.some(x=>x.lang===lang);
 }
 function hasSpecialView(lang){ return !!specialLabel(lang); }
 // その言語の語形成を開く。単位は言語ごとに違う(阿=語根 / 尼=基語 / 土=接尾辞 / 泰=語)
@@ -2953,12 +2963,14 @@ function importData(raw, msgEl){
   }
   if(Array.isArray(data.prefixRules) && data.prefixRules.length) db.prefixRules = data.prefixRules;
   // 動詞に足すもの(中国語)
-  let aAdded = 0, aUpdated = 0;
+  let aAdded = 0, aUpdated = 0, aDeleted = 0;
   if(Array.isArray(data.adds)){
     data.adds.forEach(a=>{
       if(!a || !a.name || !a.lang) return;
       const rec = Object.assign({}, a, {id: a.id || uid(), lang: toNative(String(a.lang))});
       const i = db.adds.findIndex(x=>x.lang===rec.lang && x.name===rec.name);
+      // "delete":true は掃除用。軸を組み直したときに古い項目を消せる
+      if(a.delete === true){ if(i>=0){ db.adds.splice(i,1); aDeleted++; } return; }
       if(i>=0){ rec.id = db.adds[i].id; db.adds[i] = rec; aUpdated++; }
       else { db.adds.push(rec); aAdded++; }
     });
@@ -3004,7 +3016,7 @@ function importData(raw, msgEl){
     });
   }
   save();
-  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated || aAdded || aUpdated;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated || aAdded || aUpdated || aDeleted;
   let msg = (added || updated || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
     : "取り込み完了:";
@@ -3020,7 +3032,8 @@ function importData(raw, msgEl){
   if(pAdded || pUpdated) msg += "(語をつくる語: 新規 " + pAdded + " 個 / 上書き " + pUpdated + " 個)";
   if(cAdded || cUpdated) msg += "(類別詞: 新規 " + cAdded + " 個 / 上書き " + cUpdated + " 個)";
   if(xAdded || xUpdated) msg += "(前綴り: 新規 " + xAdded + " 個 / 上書き " + xUpdated + " 個)";
-  if(aAdded || aUpdated) msg += "(足すもの: 新規 " + aAdded + " 個 / 上書き " + aUpdated + " 個)";
+  if(aAdded || aUpdated || aDeleted) msg += "(足すもの: 新規 " + aAdded + " 個 / 上書き " + aUpdated + " 個"
+    + (aDeleted ? " / 掃除 " + aDeleted + " 個" : "") + ")";
   if(zAdded || zUpdated) msg += "(積み木: 新規 " + zAdded + " 個 / 上書き " + zUpdated + " 個)";
   if(yAdded || yUpdated) msg += "(格: 新規 " + yAdded + " 個 / 上書き " + yUpdated + " 個)";
   if(fAdded || fUpdated) msg += "(この言語のキモ: 新規 " + fAdded + " 言語 / 上書き " + fUpdated + " 言語)";
