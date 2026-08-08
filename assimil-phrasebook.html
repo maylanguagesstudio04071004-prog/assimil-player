@@ -557,6 +557,8 @@ function load(){
   // 接尾辞(スロット順)。今はトルコ語専用
   if(!Array.isArray(d.suffixes)) d.suffixes = [];
   d.suffixes.forEach(s=>{ s.lang = toNative(s.lang); });
+  // スロットの鎖(接尾辞画面の頭に出す図)
+  if(!Array.isArray(d.suffixChains)) d.suffixChains = [];
   // 複合語の「語をつくる語」と類別詞。今はタイ語専用
   if(!Array.isArray(d.parts)) d.parts = [];
   d.parts.forEach(p=>{ p.lang = toNative(p.lang); });
@@ -1278,17 +1280,24 @@ function renderSufSlots(){
   const slots = [];
   list.forEach(s=>{ if(!slots.some(x=>x.slot===s.slot)) slots.push({slot:s.slot, order:s.slotOrder}); });
   slots.sort((a,b)=>a.order-b.order);
-  const sample = sufGroup==="名詞"
-    ? {word:"ev-ler-im-de", ja:"私の家々で", parts:["ev","ler","im","de"], labels:["語幹","複数","所有","格"]}
-    : {word:"gel-mi-yor-um", ja:"私は来ない", parts:["gel","mi","yor","um"], labels:["語幹","否定","時制","人称"]};
-  box.innerHTML = '<div class="card"><h2>付く順番</h2>'
-    + '<div class="suf-chain">'
-    + '<span class="suf-part stem">' + esc(sample.parts[0]) + '<b>' + esc(sample.labels[0]) + '</b></span>'
-    + sample.parts.slice(1).map((p,i)=>
-        '<span class="suf-plus">-</span><span class="suf-part">' + esc(p)
-        + '<b>' + esc(sample.labels[i+1]) + '</b></span>').join("")
+  // 鎖はデータから引く。無ければ従来の作り付けを使う
+  const DEFAULT = {
+    "名詞": [{parts:[{w:"ev",g:"語幹"},{w:"ler",g:"複数"},{w:"im",g:"所有"},{w:"de",g:"格"}], ja:"私の家々で"}],
+    "動詞": [{parts:[{w:"gel",g:"語幹"},{w:"mi",g:"否定"},{w:"yor",g:"時制"},{w:"um",g:"人称"}], ja:"私は来ない"}]
+  };
+  const chains = db.suffixChains.filter(c=>c.group===sufGroup);
+  const use = chains.length ? chains : (DEFAULT[sufGroup] || []);
+  const chainHtml = c =>
+    '<div class="suf-chain">'
+    + (c.parts||[]).map((p,i)=>
+        (i ? '<span class="suf-plus">-</span>' : '')
+        + '<span class="suf-part' + (i===0 ? ' stem' : '') + '">' + esc(p.w)
+        + '<b>' + esc(p.g || "") + '</b></span>').join("")
     + '</div>'
-    + '<div class="suf-chain-ja">' + esc(sample.ja) + '</div>'
+    + (c.ja ? '<div class="suf-chain-ja">' + esc(c.ja) + '</div>' : "")
+    + (c.note ? '<div class="hint">' + esc(c.note) + '</div>' : "");
+  box.innerHTML = '<div class="card"><h2>付く順番</h2>'
+    + use.map(chainHtml).join('<div style="height:14px"></div>')
     + '<div class="hint">スロットの順番は入れ替わらない</div>'
     + '<div class="rchips" style="margin-top:10px">'
     + slots.map(s=>'<span class="rchip">' + s.order + ' ' + esc(s.slot) + '</span>').join("")
@@ -2767,7 +2776,7 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds)){
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds) && !Array.isArray(data.suffixChains)){
     msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / adds / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   const rootRes = importRoots(data.roots);
@@ -2966,6 +2975,7 @@ function importData(raw, msgEl){
     });
   }
   if(data.stackChain && typeof data.stackChain === "object") db.stackChain = data.stackChain;
+  if(Array.isArray(data.suffixChains) && data.suffixChains.length) db.suffixChains = data.suffixChains;
   // 格の要求表(ロシア語)
   let yAdded = 0, yUpdated = 0;
   if(Array.isArray(data.cases)){
