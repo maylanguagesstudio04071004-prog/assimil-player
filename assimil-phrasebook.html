@@ -175,6 +175,8 @@ input,textarea,select{font-family:inherit}
   background:var(--accent-soft); color:var(--accent)}
 .case-pair .cp-label{font-size:12.5px; color:var(--sub)}
 .case-pair .cp-ex{margin-top:4px}
+.place-band{font-size:12px; font-weight:700; color:var(--accent); margin:12px 0 5px}
+.tagrow button.here{background:var(--accent); color:#fff}
 .prof-head{font-size:19px; font-weight:700; line-height:1.65; margin-top:2px}
 .prof-note{font-size:13.5px; color:var(--sub); line-height:1.8; margin-top:9px}
 /* 接尾辞: スロットの鎖 */
@@ -1765,7 +1767,11 @@ function openLangProfile(lang){
     head.className = "card";
     head.innerHTML = '<h2>' + esc(lang) + '</h2>'
       + '<div class="prof-head">' + esc(p.headline) + '</div>'
-      + (p.note ? '<div class="prof-note">' + esc(p.note) + '</div>' : "");
+      + (p.note ? '<div class="prof-note">' + esc(p.note) + '</div>' : "")
+      + (p.place ? '<div class="rchips" style="margin-top:10px">'
+          + '<span class="rchip">情報の置き場所 — ' + esc(p.place) + '</span></div>'
+          + (p.placeNote ? '<div class="prof-note" style="margin-top:6px">' + esc(p.placeNote) + '</div>' : "")
+        : "");
     box.appendChild(head);
   }
   // その言語だけの画面(語根/接辞/接尾辞/複合語・類別詞)への入口
@@ -1803,22 +1809,53 @@ function openLangProfile(lang){
     box.appendChild(c);
   }
   // ほかの言語のキモへ渡る
+  // ほかの言語へ渡る。place(文法情報をどこに置くか)があれば帯ごとに並べる
   const others = db.profiles.filter(x=>x.lang!==lang)
     .sort((a,b)=>(a.order||0)-(b.order||0));
   if(others.length){
     const c = document.createElement("div");
     c.className = "card";
-    c.innerHTML = '<h2>ほかの言語</h2>';
-    const tr = document.createElement("div");
-    tr.className = "tagrow";
-    tr.style.margin = "0";
-    others.forEach(o=>{
-      const b = document.createElement("button");
-      b.textContent = o.lang;
-      b.onclick = ()=>openLangProfile(o.lang);
-      tr.appendChild(b);
-    });
-    c.appendChild(tr);
+    const bands = [];
+    db.profiles.slice().sort((a,b)=>(a.placeOrder||99)-(b.placeOrder||99) || (a.order||0)-(b.order||0))
+      .forEach(x=>{
+        if(!x.place) return;
+        let bd = bands.find(y=>y.place===x.place);
+        if(!bd){ bd = {place:x.place, order:x.placeOrder||99, langs:[]}; bands.push(bd); }
+        bd.langs.push(x);
+      });
+    if(bands.length){
+      c.innerHTML = '<h2>文法情報をどこに置くか</h2>'
+        + '<div class="small-note" style="margin:0 0 10px">13言語のキモを並べると、置き場所で分かれる。</div>';
+      bands.forEach(bd=>{
+        const h = document.createElement("div");
+        h.className = "place-band";
+        h.textContent = bd.place;
+        c.appendChild(h);
+        const tr = document.createElement("div");
+        tr.className = "tagrow";
+        tr.style.margin = "0 0 4px";
+        bd.langs.forEach(o=>{
+          const b = document.createElement("button");
+          b.textContent = o.lang;
+          if(o.lang === lang) b.className = "here";
+          b.onclick = ()=>openLangProfile(o.lang);
+          tr.appendChild(b);
+        });
+        c.appendChild(tr);
+      });
+    } else {
+      c.innerHTML = '<h2>ほかの言語</h2>';
+      const tr = document.createElement("div");
+      tr.className = "tagrow";
+      tr.style.margin = "0";
+      others.forEach(o=>{
+        const b = document.createElement("button");
+        b.textContent = o.lang;
+        b.onclick = ()=>openLangProfile(o.lang);
+        tr.appendChild(b);
+      });
+      c.appendChild(tr);
+    }
     box.appendChild(c);
   }
   window.scrollTo(0,0);
@@ -3009,6 +3046,9 @@ function importData(raw, msgEl){
       const rec = {id: p.id || uid(), lang: toNative(String(p.lang)), order: Number(p.order) || 0,
         headline: String(p.headline), note: p.note ? String(p.note) : "",
         viewLabel: p.viewLabel ? String(p.viewLabel) : "",
+        place: p.place ? String(p.place) : "",
+        placeNote: p.placeNote ? String(p.placeNote) : "",
+        placeOrder: Number(p.placeOrder) || 0,
         picks: Array.isArray(p.picks) ? p.picks.map(String) : []};
       const i = db.profiles.findIndex(x=>x.lang===rec.lang);
       if(i>=0){ rec.id = db.profiles[i].id; db.profiles[i] = rec; fUpdated++; }
