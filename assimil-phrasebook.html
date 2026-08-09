@@ -294,7 +294,10 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     </div>
     <div id="lessonActions" style="display:flex; gap:8px; margin-top:12px; align-items:stretch">
       <button class="obs-btn" id="mapBtn" title="カバレッジマップ">🗺</button>
-      <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button>
+      <!-- ✎気づきメモは2026-08-09に撤去(実装から1か月、0件のまま)。
+           気づきはキモの一言・note・placeNote 側に集まったため、器が二重になっていた。
+           仕組みは残してあるので、下の1行を戻せば復活する:
+           <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button> -->
       <button class="obs-btn" id="wordFormBtn" style="display:none" title="この言語のキモ">✦</button>
     </div>
     <!-- 比較モードのボタンは2026-07-26に撤去(本人が使わないため)。
@@ -3486,7 +3489,8 @@ function openObsPopup(obs, anchorRect){
   const op = trPop.querySelector(".obs-open");
   if(op) op.onclick = ()=>{ hideTrPop(); jumpTo(obs.lang, obs.lesson); };
 }
-$("obsBtn").onclick = (ev)=>openObsPopup(null, ev.target.getBoundingClientRect());
+// ボタンは撤去済み。復活させたときだけ効く
+if($("obsBtn")) $("obsBtn").onclick = (ev)=>openObsPopup(null, ev.target.getBoundingClientRect());
 
 /* ---------- 単語だけ選択したときの簡易訳(その単語だけをその場で自動翻訳) ---------- */
 // 「訳」ボタン=フレーズ全体の保存済み訳、テキスト選択=選んだ範囲だけのその場翻訳、と役割を分ける
