@@ -2668,17 +2668,18 @@ function renderFavs(){
        box.appendChild(mbtn); */
     let lastTopic = null, lastType = null;
     list.forEach(g=>{
-      // ◇の塊と§の塊の境目に見出しを1つ入れる
+      // ◇の塊にだけ見出しを付ける。§側は各行の頭に § が付いていて、
+      // しかもリスト全体が§なので、見出しが何も分けていなかった(2026-08-09に撤去)
       const kind = (g.type==="concept") ? "concept" : "grammar";
       if(kind !== lastType){
         lastType = kind;
-        const sec = document.createElement("div");
-        sec.className = "small-note";
-        sec.style.cssText = "margin:14px 4px 4px; font-weight:600; color:var(--accent)";
-        sec.textContent = (kind==="concept")
-          ? "◇ 概念 — 各言語が同じことをどう捉えるか"
-          : "§ 文法 — 各言語の中の記述";
-        box.appendChild(sec);
+        if(kind === "concept"){
+          const sec = document.createElement("div");
+          sec.className = "small-note";
+          sec.style.cssText = "margin:14px 4px 4px; font-weight:600; color:var(--accent)";
+          sec.textContent = "◇ 概念 — 各言語が同じことをどう捉えるか";
+          box.appendChild(sec);
+        }
       }
       if(g.topic !== lastTopic){
         lastTopic = g.topic;
