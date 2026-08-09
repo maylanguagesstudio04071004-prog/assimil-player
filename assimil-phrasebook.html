@@ -270,7 +270,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <div class="tabs">
   <button id="tabLesson" class="on">レッスン</button>
   <button id="tabSearch">検索</button>
-  <button id="tabFav">★</button>
+  <button id="tabFav">§</button>
   <button id="tabImport">取込</button>
   <button id="tabSettings">設定</button>
 </div>
@@ -324,11 +324,13 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <!-- お気に入り・気づき -->
 <section id="pageFav" style="display:none">
+  <!-- ★お気に入りと✎気づきは2026-08-09に撤去。§文法だけになったので切り替えバーも外した。
+       戻すなら下を復活させる:
   <div class="filterbar" style="margin-top:2px">
     <button id="fmFav" class="on">★ お気に入り</button>
     <button id="fmObs">✎ 気づき</button>
     <button id="fmGram">§ 文法</button>
-  </div>
+  </div> -->
   <div class="langbar" id="favLangbar"></div>
   <div id="favList"></div>
 </section>
@@ -1986,7 +1988,6 @@ function phraseRow(lang, lesson, p, i){
   const row = document.createElement("div");
   row.className = "phrase";
   row.dataset.lang = lang;
-  const fav = isFav(lang, lesson, p, "phrase");
   const note = getNote(lang, lesson, p);
   row.innerHTML = '<span class="no">' + (i+1) + '</span>'
     + '<div style="flex:1; min-width:0"><span class="txt">' + phraseHtml(lang, p) + '</span>'
@@ -2006,11 +2007,7 @@ function phraseRow(lang, lesson, p, i){
   nbtn.textContent = "訳";
   nbtn.onclick = (ev)=>{ ev.stopPropagation(); openNotePopup(lang, lesson, p, nbtn); };
   row.appendChild(nbtn);
-  const btn = document.createElement("button");
-  btn.className = "fav" + (fav ? " on" : "");
-  btn.textContent = "★";
-  btn.onclick = (ev)=>{ ev.stopPropagation(); toggleFav(lang, lesson, p, "phrase"); btn.classList.toggle("on"); };
-  row.appendChild(btn);
+  // ★お気に入りは2026-08-09に撤去。toggleFav() は残してある
   bindRootTokens(row, lang);
   // フレーズ全体の訳は「訳」ボタンのタップのみで開く(長押し/単語選択と競合させない)
   return row;
@@ -2018,30 +2015,12 @@ function phraseRow(lang, lesson, p, i){
 function wordChip(lang, lesson, w){
   const b = document.createElement("button");
   b.dataset.lang = lang;
-  b.className = isFav(lang, lesson, w, "word") ? "faved" : "";
   const note = getNote(lang, lesson, w, "word");
   b.innerHTML = '<span class="wtxt">' + esc(w) + '</span>'
     + (note && note.roman ? '<span class="wroman">' + esc(note.roman) + '</span>' : '')
     + (note && note.ja ? '<span class="wja">' + esc(note.ja) + '</span>' : '');
-  // タップ=お気に入り、長押し(0.5秒)=訳の編集
-  let timer = null, longPressed = false;
-  b.addEventListener("pointerdown", ()=>{
-    longPressed = false;
-    timer = setTimeout(()=>{
-      longPressed = true;
-      openNotePopup(lang, lesson, w, b, "word");
-    }, 500);
-  });
-  const cancel = ()=>clearTimeout(timer);
-  b.addEventListener("pointerup", cancel);
-  b.addEventListener("pointercancel", cancel);
-  b.addEventListener("pointerleave", cancel);
-  b.addEventListener("contextmenu", e=>e.preventDefault());
-  b.onclick = ()=>{
-    if(longPressed){ longPressed = false; return; }
-    toggleFav(lang, lesson, w, "word");
-    b.classList.toggle("faved");
-  };
+  // ★を外したので、タップでそのまま訳の編集が開く(長押しは不要になった。2026-08-09)
+  b.onclick = ()=>openNotePopup(lang, lesson, w, b, "word");
   return b;
 }
 function lessonCards(L, withLangTitle){
@@ -2518,13 +2497,7 @@ function resultRow(r, q){
   }
   body += '<div class="meta">' + meta + '</div>';
   row.innerHTML = '<div class="body">' + body + '</div>';
-  if(r.type!=="lesson" && r.type!=="grammar" && r.type!=="obs"){
-    const btn = document.createElement("button");
-    btn.className = "fav" + (isFav(r.lang, r.lesson, r.text, r.type) ? " on" : "");
-    btn.textContent = "★";
-    btn.onclick = (ev)=>{ ev.stopPropagation(); toggleFav(r.lang, r.lesson, r.text, r.type); btn.classList.toggle("on"); };
-    row.appendChild(btn);
-  }
+  // 検索結果の★も2026-08-09に撤去
   row.onclick = ()=>{
     if(r.type==="grammar") openGrammarPopup(r.g, row.getBoundingClientRect());
     else if(r.type==="obs") openObsPopup(r.o, row.getBoundingClientRect());
@@ -2642,14 +2615,14 @@ $("fWord").onclick = ()=>{ searchType="word"; renderSearch(); };
 $("fTag").onclick = ()=>{ searchType="tag"; renderSearch(); };
 
 /* ---------- favorites ---------- */
-let favView = "fav"; // fav | obs | gram
-$("fmFav").onclick = ()=>{ favView = "fav"; renderFavs(); };
-$("fmObs").onclick = ()=>{ favView = "obs"; renderFavs(); };
-$("fmGram").onclick = ()=>{ favView = "gram"; renderFavs(); };
+let favView = "gram"; // 2026-08-09に gram 固定。★と✎を外したため
+if($("fmFav")) $("fmFav").onclick = ()=>{ favView = "fav"; renderFavs(); };
+if($("fmObs")) $("fmObs").onclick = ()=>{ favView = "obs"; renderFavs(); };
+if($("fmGram")) $("fmGram").onclick = ()=>{ favView = "gram"; renderFavs(); };
 function renderFavs(){
-  $("fmFav").classList.toggle("on", favView==="fav");
-  $("fmObs").classList.toggle("on", favView==="obs");
-  $("fmGram").classList.toggle("on", favView==="gram");
+  if($("fmFav")) $("fmFav").classList.toggle("on", favView==="fav");
+  if($("fmObs")) $("fmObs").classList.toggle("on", favView==="obs");
+  if($("fmGram")) $("fmGram").classList.toggle("on", favView==="gram");
   const bar = $("favLangbar");
   bar.innerHTML = "";
   const src = favView==="fav" ? db.favs : (favView==="obs" ? db.observations : db.grammar);
@@ -2684,13 +2657,15 @@ function renderFavs(){
       box.appendChild(d);
       return;
     }
-    const mbtn = document.createElement("button");
-    mbtn.className = "bulk-roman";
-    mbtn.style.marginTop = "0";
-    mbtn.style.marginBottom = "12px";
-    mbtn.textContent = "🗺 topic × 言語マトリクス";
-    mbtn.onclick = openGramMatrix;
-    box.appendChild(mbtn);
+    /* 🗺 topic×言語マトリクスは2026-08-09に撤去(555 topic 中16しか横断せず、ほぼ空白の表だった)。
+       openGramMatrix() は残してあるので、下を戻せば復活する:
+       const mbtn = document.createElement("button");
+       mbtn.className = "bulk-roman";
+       mbtn.style.marginTop = "0";
+       mbtn.style.marginBottom = "12px";
+       mbtn.textContent = "🗺 topic × 言語マトリクス";
+       mbtn.onclick = openGramMatrix;
+       box.appendChild(mbtn); */
     let lastTopic = null, lastType = null;
     list.forEach(g=>{
       // ◇の塊と§の塊の境目に見出しを1つ入れる
