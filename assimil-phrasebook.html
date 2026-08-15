@@ -731,49 +731,61 @@ function save(){
 }
 /* 取り込みの取り消し(1回分)。上書きで何かが消えても戻せるようにする(2026-08-15) */
 const UNDO_KEY = "undo";
-let undoReady = false;
+let undoInfo = null;   // {at, lessons, grammar, text}
+function stamp(t){
+  const d = new Date(t);
+  return (d.getMonth()+1) + "/" + d.getDate() + " "
+    + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+}
 function makeUndo(){
-  const text = JSON.stringify(db);
-  undoReady = true;
+  const rec = {at: Date.now(), lessons: db.lessons.length, grammar: db.grammar.length,
+               text: JSON.stringify(db)};
+  undoInfo = rec;
   openAtlasDB().then(h=>{
     if(!h) return;
     try{
       const tx = h.transaction(ADB_STORE, "readwrite");
-      tx.objectStore(ADB_STORE).put(text, UNDO_KEY);
+      tx.objectStore(ADB_STORE).put(rec, UNDO_KEY);
     }catch(e){}
   });
-  try{ sessionStorage.setItem(KEY + ".undo", text); }catch(e){ /* 入らなければIndexedDBだけ */ }
   refreshUndoBtn();
 }
 async function readUndo(){
-  let t = null;
-  try{ t = sessionStorage.getItem(KEY + ".undo"); }catch(e){}
-  if(!t){
-    const h = await openAtlasDB();
-    if(h) t = await new Promise(res=>{
-      try{
-        const q = h.transaction(ADB_STORE, "readonly").objectStore(ADB_STORE).get(UNDO_KEY);
-        q.onsuccess = ()=>res(q.result || null);
-        q.onerror   = ()=>res(null);
-      }catch(e){ res(null); }
-    });
-  }
-  return t;
+  const h = await openAtlasDB();
+  if(!h) return null;
+  const r = await new Promise(res=>{
+    try{
+      const q = h.transaction(ADB_STORE, "readonly").objectStore(ADB_STORE).get(UNDO_KEY);
+      q.onsuccess = ()=>res(q.result || null);
+      q.onerror   = ()=>res(null);
+    }catch(e){ res(null); }
+  });
+  if(!r) return null;
+  return (typeof r === "string") ? {at:0, lessons:0, grammar:0, text:r} : r;  // 旧形式も読める
 }
+// リロードしても控えは残っている。いつの分かを出しておかないと押しづらいので明示する
 function refreshUndoBtn(){
   const b = $("undoBtn");
-  if(b) b.style.display = undoReady ? "" : "none";
+  if(!b) return;
+  if(!undoInfo){ b.style.display = "none"; return; }
+  b.style.display = "";
+  b.textContent = "取り込みを取り消す"
+    + (undoInfo.at ? "(" + stamp(undoInfo.at) + " の取り込み前・レッスン "
+        + undoInfo.lessons + " 課 / § " + undoInfo.grammar + " 件に戻す)" : "");
 }
 async function doUndo(){
-  const t = await readUndo();
   const msg = $("importMsg");
-  if(!t){ msg.textContent = "戻せる控えが見つかりませんでした。"; msg.className = "msg err"; return; }
+  const rec = undoInfo || await readUndo();
+  if(!rec || !rec.text){ msg.textContent = "戻せる控えが見つかりませんでした。"; msg.className = "msg err"; return; }
   let raw = null;
-  try{ raw = JSON.parse(t); }catch(e){}
+  try{ raw = JSON.parse(rec.text); }catch(e){}
   if(!raw || !Array.isArray(raw.lessons)){ msg.textContent = "控えを読めませんでした。"; msg.className = "msg err"; return; }
+  const now = "いまの状態: レッスン " + db.lessons.length + " 課 / § " + db.grammar.length + " 件";
+  const back = "戻したあと: レッスン " + raw.lessons.length + " 課 / § " + (raw.grammar||[]).length + " 件";
+  if(!confirm(now + "\n" + back + "\n\nこのあとに入れたものは失われます。戻しますか?")) return;
   db = load(raw);
   save();
-  undoReady = false; refreshUndoBtn();
+  undoInfo = null; refreshUndoBtn();
   renderLangbar(); renderLesson();
   msg.textContent = "取り込む前の状態に戻しました(レッスン " + db.lessons.length
     + " 課 / § " + db.grammar.length + " 件)。";
@@ -782,6 +794,8 @@ async function doUndo(){
 
 // 起動時: IndexedDB のほうが新しければそちらを採用する
 async function bootStorage(){
+  // 控えはリロードしても残る。起動時に拾ってボタンを出す(2026-08-15)
+  readUndo().then(r=>{ if(r){ undoInfo = r; refreshUndoBtn(); } });
   let raw = null;
   try{ const t = await atlasRead(); if(t) raw = JSON.parse(t); }catch(e){}
   const here = Number(db.savedAt) || 0;
