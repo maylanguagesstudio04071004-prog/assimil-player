@@ -217,6 +217,14 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .btn.soft{background:var(--accent-soft); color:var(--accent)}
 .btn.danger{background:transparent; color:var(--danger); border:1px solid var(--danger)}
 .btn.full{width:100%; margin-top:10px}
+/* ◇概念の目次(2026-08-15) */
+.con-row{display:block; width:100%; text-align:left; background:var(--card);
+  border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:8px}
+.con-top{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+.con-name{font-size:18px; font-weight:700; color:var(--text)}
+.con-n{font-size:12px; color:var(--accent); font-weight:600; white-space:nowrap}
+.con-langs{font-size:12px; color:var(--sub); margin-top:6px; line-height:1.7}
+.con-miss{font-size:11px; color:var(--sub); opacity:.6; margin-top:4px; line-height:1.7}
 /* 単語をまとめて登録(2026-08-15) */
 .wd-head{font-size:11px; color:var(--sub); font-weight:700; letter-spacing:.04em;
   margin:14px 4px 6px}
@@ -334,15 +342,16 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div id="results"></div>
 </section>
 
-<!-- お気に入り・気づき -->
+<!-- ◇概念 / §文法 -->
 <section id="pageFav" style="display:none">
-  <!-- ★お気に入りと✎気づきは2026-08-09に撤去。§文法だけになったので切り替えバーも外した。
-       戻すなら下を復活させる:
+  <!-- ★お気に入りと✎気づきは2026-08-09に撤去。
+       ◇と§は性格が違う(◇=言語をまたぐ横の軸が7件、§=課ごとの縦の記述が617件)ので、
+       2026-08-15に切り替えバーを戻した。戻す前は617件の陰に◇が隠れていた。
+       ★/✎を復活させるなら、下に <button id="fmFav"> などを足す -->
   <div class="filterbar" style="margin-top:2px">
-    <button id="fmFav" class="on">★ お気に入り</button>
-    <button id="fmObs">✎ 気づき</button>
+    <button id="fmCon" class="on">◇ 概念</button>
     <button id="fmGram">§ 文法</button>
-  </div> -->
+  </div>
   <div class="langbar" id="favLangbar"></div>
   <div id="favList"></div>
 </section>
@@ -553,7 +562,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-15c";
+const BUILD = "2026-08-15d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2834,14 +2843,54 @@ $("fWord").onclick = ()=>{ searchType="word"; renderSearch(); };
 $("fTag").onclick = ()=>{ searchType="tag"; renderSearch(); };
 
 /* ---------- favorites ---------- */
-let favView = "gram"; // 2026-08-09に gram 固定。★と✎を外したため
+let favView = "con"; // 2026-08-15。◇を既定にした(§617件の陰に隠れていたため)
 if($("fmFav")) $("fmFav").onclick = ()=>{ favView = "fav"; renderFavs(); };
 if($("fmObs")) $("fmObs").onclick = ()=>{ favView = "obs"; renderFavs(); };
+if($("fmCon")) $("fmCon").onclick = ()=>{ favView = "con"; renderFavs(); };
 if($("fmGram")) $("fmGram").onclick = ()=>{ favView = "gram"; renderFavs(); };
 function renderFavs(){
   if($("fmFav")) $("fmFav").classList.toggle("on", favView==="fav");
   if($("fmObs")) $("fmObs").classList.toggle("on", favView==="obs");
+  if($("fmCon")) $("fmCon").classList.toggle("on", favView==="con");
   if($("fmGram")) $("fmGram").classList.toggle("on", favView==="gram");
+
+  // ◇概念は言語をまたぐ軸なので、言語で絞る意味がない。見出しだけの目次にする(2026-08-15)
+  if(favView==="con"){
+    $("favLangbar").innerHTML = "";
+    const box = $("favList");
+    box.innerHTML = "";
+    const con = db.grammar.filter(g=>g.type==="concept");
+    if(!con.length){
+      box.innerHTML = '<div class="empty-msg">◇概念はまだありません。</div>';
+      return;
+    }
+    const byTopic = new Map();
+    con.forEach(g=>{
+      if(!byTopic.has(g.topic)) byTopic.set(g.topic, []);
+      byTopic.get(g.topic).push(g);
+    });
+    const head = document.createElement("div");
+    head.className = "small-note";
+    head.style.cssText = "margin:2px 4px 12px";
+    head.textContent = "同じことを、各言語がどう扱うか。" + byTopic.size + " の軸 / " + con.length + " 件";
+    box.appendChild(head);
+    [...byTopic.entries()]
+      .sort((a,b)=>b[1].length - a[1].length || a[0].localeCompare(b[0], "ja"))
+      .forEach(([topic, list])=>{
+        const langs = [...new Set(list.map(g=>g.lang))];
+        const miss = db.langs.filter(l=>!langs.includes(l));
+        const b = document.createElement("button");
+        b.className = "con-row";
+        b.innerHTML = '<div class="con-top"><span class="con-name">◇ ' + esc(topic) + '</span>'
+          + '<span class="con-n">' + langs.length + ' 言語</span></div>'
+          + '<div class="con-langs">' + langs.map(esc).join(" · ") + '</div>'
+          + (miss.length ? '<div class="con-miss">まだ: ' + miss.map(esc).join(" · ") + '</div>' : '');
+        b.onclick = ()=>openTopicPage(topic);
+        box.appendChild(b);
+      });
+    return;
+  }
+
   const bar = $("favLangbar");
   bar.innerHTML = "";
   const src = favView==="fav" ? db.favs : (favView==="obs" ? db.observations : db.grammar);
@@ -2862,12 +2911,12 @@ function renderFavs(){
   const box = $("favList");
   box.innerHTML = "";
   if(favView==="gram"){
-    // ◇概念は数が少なく言語横断の軸なので、§に埋もれないよう先頭に固める
+    // ◇概念は別の切り替え先に移した(2026-08-15)。ここは課ごとの§だけ
     const list = db.grammar
+      .filter(g=>g.type!=="concept")
       .filter(g=>!favFilter || g.lang===favFilter)
       .sort((a,b)=>
-        (a.type==="concept" ? 0 : 1) - (b.type==="concept" ? 0 : 1)
-        || a.topic.localeCompare(b.topic, "ja")
+        a.topic.localeCompare(b.topic, "ja")
         || langOrder(a.lang)-langOrder(b.lang));
     if(!list.length){
       const d = document.createElement("div");
@@ -2885,21 +2934,13 @@ function renderFavs(){
        mbtn.textContent = "🗺 topic × 言語マトリクス";
        mbtn.onclick = openGramMatrix;
        box.appendChild(mbtn); */
-    let lastTopic = null, lastType = null;
+    const cnt = document.createElement("div");
+    cnt.className = "small-note";
+    cnt.style.cssText = "margin:2px 4px 10px";
+    cnt.textContent = list.length + " 件 / " + new Set(list.map(g=>g.topic)).size + " topic";
+    box.appendChild(cnt);
+    let lastTopic = null;
     list.forEach(g=>{
-      // ◇の塊にだけ見出しを付ける。§側は各行の頭に § が付いていて、
-      // しかもリスト全体が§なので、見出しが何も分けていなかった(2026-08-09に撤去)
-      const kind = (g.type==="concept") ? "concept" : "grammar";
-      if(kind !== lastType){
-        lastType = kind;
-        if(kind === "concept"){
-          const sec = document.createElement("div");
-          sec.className = "small-note";
-          sec.style.cssText = "margin:14px 4px 4px; font-weight:600; color:var(--accent)";
-          sec.textContent = "◇ 概念 — 各言語が同じことをどう捉えるか";
-          box.appendChild(sec);
-        }
-      }
       if(g.topic !== lastTopic){
         lastTopic = g.topic;
         const h = document.createElement("div");
