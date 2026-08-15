@@ -217,6 +217,17 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .btn.soft{background:var(--accent-soft); color:var(--accent)}
 .btn.danger{background:transparent; color:var(--danger); border:1px solid var(--danger)}
 .btn.full{width:100%; margin-top:10px}
+/* 単語をまとめて登録(2026-08-15) */
+.wd-head{font-size:11px; color:var(--sub); font-weight:700; letter-spacing:.04em;
+  margin:14px 4px 6px}
+.wd-row{display:flex; gap:8px; align-items:center; background:var(--card);
+  border:1px solid var(--border); border-radius:12px; padding:8px 10px; margin-bottom:6px}
+.wd-src{flex:0 0 40%; font-size:15px; unicode-bidi:plaintext; word-break:break-word}
+.wd-in{flex:1; min-width:0; padding:9px; font-size:15px; border:1px solid var(--border);
+  border-radius:8px; background:var(--bg); color:var(--text); unicode-bidi:plaintext}
+.wd-row.busy{border-color:var(--accent)}
+.wd-row.miss .wd-in{border-color:var(--danger)}
+.tr-hint{font-size:11px; color:var(--sub); margin-top:4px}
 .msg{font-size:13px; margin-top:10px; color:var(--accent); min-height:18px}
 .msg.err{color:var(--danger)}
 .small-note{font-size:12px; color:var(--sub); margin-top:8px; line-height:1.7}
@@ -299,6 +310,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
            仕組みは残してあるので、下の1行を戻せば復活する:
            <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button> -->
       <button class="obs-btn" id="wordFormBtn" style="display:none" title="この言語のキモ">✦</button>
+      <button class="obs-btn" id="wordsBtn" title="単語をまとめて登録">単</button>
     </div>
     <!-- 比較モードのボタンは2026-07-26に撤去(本人が使わないため)。
          compareMode の仕組み自体は残してあるので、下の1行を戻せば復活する:
@@ -435,6 +447,31 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <section id="pageProf" style="display:none">
   <button class="btn soft" id="profToLesson" style="margin-bottom:12px">← レッスンへ</button>
   <div id="profBody"></div>
+</section>
+
+<!-- 単語をまとめて登録(2026-08-15) -->
+<section id="pageWords" style="display:none">
+  <button class="btn soft" id="wdToLesson" style="margin-bottom:12px">← レッスンへ</button>
+  <div class="card">
+    <h2>単語をまとめて登録</h2>
+    <div class="filterbar" style="margin-top:0">
+      <button id="wdLesson" class="on">この課</button>
+      <button id="wdLang">この言語</button>
+      <button id="wdAll">全部</button>
+    </div>
+    <div class="filterbar">
+      <button id="wdTodo" class="on">未入力だけ</button>
+      <button id="wdEvery">すべて</button>
+    </div>
+    <div id="wdCount"></div>
+    <div style="display:flex; gap:8px; margin-top:6px">
+      <button class="btn" id="wdAutoBtn" style="flex:1; margin-top:0">表示中をまとめて自動翻訳</button>
+      <button class="btn soft" id="wdStopBtn" style="display:none; flex:0 0 90px; margin-top:0">止める</button>
+    </div>
+    <div class="msg" id="wdMsg"></div>
+    <div class="small-note">入力した訳はその場で保存されます(保存ボタンはありません)。自動翻訳は機械訳なので、おかしいものはその場で直してください。読みとメモは、単語をタップして開く画面から入れられます。</div>
+  </div>
+  <div id="wdList"></div>
 </section>
 
 <!-- 取り込み -->
@@ -1462,7 +1499,7 @@ const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings"};
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
-const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageCase", "pageStack", "pageAdd", "pageProf"];
+const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageCase", "pageStack", "pageAdd", "pageProf", "pageWords"];
 function showTab(t){
   subPages.forEach(p=>$(p).style.display = "none");
   Object.keys(pages).forEach(k=>{
@@ -3204,7 +3241,21 @@ function saveNoteField(lang, lesson, text, field, value, type){
   }
   save();
 }
-function hideTrPop(){ trPop.style.display = "none"; trPop.innerHTML = ""; }
+/* 保存ボタンを撤去したので、閉じる直前に必ず書き込む(2026-08-15)。
+   trCommit は openNotePopup が仕掛ける。別のポップアップを開くときも先に流す。 */
+let trCommit = null;
+function flushTr(){ if(trCommit){ const f = trCommit; trCommit = null; try{ f(); }catch(e){} } }
+function hideTrPop(){ flushTr(); trPop.style.display = "none"; trPop.innerHTML = ""; }
+// 自動翻訳(1件)。取れなければ空文字を返す
+async function translateOne(text, lang){
+  const sl = LANGCODE[lang] || "auto";
+  const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="
+    + encodeURIComponent(sl) + "&tl=ja&dt=t&q=" + encodeURIComponent(text);
+  const res = await fetch(url);
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  const data = await res.json();
+  return (data[0] || []).map(seg=>seg[0]).join("");
+}
 // ポップアップ内の入力欄を内容に合わせて自動で伸ばす(長い訳も全文見えるように)
 function fitTextareas(root){
   root.querySelectorAll("textarea").forEach(ta=>{
@@ -3265,6 +3316,7 @@ function refreshNoteButtons(lang, lesson, text){
   });
 }
 function openNotePopup(lang, lesson, text, anchorEl, type){
+  flushTr();
   type = type || "phrase";
   const rect = anchorEl.getBoundingClientRect();
   const note = getNote(lang, lesson, text, type) || {};
@@ -3273,11 +3325,11 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
     html += '<div class="tr-field"><div class="tr-label">' + esc(f.label) + '</div>'
       + '<textarea class="tr-input" dir="auto" data-field="' + f.key + '" placeholder="未入力">' + esc(note[f.key]||"") + '</textarea></div>';
   });
+  // 単語は開いた瞬間に自動翻訳を取りにいくのでボタンを出さない(2026-08-15)
   html += '<div class="tr-actions">'
-    + (note.ja ? '' : '<button class="tr-auto">自動翻訳を試す</button>')
+    + ((note.ja || type==="word") ? '' : '<button class="tr-auto">自動翻訳を試す</button>')
     + (!note.roman && ROMAN_LANGS.has(lang) ? '<button class="tr-auto tr-romanbtn">読みを自動取得</button>' : '')
-    + '<button class="tr-save btn">保存</button>'
-    + '<button class="tr-close btn soft">閉じる</button>'
+    + '<button class="tr-close btn">閉じる</button>'
     + '</div>';
   trPop.className = "tr-pop";
   trPop.innerHTML = html;
@@ -3288,15 +3340,46 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   setTimeout(()=>{ trJustOpened = false; }, 700);
 
   trPop.querySelector(".tr-close").onclick = hideTrPop;
-  trPop.querySelector(".tr-save").onclick = ()=>{
+
+  // 保存ボタンの代わり。閉じる/外をタップ/別のポップアップを開く、のどれでも書き込まれる
+  trCommit = ()=>{
+    let changed = false;
     fieldsFor(lang, type).forEach(f=>{
       const ta = trPop.querySelector('[data-field="' + f.key + '"]');
-      if(ta) saveNoteField(lang, lesson, text, f.key, ta.value, type);
+      if(!ta) return;
+      const before = (getNote(lang, lesson, text, type) || {})[f.key] || "";
+      if(String(ta.value).trim() !== String(before).trim()) changed = true;
+      saveNoteField(lang, lesson, text, f.key, ta.value, type);
     });
-    hideTrPop();
+    if(!changed) return;
     if(type==="title" || type==="word") renderLesson(); // 常時表示(タイトル訳・単語訳)を更新
     else refreshNoteButtons(lang, lesson, text);
+    if($("pageWords").style.display !== "none") renderWordsPage();
   };
+
+  // 単語は開いた瞬間に訳を取りにいく。手入力が先にあればそちらを優先する
+  if(type === "word"){
+    const jaTa = trPop.querySelector('[data-field="ja"]');
+    if(jaTa && !jaTa.value.trim()){
+      const hint = document.createElement("div");
+      hint.className = "tr-hint";
+      hint.textContent = "自動翻訳を取得中…";
+      jaTa.parentNode.appendChild(hint);
+      translateOne(text, lang).then(out=>{
+        if(!document.body.contains(jaTa)) return; // すでに閉じている
+        if(jaTa.value.trim()){ hint.remove(); return; }
+        if(out){
+          jaTa.value = out;
+          hint.textContent = "自動翻訳です。おかしければ直してください";
+          fitTextareas(trPop);
+        } else {
+          hint.textContent = "自動翻訳は取得できませんでした";
+        }
+      }).catch(()=>{
+        if(document.body.contains(hint)) hint.textContent = "自動翻訳は取得できませんでした";
+      });
+    }
+  }
   const rBtn = trPop.querySelector(".tr-romanbtn");
   if(rBtn){
     rBtn.onclick = async ()=>{
@@ -3317,14 +3400,8 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
     autoBtn.onclick = async ()=>{
       autoBtn.disabled = true;
       autoBtn.textContent = "取得中…";
-      const sl = LANGCODE[lang] || "auto";
       try{
-        const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="
-          + encodeURIComponent(sl) + "&tl=ja&dt=t&q=" + encodeURIComponent(text);
-        const res = await fetch(url);
-        if(!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        const out = (data[0] || []).map(seg=>seg[0]).join("");
+        const out = await translateOne(text, lang);
         const ta = trPop.querySelector('[data-field="ja"]');
         if(ta && out){ ta.value = out; ta.focus(); }
         autoBtn.remove();
@@ -3347,12 +3424,162 @@ document.addEventListener("scroll", ()=>{
   hideTrPop();
 }, true);
 
+/* ---------- 単語をまとめて登録(2026-08-15) ----------
+   狙いは「1件あたりのタップ数を減らす」こと。訳は入力した時点で保存され、
+   保存ボタンはない。読みとメモは今まで通り単語をタップして開く画面で入れる。 */
+let wdScope = "lesson";   // lesson | lang | all
+let wdOnly  = "todo";     // todo | every
+let wdRunning = false, wdStopReq = false;
+
+function wordRows(){
+  const order = new Map(db.langs.map((l,i)=>[l,i]));
+  const out = [];
+  db.lessons.forEach(L=>{
+    if(wdScope === "lesson" && !(L.lang === currentLang && L.lesson === currentNo)) return;
+    if(wdScope === "lang"   && L.lang !== currentLang) return;
+    (L.words || []).forEach(w=>{
+      const n = getNote(L.lang, L.lesson, w, "word") || {};
+      if(wdOnly === "todo" && String(n.ja || "").trim()) return;
+      out.push({lang:L.lang, lesson:L.lesson, w:w, ja:n.ja || ""});
+    });
+  });
+  out.sort((a,b)=>{
+    const oa = order.has(a.lang) ? order.get(a.lang) : 99;
+    const ob = order.has(b.lang) ? order.get(b.lang) : 99;
+    return (oa - ob) || (a.lesson - b.lesson);
+  });
+  return out;
+}
+
+function renderWordsPage(){
+  const rows = wordRows();
+  const scopeLabel = wdScope === "lesson" ? (currentLang + " L" + currentNo)
+                   : wdScope === "lang"   ? currentLang : "全言語";
+  $("wdCount").textContent = scopeLabel + " · " + rows.length + " 件"
+    + (wdOnly === "todo" ? "(訳が未入力のもの)" : "");
+  $("wdAutoBtn").disabled = wdRunning || !rows.some(r=>!r.ja.trim());
+  const box = $("wdList");
+  box.innerHTML = "";
+  let head = "";
+  rows.forEach(r=>{
+    const key = r.lang + "  L" + r.lesson;
+    if(key !== head){
+      head = key;
+      const h = document.createElement("div");
+      h.className = "wd-head";
+      h.textContent = key;
+      box.appendChild(h);
+    }
+    const row = document.createElement("div");
+    row.className = "wd-row";
+    row.dataset.lang = r.lang;
+    row.dataset.lesson = r.lesson;
+    row.dataset.w = r.w;
+    const src = document.createElement("div");
+    src.className = "wd-src";
+    src.dir = "auto";
+    src.textContent = r.w;
+    src.onclick = ()=>openNotePopup(r.lang, r.lesson, r.w, src, "word"); // 読み・メモを入れたいとき
+    const inp = document.createElement("input");
+    inp.className = "wd-in";
+    inp.dir = "auto";
+    inp.placeholder = "訳";
+    inp.value = r.ja;
+    let t = null;
+    const put = ()=>{ saveNoteField(r.lang, r.lesson, r.w, "ja", inp.value, "word"); };
+    inp.oninput  = ()=>{ clearTimeout(t); t = setTimeout(put, 400); };
+    inp.onchange = ()=>{ clearTimeout(t); put(); };
+    row.appendChild(src);
+    row.appendChild(inp);
+    box.appendChild(row);
+  });
+  if(!rows.length){
+    box.innerHTML = '<div class="small-note" style="padding:0 4px">'
+      + (wdOnly === "todo" ? "この範囲は全部入っています。" : "この範囲に単語がありません。") + '</div>';
+  }
+}
+
+async function runWordAuto(){
+  if(wdRunning) return;
+  const targets = Array.from($("wdList").querySelectorAll(".wd-row"))
+    .filter(row=>!row.querySelector(".wd-in").value.trim());
+  if(!targets.length){ $("wdMsg").textContent = "自動翻訳するものがありません。"; return; }
+  wdRunning = true; wdStopReq = false;
+  $("wdStopBtn").style.display = "";
+  $("wdAutoBtn").disabled = true;
+  let ok = 0, ng = 0, streak = 0;
+  for(let i = 0; i < targets.length; i++){
+    if(wdStopReq) break;
+    const row = targets[i];
+    const inp = row.querySelector(".wd-in");
+    if(inp.value.trim()) continue;         // 途中で手入力されたものは飛ばす
+    row.classList.add("busy");
+    $("wdMsg").textContent = "自動翻訳中… " + (i+1) + " / " + targets.length
+      + "(入った " + ok + " 件)";
+    try{
+      const out = await translateOne(row.dataset.w, row.dataset.lang);
+      if(out && out !== row.dataset.w){
+        inp.value = out;
+        saveNoteField(row.dataset.lang, Number(row.dataset.lesson), row.dataset.w, "ja", out, "word");
+        ok++; streak = 0;
+      } else {
+        row.classList.add("miss"); ng++; streak++;
+      }
+    }catch(e){
+      row.classList.add("miss"); ng++; streak++;
+    }
+    row.classList.remove("busy");
+    if(streak >= 5){                        // 連続で失敗したら止める(回数制限に当たった可能性)
+      $("wdMsg").textContent = "続けて取得できなくなったので止めました。少し待ってからもう一度試してください。"
+        + "(入った " + ok + " 件 / 失敗 " + ng + " 件)";
+      break;
+    }
+    await new Promise(r=>setTimeout(r, 120));
+  }
+  wdRunning = false;
+  $("wdStopBtn").style.display = "none";
+  $("wdAutoBtn").disabled = false;
+  if(streak < 5){
+    $("wdMsg").textContent = (wdStopReq ? "止めました。" : "終わりました。")
+      + " 入った " + ok + " 件" + (ng ? " / 取れなかった " + ng + " 件" : "")
+      + "。機械訳なので、目を通して直してください。";
+  }
+}
+
+function openWordsPage(){
+  openSubPage("pageWords");
+  renderWordsPage();
+}
+$("wdToLesson").onclick = ()=>showTab("tabLesson");
+$("wordsBtn").onclick = openWordsPage;
+[["wdLesson","lesson"],["wdLang","lang"],["wdAll","all"]].forEach(([id,v])=>{
+  $(id).onclick = ()=>{
+    if(wdRunning) return;
+    wdScope = v;
+    ["wdLesson","wdLang","wdAll"].forEach(x=>$(x).classList.toggle("on", x===id));
+    $("wdMsg").textContent = "";
+    renderWordsPage();
+  };
+});
+[["wdTodo","todo"],["wdEvery","every"]].forEach(([id,v])=>{
+  $(id).onclick = ()=>{
+    if(wdRunning) return;
+    wdOnly = v;
+    ["wdTodo","wdEvery"].forEach(x=>$(x).classList.toggle("on", x===id));
+    $("wdMsg").textContent = "";
+    renderWordsPage();
+  };
+});
+$("wdAutoBtn").onclick = runWordAuto;
+$("wdStopBtn").onclick = ()=>{ wdStopReq = true; $("wdMsg").textContent = "止めています…"; };
+
 /* ---------- 文法(Grammar) ---------- */
 function grammarOf(lang, lesson, text){
   return db.grammar.filter(g=>(g.examples||[]).some(e=>e.lang===lang && e.lesson===lesson && e.text===text));
 }
 function gMark(g){ return g.type==="concept" ? "◇" : (g.type==="root" ? "√" : "§"); }
 function openGrammarPopup(g, anchorRect){
+  flushTr();
   trPop.className = "tr-pop";
   let html = '<div class="tr-src">' + gMark(g) + ' ' + esc(g.topic) + ' — ' + esc(g.lang)
     + (g.lesson!=null ? ' · L' + g.lesson : '') + '</div>'
