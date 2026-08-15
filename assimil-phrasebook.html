@@ -2872,7 +2872,7 @@ function renderFavs(){
     const head = document.createElement("div");
     head.className = "small-note";
     head.style.cssText = "margin:2px 4px 12px";
-    head.textContent = "同じことを、各言語がどう扱うか。" + byTopic.size + " の軸 / " + con.length + " 件";
+    head.textContent = "同じことを、各言語がどう扱うか。" + byTopic.size + " の軸";
     box.appendChild(head);
     [...byTopic.entries()]
       .sort((a,b)=>b[1].length - a[1].length || a[0].localeCompare(b[0], "ja"))
