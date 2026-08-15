@@ -480,8 +480,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <h2>JSONを貼り付けて取り込み</h2>
     <textarea id="importBox" placeholder='{"lessons":[...]}'></textarea>
     <button class="btn full" id="importBtn">取り込む</button>
+    <button class="btn soft full" id="undoBtn" style="display:none">直前の取り込みを取り消す</button>
     <div class="msg" id="importMsg"></div>
-    <div class="small-note">同じ言語・同じレッスン番号は上書きされます。未登録の言語は自動で追加されます。言語名は日本語(例: ロシア語)でも自己表記(Русский)に自動変換されます。<br>日本語訳をまとめて登録したい場合は <code>{"notes":[{"lang":"...","lesson":1,"text":"フレーズ原文","ja":"日本語訳","roman":"読み(任意)"}]}</code> の形式で貼り付けても取り込めます(lessonsと同時でも単独でもOK)。タイトルの訳は <code>"type":"title"</code> を付けます。</div>
+    <div class="small-note">同じ言語・同じレッスン番号は<b>差し替え</b>られます。ダイアログと文法の例文を別々のJSONで入れたい復習回などは、レッスンに <code>"mode":"add"</code> を付けると既存の本文に<b>足されます</b>(同じ行は二重になりません)。<code>title</code>・<code>words</code>・<code>tags</code>・<code>note</code> は、書かなければ既存のものが残ります。何かを潰した取り込みは赤字で知らせます。上の「取り消す」で直前の1回だけ戻せます。<br>未登録の言語は自動で追加されます。言語名は日本語(例: ロシア語)でも自己表記(Русский)に自動変換されます。<br>日本語訳をまとめて登録したい場合は <code>{"notes":[{"lang":"...","lesson":1,"text":"フレーズ原文","ja":"日本語訳","roman":"読み(任意)"}]}</code> の形式で貼り付けても取り込めます(lessonsと同時でも単独でもOK)。タイトルの訳は <code>"type":"title"</code> を付けます。</div>
   </div>
   <div class="card">
     <h2>形式(Claudeに依頼するとき用)</h2>
@@ -728,6 +729,57 @@ function save(){
     if(adbAgain){ adbAgain = false; save(); }
   });
 }
+/* 取り込みの取り消し(1回分)。上書きで何かが消えても戻せるようにする(2026-08-15) */
+const UNDO_KEY = "undo";
+let undoReady = false;
+function makeUndo(){
+  const text = JSON.stringify(db);
+  undoReady = true;
+  openAtlasDB().then(h=>{
+    if(!h) return;
+    try{
+      const tx = h.transaction(ADB_STORE, "readwrite");
+      tx.objectStore(ADB_STORE).put(text, UNDO_KEY);
+    }catch(e){}
+  });
+  try{ sessionStorage.setItem(KEY + ".undo", text); }catch(e){ /* 入らなければIndexedDBだけ */ }
+  refreshUndoBtn();
+}
+async function readUndo(){
+  let t = null;
+  try{ t = sessionStorage.getItem(KEY + ".undo"); }catch(e){}
+  if(!t){
+    const h = await openAtlasDB();
+    if(h) t = await new Promise(res=>{
+      try{
+        const q = h.transaction(ADB_STORE, "readonly").objectStore(ADB_STORE).get(UNDO_KEY);
+        q.onsuccess = ()=>res(q.result || null);
+        q.onerror   = ()=>res(null);
+      }catch(e){ res(null); }
+    });
+  }
+  return t;
+}
+function refreshUndoBtn(){
+  const b = $("undoBtn");
+  if(b) b.style.display = undoReady ? "" : "none";
+}
+async function doUndo(){
+  const t = await readUndo();
+  const msg = $("importMsg");
+  if(!t){ msg.textContent = "戻せる控えが見つかりませんでした。"; msg.className = "msg err"; return; }
+  let raw = null;
+  try{ raw = JSON.parse(t); }catch(e){}
+  if(!raw || !Array.isArray(raw.lessons)){ msg.textContent = "控えを読めませんでした。"; msg.className = "msg err"; return; }
+  db = load(raw);
+  save();
+  undoReady = false; refreshUndoBtn();
+  renderLangbar(); renderLesson();
+  msg.textContent = "取り込む前の状態に戻しました(レッスン " + db.lessons.length
+    + " 課 / § " + db.grammar.length + " 件)。";
+  msg.className = "msg";
+}
+
 // 起動時: IndexedDB のほうが新しければそちらを採用する
 async function bootStorage(){
   let raw = null;
@@ -2953,8 +3005,11 @@ function importData(raw, msgEl){
      && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds) && !Array.isArray(data.suffixChains)){
     msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / adds / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
+  // 取り込みの直前を1回分だけ控えておく。上書きで消えたときに戻せるように(2026-08-15)
+  makeUndo();
   const rootRes = importRoots(data.roots);
   let gAdded = 0, gUpdated = 0;
+  const gOverwritten = [], lReplaced = [];
   if(Array.isArray(data.grammar)){
     data.grammar.forEach(g=>{
       if(!g || !g.topic || !g.lang) return;
@@ -2972,8 +3027,15 @@ function importData(raw, msgEl){
             }))
           : []
       };
-      const i = db.grammar.findIndex(x=>(g.id && x.id===g.id) || (x.topic===rec.topic && x.lang===rec.lang && x.lesson===rec.lesson));
-      if(i>=0){ rec.id = db.grammar[i].id; db.grammar[i] = rec; gUpdated++; }
+      // 照合キーに type を入れる。入れないと、同じ topic 名(「数」「時間」「家族」など)を持つ
+      // §文法 と ◇概念 が同じ言語・同じ課で衝突し、片方が黙って消えていた(2026-08-15)
+      const i = db.grammar.findIndex(x=>(g.id && x.id===g.id)
+        || (x.topic===rec.topic && x.lang===rec.lang && x.lesson===rec.lesson
+            && (x.type||"grammar")===rec.type));
+      if(i>=0){
+        gOverwritten.push(gMark(rec) + rec.topic + "(" + rec.lang + " L" + rec.lesson + ")");
+        rec.id = db.grammar[i].id; db.grammar[i] = rec; gUpdated++;
+      }
       else { db.grammar.push(rec); gAdded++; }
     });
   }
@@ -3019,24 +3081,44 @@ function importData(raw, msgEl){
       else { db.notes.push({lang, lesson, text, ...fields, updated:Date.now()}); notesAdded++; }
     });
   }
-  let added = 0, updated = 0;
+  let added = 0, updated = 0, merged = 0;
   list.forEach(item=>{
     if(!item || !item.lang || item.lesson==null) return;
-    const rec = {
-      lang: toNative(String(item.lang)),
-      lesson: Number(item.lesson),
-      title: item.title ? String(item.title) : "",
-      phrases: Array.isArray(item.phrases) ? item.phrases.map(String) : [],
-      words: Array.isArray(item.words) ? item.words.map(String) : [],
-      note: item.note ? String(item.note) : "",
-      tags: parseTags(item.tags)
+    const lang = toNative(String(item.lang)), lesson = Number(item.lesson);
+    if(!db.langs.includes(lang)) db.langs.push(lang);
+    const i = db.lessons.findIndex(x=>x.lang===lang && x.lesson===lesson);
+    const old = i>=0 ? db.lessons[i] : null;
+    const inPhr = Array.isArray(item.phrases) ? item.phrases.map(String) : null;
+    const inWrd = Array.isArray(item.words)   ? item.words.map(String)   : null;
+    // "mode":"add" なら既存に足す。復習回のように、ダイアログと文法の例文を
+    // 別々のJSONで入れたいときに使う。同じ行は二重にしない(2026-08-15)
+    const addMode = String(item.mode||"") === "add";
+    const join = (o, n)=>{
+      if(!n) return o || [];
+      if(!addMode) return n;
+      const seen = new Set(o || []);
+      return (o || []).concat(n.filter(x=>{ if(seen.has(x)) return false; seen.add(x); return true; }));
     };
-    if(!db.langs.includes(rec.lang)) db.langs.push(rec.lang);
-    const i = db.lessons.findIndex(x=>x.lang===rec.lang && x.lesson===rec.lesson);
+    const tagsIn = parseTags(item.tags);
+    const rec = {
+      lang: lang,
+      lesson: lesson,
+      // 省略したキーで既存を消さない。以前は words を書かずに取り込むと単語が全部消えていた
+      title:   item.title != null ? String(item.title) : (old ? old.title : ""),
+      phrases: join(old ? old.phrases : [], inPhr),
+      words:   join(old ? old.words   : [], inWrd),
+      note:    item.note != null ? String(item.note) : (old ? old.note : ""),
+      tags:    tagsIn.length ? tagsIn : (old && Array.isArray(old.tags) ? old.tags : [])
+    };
     if(i>=0){
-      // 手元で付けたタグは、取り込みデータにタグが無ければ残す
-      if(!rec.tags.length && Array.isArray(db.lessons[i].tags)) rec.tags = db.lessons[i].tags;
-      db.lessons[i] = rec; updated++;
+      if(addMode) merged++;
+      else{
+        updated++;
+        // 差し替えで本文が入れ替わった課は、あとで名前を出す(黙って消さない)
+        const lost = (old.phrases||[]).filter(p=>!rec.phrases.includes(p)).length;
+        if(lost) lReplaced.push(lang + " L" + lesson + "(" + lost + "行)");
+      }
+      db.lessons[i] = rec;
     } else { db.lessons.push(rec); added++; }
   });
   // 語形成(基語)。lang+base で照合し、丸ごと差し替える(語根の追記マージより単純でよい)
@@ -3184,8 +3266,9 @@ function importData(raw, msgEl){
   }
   save();
   const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated || aAdded || aUpdated || aDeleted;
-  let msg = (added || updated || !other)
-    ? "取り込み完了: 新規 " + added + " 件 / 上書き " + updated + " 件"
+  let msg = (added || updated || merged || !other)
+    ? "取り込み完了: 新規 " + added + " 件 / 差し替え " + updated + " 件"
+      + (merged ? " / 足した " + merged + " 件" : "")
     : "取り込み完了:";
   if(notesAdded || notesUpdated || notesDeleted) msg += "(日本語訳など: 新規 " + notesAdded + " 件 / 上書き " + notesUpdated + " 件"
     + (notesDeleted ? " / 掃除 " + notesDeleted + " 件" : "") + ")";
@@ -3204,10 +3287,19 @@ function importData(raw, msgEl){
   if(zAdded || zUpdated) msg += "(積み木: 新規 " + zAdded + " 個 / 上書き " + zUpdated + " 個)";
   if(yAdded || yUpdated) msg += "(格: 新規 " + yAdded + " 個 / 上書き " + yUpdated + " 個)";
   if(fAdded || fUpdated) msg += "(この言語のキモ: 新規 " + fAdded + " 言語 / 上書き " + fUpdated + " 言語)";
-  msgEl.textContent = msg;
+  // 何かを潰したときは黙らない。上の「取り消す」で戻せる(2026-08-15)
+  const warn = [];
+  if(lReplaced.length) warn.push("本文を差し替えた課: " + lReplaced.join("、")
+    + " ── 足したいときは各レッスンに \"mode\":\"add\" を付けてください");
+  if(gOverwritten.length) warn.push("上書きした文法: " + gOverwritten.join("、"));
+  msgEl.innerHTML = esc(msg)
+    + (warn.length ? '<div style="color:var(--danger); margin-top:8px; line-height:1.7">⚠ '
+        + warn.map(esc).join("<br>⚠ ") + '</div>' : '');
   msgEl.className = "msg";
+  refreshUndoBtn();
   return true;
 }
+$("undoBtn").onclick = doUndo;
 $("importBtn").onclick = ()=>{
   // 取り込みの途中で例外が出ると、以前は何のメッセージも出ないまま
   // 「画面には入っているのにリロードで消える」状態になっていた(2026-08-15)
