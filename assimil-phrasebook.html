@@ -506,6 +506,11 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="audioCheck" class="small-note"></div>
   </div>
   <div class="card">
+    <h2>保存の状態</h2>
+    <div id="storeInfo" class="small-note" style="margin-top:0"></div>
+    <button class="btn soft full" id="storeCheckBtn">調べ直す</button>
+  </div>
+  <div class="card">
     <h2>バックアップ</h2>
     <button class="btn full" id="exportBtn">JSONを書き出す(お気に入り含む)</button>
     <button class="btn soft full" id="fileImportBtn">ファイルから読み込む</button>
@@ -563,9 +568,9 @@ let compareMode = false;
 let favFilter = "";      // "" = 全言語
 let searchType = "all";  // all | phrase | word
 
-function load(){
-  let d = null;
-  try{
+function load(raw){
+  let d = (raw && Array.isArray(raw.langs) && Array.isArray(raw.lessons)) ? raw : null;
+  if(!d) try{
     const p = JSON.parse(localStorage.getItem(KEY));
     if(p && Array.isArray(p.langs) && Array.isArray(p.lessons)) d = p;
   }catch(e){}
@@ -630,7 +635,113 @@ function load(){
   return d;
 }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+/* ---------- 保存 ----------
+   2026-08-15: localStorage は端末あたり約5MBしか入らず、データがすでに約4.8MBあった。
+   上限を超えると setItem が例外を投げ、これまで無言で失敗していた
+   (=取り込んだレッスンがリロードで消える、という症状の原因)。
+   そこで保存先を IndexedDB に移した。localStorage は入るあいだだけ控えとして書く。 */
+// localStorage が満杯だと、現在の言語や課番号のような小さな書き込みまで例外を投げる。
+// これが renderLesson の途中で起きると画面が壊れるので、必ずこの関数を通す(2026-08-15)
+function lsSet(k, v){ try{ localStorage.setItem(k, v); return true; }catch(e){ return false; } }
+const ADB_NAME = "assimilAtlas", ADB_STORE = "db", ADB_KEY = "main";
+let adbHandle = null, adbFailed = false;
+function openAtlasDB(){
+  return new Promise(res=>{
+    if(adbHandle) return res(adbHandle);
+    if(adbFailed) return res(null);
+    let done = false;
+    const finish = v=>{ if(!done){ done = true; if(!v) adbFailed = true; res(v); } };
+    const to = setTimeout(()=>finish(null), 3000);
+    try{
+      const r = indexedDB.open(ADB_NAME, 1);
+      r.onupgradeneeded = ()=>{ try{ r.result.createObjectStore(ADB_STORE); }catch(e){} };
+      r.onsuccess = ()=>{ clearTimeout(to); adbHandle = r.result; finish(adbHandle); };
+      r.onerror   = ()=>{ clearTimeout(to); finish(null); };
+    }catch(e){ clearTimeout(to); finish(null); }
+  });
+}
+async function atlasRead(){
+  const h = await openAtlasDB();
+  if(!h) return null;
+  return new Promise(res=>{
+    try{
+      const q = h.transaction(ADB_STORE, "readonly").objectStore(ADB_STORE).get(ADB_KEY);
+      q.onsuccess = ()=>res(q.result || null);
+      q.onerror   = ()=>res(null);
+    }catch(e){ res(null); }
+  });
+}
+function atlasWrite(text){
+  return openAtlasDB().then(h=>{
+    if(!h) return false;
+    return new Promise(res=>{
+      try{
+        const tx = h.transaction(ADB_STORE, "readwrite");
+        tx.objectStore(ADB_STORE).put(text, ADB_KEY);
+        tx.oncomplete = ()=>res(true);
+        tx.onerror = tx.onabort = ()=>res(false);
+      }catch(e){ res(false); }
+    });
+  });
+}
+// 保存の状態。設定画面と警告帯で使う
+const STORE = {mode:"", lastOk:0, lastErr:"", lsOk:true, bytes:0};
+let adbBusy = false, adbAgain = false;
+function warnBar(msg){
+  let el = document.getElementById("saveWarn");
+  if(!msg){ if(el) el.remove(); return; }
+  if(!el){
+    el = document.createElement("div");
+    el.id = "saveWarn";
+    el.style.cssText = "position:fixed; left:8px; right:8px; bottom:8px; z-index:99;"
+      + "background:var(--danger); color:#fff; padding:12px 14px; border-radius:12px;"
+      + "font-size:13px; line-height:1.6; box-shadow:0 6px 20px rgba(0,0,0,.25)";
+    el.onclick = ()=>el.remove();
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+}
+function save(){
+  db.savedAt = Date.now();   // どちらの保存先が新しいかの判定に使う
+  const text = JSON.stringify(db);
+  STORE.bytes = text.length * 2;
+  // 控え(入るあいだだけ)。あふれても止めない
+  try{ localStorage.setItem(KEY, text); STORE.lsOk = true; }
+  catch(e){ STORE.lsOk = false; }
+  // 本体
+  if(adbBusy){ adbAgain = true; return; }
+  adbBusy = true;
+  atlasWrite(text).then(ok=>{
+    if(ok){
+      STORE.mode = "idb"; STORE.lastOk = Date.now(); STORE.lastErr = "";
+      warnBar("");
+    } else if(STORE.lsOk){
+      STORE.mode = "ls"; STORE.lastOk = Date.now(); STORE.lastErr = "";
+      warnBar("");
+    } else {
+      STORE.mode = "none";
+      STORE.lastErr = "保存できませんでした";
+      warnBar("保存できませんでした。これ以上の変更は失われます。設定→バックアップから書き出して、ブラウザを開き直してください。(タップで閉じる)");
+    }
+  }).finally(()=>{
+    adbBusy = false;
+    if(adbAgain){ adbAgain = false; save(); }
+  });
+}
+// 起動時: IndexedDB のほうが新しければそちらを採用する
+async function bootStorage(){
+  let raw = null;
+  try{ const t = await atlasRead(); if(t) raw = JSON.parse(t); }catch(e){}
+  const here = Number(db.savedAt) || 0;
+  const there = raw ? (Number(raw.savedAt) || 0) : -1;
+  if(raw && there >= here){
+    db = load(raw);
+    STORE.mode = "idb";
+    renderLangbar(); renderLesson();
+  } else {
+    save();               // localStorage 側が新しい(または初回) → IndexedDB へ移す
+  }
+}
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function findLesson(lang, no){ return db.lessons.find(x=>x.lang===lang && x.lesson===no); }
 function langOrder(l){ const i = db.langs.indexOf(l); return i<0 ? 999 : i; }
@@ -1509,7 +1620,7 @@ function showTab(t){
   if(t==="tabLesson") renderLesson();
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
-  if(t==="tabSettings") renderLangs();
+  if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); }
 }
 Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
 // レッスン画面から語根/接辞を開く。タブの見た目は「レッスン」のまま
@@ -2003,7 +2114,7 @@ $("wfQ").oninput = ()=>renderWf();
 });
 function jumpTo(lang, no){
   currentLang = lang; currentNo = no; compareMode = false;
-  localStorage.setItem(KEY + ".lang", lang);
+  lsSet(KEY + ".lang", lang);
   if(typeof closeMap === "function") closeMap(); // マトリクス/マップ経由のジャンプ時に重なりを残さない
   showTab("tabLesson");
 }
@@ -2017,7 +2128,7 @@ function renderLangbar(){
     const b = document.createElement("button");
     b.textContent = l;
     b.className = (l===currentLang && !compareMode) ? "on" : "";
-    b.onclick = ()=>{ compareMode = false; currentLang = l; localStorage.setItem(KEY + ".lang", l); renderLesson(); };
+    b.onclick = ()=>{ compareMode = false; currentLang = l; lsSet(KEY + ".lang", l); renderLesson(); };
     bar.appendChild(b);
   });
 }
@@ -2136,7 +2247,7 @@ function lessonCards(L, withLangTitle){
 function renderLesson(){
   renderLangbar();
   $("lessonNo").value = currentNo;
-  localStorage.setItem(KEY + ".no", currentNo);
+  lsSet(KEY + ".no", currentNo);
   const cmp = $("compareBtn");   // ボタンは撤去済み。復活させたときだけ効く
   if(cmp){
     cmp.textContent = compareMode ? "1言語表示に戻る" : "全言語でこのレッスンを見る";
@@ -3098,7 +3209,14 @@ function importData(raw, msgEl){
   return true;
 }
 $("importBtn").onclick = ()=>{
-  if(importData($("importBox").value, $("importMsg"))) $("importBox").value = "";
+  // 取り込みの途中で例外が出ると、以前は何のメッセージも出ないまま
+  // 「画面には入っているのにリロードで消える」状態になっていた(2026-08-15)
+  try{
+    if(importData($("importBox").value, $("importMsg"))) $("importBox").value = "";
+  }catch(e){
+    $("importMsg").textContent = "取り込み中にエラーが起きました: " + (e && e.message ? e.message : e);
+    $("importMsg").className = "msg err";
+  }
 };
 
 /* ---------- settings ---------- */
@@ -3155,8 +3273,8 @@ function renameLang(oldName, newName){
   });
   db.roots.forEach(r=>{ if(r.lang===oldName) r.lang = newName; });
   const spd = localStorage.getItem(KEY + ".spd." + oldName);
-  if(spd!=null){ localStorage.setItem(KEY + ".spd." + newName, spd); localStorage.removeItem(KEY + ".spd." + oldName); }
-  if(currentLang===oldName){ currentLang = newName; localStorage.setItem(KEY + ".lang", newName); }
+  if(spd!=null){ lsSet(KEY + ".spd." + newName, spd); localStorage.removeItem(KEY + ".spd." + oldName); }
+  if(currentLang===oldName){ currentLang = newName; lsSet(KEY + ".lang", newName); }
   apLangCache = null; // 音声照合キャッシュを作り直す
   save();
   renderLangs();
@@ -3424,6 +3542,38 @@ document.addEventListener("scroll", ()=>{
   hideTrPop();
 }, true);
 
+/* ---------- 保存の状態(設定画面) ---------- */
+function mb(n){ return (n/1048576).toFixed(2) + " MB"; }
+async function renderStoreInfo(){
+  const el = $("storeInfo");
+  if(!el) return;
+  el.textContent = "調べています…";
+  const text = JSON.stringify(db);
+  const size = text.length * 2;
+  const idbAlive = !!(await openAtlasDB());
+  let lsOk = true;
+  try{ localStorage.setItem(KEY + ".probe", text.slice(0, 200000)); localStorage.removeItem(KEY + ".probe"); }
+  catch(e){ lsOk = false; }
+  let quota = "";
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      const q = await navigator.storage.estimate();
+      if(q && q.quota) quota = "この端末がこのサイトに割り当てている容量: " + mb(q.usage||0) + " / " + mb(q.quota);
+    }
+  }catch(e){}
+  const lines = [
+    "データの大きさ: <b>" + mb(size) + "</b>"
+      + "(レッスン " + db.lessons.length + " 課 / 注 " + db.notes.length + " 件 / § " + db.grammar.length + " 件)",
+    "主な保存先: <b>" + (idbAlive ? "IndexedDB(容量に余裕あり)" : "IndexedDBが使えません") + "</b>",
+    "控えのlocalStorage: <b>" + (lsOk ? "書けています" : "満杯で書けません(約5MBが上限)") + "</b>"
+      + (lsOk ? "" : " ── 控えなので、これが満杯でも本体には影響しません"),
+    STORE.lastOk ? "最後に保存できた時刻: " + new Date(STORE.lastOk).toLocaleString() : "",
+    quota
+  ].filter(Boolean);
+  el.innerHTML = lines.join("<br>")
+    + (idbAlive ? "" : "<br><span style='color:var(--danger)'>IndexedDBが使えないため、約5MBを超えると保存できません。設定→バックアップからこまめに書き出してください。</span>");
+}
+
 /* ---------- 単語をまとめて登録(2026-08-15) ----------
    狙いは「1件あたりのタップ数を減らす」こと。訳は入力した時点で保存され、
    保存ボタンはない。読みとメモは今まで通り単語をタップして開く画面で入れる。 */
@@ -3507,7 +3657,7 @@ async function runWordAuto(){
   wdRunning = true; wdStopReq = false;
   $("wdStopBtn").style.display = "";
   $("wdAutoBtn").disabled = true;
-  let ok = 0, ng = 0, streak = 0;
+  let ok = 0, ng = 0, streak = 0, stopMsg = "";
   for(let i = 0; i < targets.length; i++){
     if(wdStopReq) break;
     const row = targets[i];
@@ -3516,34 +3666,40 @@ async function runWordAuto(){
     row.classList.add("busy");
     $("wdMsg").textContent = "自動翻訳中… " + (i+1) + " / " + targets.length
       + "(入った " + ok + " 件)";
+    let out = null, netErr = false;
     try{
-      const out = await translateOne(row.dataset.w, row.dataset.lang);
-      if(out && out !== row.dataset.w){
-        inp.value = out;
+      out = await translateOne(row.dataset.w, row.dataset.lang);
+    }catch(e){ netErr = true; }
+    if(out && out !== row.dataset.w){
+      inp.value = out;
+      // 保存の失敗は翻訳の失敗とは別物。混ぜると原因が分からなくなる(2026-08-15)
+      try{
         saveNoteField(row.dataset.lang, Number(row.dataset.lesson), row.dataset.w, "ja", out, "word");
-        ok++; streak = 0;
-      } else {
-        row.classList.add("miss"); ng++; streak++;
+      }catch(e){}
+      if(STORE.mode === "none"){
+        row.classList.remove("busy");
+        stopMsg = "保存できなくなったので止めました。設定→バックアップから書き出して、"
+          + "ブラウザを開き直してください。(入った " + ok + " 件)";
+        break;
       }
-    }catch(e){
+      ok++; streak = 0;
+    } else {
       row.classList.add("miss"); ng++; streak++;
     }
     row.classList.remove("busy");
-    if(streak >= 5){                        // 連続で失敗したら止める(回数制限に当たった可能性)
-      $("wdMsg").textContent = "続けて取得できなくなったので止めました。少し待ってからもう一度試してください。"
-        + "(入った " + ok + " 件 / 失敗 " + ng + " 件)";
+    if(streak >= 8){   // 続けて取れない = 翻訳の回数制限に当たった可能性が高い
+      stopMsg = "翻訳が続けて取れなくなったので止めました。5〜10分ほど置いてから、"
+        + "「この言語」くらいの単位で試してください。(入った " + ok + " 件 / 取れなかった " + ng + " 件)";
       break;
     }
-    await new Promise(r=>setTimeout(r, 120));
+    await new Promise(r=>setTimeout(r, 700));  // 連続で叩くと止められるので間隔をあける
   }
   wdRunning = false;
   $("wdStopBtn").style.display = "none";
   $("wdAutoBtn").disabled = false;
-  if(streak < 5){
-    $("wdMsg").textContent = (wdStopReq ? "止めました。" : "終わりました。")
-      + " 入った " + ok + " 件" + (ng ? " / 取れなかった " + ng + " 件" : "")
-      + "。機械訳なので、目を通して直してください。";
-  }
+  $("wdMsg").textContent = stopMsg || ((wdStopReq ? "止めました。" : "終わりました。")
+    + " 入った " + ok + " 件" + (ng ? " / 取れなかった " + ng + " 件" : "")
+    + "。機械訳なので、目を通して直してください。");
 }
 
 function openWordsPage(){
@@ -3570,6 +3726,7 @@ $("wordsBtn").onclick = openWordsPage;
     renderWordsPage();
   };
 });
+$("storeCheckBtn").onclick = renderStoreInfo;
 $("wdAutoBtn").onclick = runWordAuto;
 $("wdStopBtn").onclick = ()=>{ wdStopReq = true; $("wdMsg").textContent = "止めています…"; };
 
@@ -3833,7 +3990,7 @@ function speedStep(dir){
   let i = 0, best = Infinity;
   SPEEDS.forEach((s,k)=>{ const d = Math.abs(s-cur); if(d<best){ best = d; i = k; } });
   const v = SPEEDS[(i + dir + SPEEDS.length) % SPEEDS.length];
-  localStorage.setItem(KEY + ".spd." + currentLang, v);
+  lsSet(KEY + ".spd." + currentLang, v);
   $("spdBtn").textContent = speedLabel(v);
   if(AP.key && AP.key.slice(0, AP.key.lastIndexOf("|"))===currentLang) AP.audio.playbackRate = v;
 }
@@ -3951,6 +4108,9 @@ $("audioCheckBtn").onclick = async ()=>{
 };
 
 renderLesson();
+bootStorage();
+// 閉じる直前にもう一度書いておく(入力直後にアプリを閉じた場合の取りこぼし防止)
+window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
 </script>
 </body>
 </html>
