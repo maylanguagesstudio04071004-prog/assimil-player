@@ -510,6 +510,8 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <h2>保存の状態</h2>
     <div id="storeInfo" class="small-note" style="margin-top:0"></div>
     <button class="btn soft full" id="storeCheckBtn">調べ直す</button>
+    <button class="btn soft full" id="freshBtn">新しいファイルを取りに行く</button>
+    <div class="small-note">GitHubに上げても、スマホ側が古いファイルを持ったままのことがあります。上の「版」が渡したものと違うときに押してください。保存したデータは消えません。</div>
   </div>
   <div class="card">
     <h2>バックアップ</h2>
@@ -549,6 +551,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <script>
 "use strict";
+// このファイルを直すたびに上げる。設定→保存の状態 に出るので、
+// スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
+const BUILD = "2026-08-15c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3668,6 +3673,7 @@ async function renderStoreInfo(){
     }
   }catch(e){}
   const lines = [
+    "このファイルの版: <b>" + BUILD + "</b>",
     "データの大きさ: <b>" + mb(size) + "</b>"
       + "(レッスン " + db.lessons.length + " 課 / 注 " + db.notes.length + " 件 / § " + db.grammar.length + " 件)",
     "主な保存先: <b>" + (idbAlive ? "IndexedDB(容量に余裕あり)" : "IndexedDBが使えません") + "</b>",
@@ -3833,6 +3839,25 @@ $("wordsBtn").onclick = openWordsPage;
   };
 });
 $("storeCheckBtn").onclick = renderStoreInfo;
+// Service Worker と HTTP キャッシュを捨てて読み直す。db は IndexedDB にあるので消えない
+$("freshBtn").onclick = async ()=>{
+  const b = $("freshBtn");
+  b.disabled = true; b.textContent = "取りに行っています…";
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+      const rs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(rs.map(r=>r.unregister()));
+    }
+  }catch(e){}
+  try{
+    if(window.caches && caches.keys){
+      const ks = await caches.keys();
+      await Promise.all(ks.map(k=>caches.delete(k)));
+    }
+  }catch(e){}
+  const u = location.href.split("?")[0].split("#")[0];
+  location.replace(u + "?v=" + Date.now());
+};
 $("wdAutoBtn").onclick = runWordAuto;
 $("wdStopBtn").onclick = ()=>{ wdStopReq = true; $("wdMsg").textContent = "止めています…"; };
 
