@@ -520,6 +520,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="storeInfo" class="small-note" style="margin-top:0"></div>
     <button class="btn soft full" id="storeCheckBtn">調べ直す</button>
     <button class="btn soft full" id="freshBtn">新しいファイルを取りに行く</button>
+    <!-- 通信の切り分け用(2026-08-22)。原因が分かったら撤去してよい。撤去するときはこの3行を消す -->
+    <button class="btn soft full" id="netProbeBtn">通信を調べる</button>
+    <div id="netProbeOut" class="small-note" style="margin-top:0"></div>
     <div class="small-note">GitHubに上げても、スマホ側が古いファイルを持ったままのことがあります。上の「版」が渡したものと違うときに押してください。保存したデータは消えません。</div>
   </div>
   <div class="card">
@@ -562,7 +565,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-22b";
+const BUILD = "2026-08-22c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3910,6 +3913,32 @@ $("freshBtn").onclick = async ()=>{
   }catch(e){}
   const u = location.href.split("?")[0].split("#")[0];
   location.replace(u + "?v=" + Date.now());
+};
+/* 通信の切り分け(2026-08-22)。ホーム画面アプリだけ翻訳が Load failed になる件を測るため。
+   同一オリジン / Google以外の別オリジン / 翻訳API の3つを順に叩いて結果を並べる。
+   原因が分かったらこの関数とボタンを撤去してよい */
+$("netProbeBtn").onclick = async ()=>{
+  const out = $("netProbeOut"), btn = $("netProbeBtn");
+  btn.disabled = true; out.textContent = "調べています…";
+  const targets = [
+    ["同一オリジン", "./manifest.json"],
+    ["別オリジン(GitHub)", "https://api.github.com/"],
+    ["翻訳API(Google)", "https://translate.googleapis.com/translate_a/single?client=gtx&sl=es&tl=ja&dt=t&q=hola"]
+  ];
+  const lines = [];
+  for(const [name, url] of targets){
+    const t0 = Date.now();
+    try{
+      const r = await fetch(url, {cache:"no-store"});
+      const ms = Date.now() - t0;
+      lines.push(name + ": " + (r.ok ? "OK" : "HTTP " + r.status) + " (" + ms + "ms)");
+    }catch(e){
+      lines.push(name + ": 失敗 " + errText(e) + " (" + (Date.now()-t0) + "ms)");
+    }
+  }
+  lines.push("表示のしかた: " + (window.matchMedia("(display-mode: standalone)").matches ? "ホーム画面アプリ" : "ブラウザのタブ"));
+  out.innerHTML = lines.map(esc).join("<br>");
+  btn.disabled = false;
 };
 $("wdAutoBtn").onclick = runWordAuto;
 $("wdStopBtn").onclick = ()=>{ wdStopReq = true; $("wdMsg").textContent = "止めています…"; };
