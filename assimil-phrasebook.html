@@ -562,7 +562,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-15d";
+const BUILD = "2026-08-22a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3471,7 +3471,11 @@ const NOTE_FIELDS = [
   {key:"roman", label:"読み(ローマ字)"}
 ];
 // 読みの自動取得を出す言語(ラテン文字以外の文字体系)
-const ROMAN_LANGS = new Set(["ไทย","हिन्दी","العربية","中文","Русский","한국어"]);
+// タイ語は外してある(2026-08-22)。Googleの変換はタイ語にだけ発音ではなく字面変換
+// (ISO 11940系)を返し、声調も母音の長短も表さない。วันนี้ → "Wạn nī̂"(正しくは wanníi)。
+// これで入った135件を作り直したので、押せないようにした。読みは手で入れる(欄は残っている)。
+// 戻すなら下の Set の先頭に "ไทย" を足す。
+const ROMAN_LANGS = new Set(["हिन्दी","العربية","中文","Русский","한국어"]);
 async function fetchRoman(text, lang){
   const sl = LANGCODE[lang] || "auto";
   const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl="
