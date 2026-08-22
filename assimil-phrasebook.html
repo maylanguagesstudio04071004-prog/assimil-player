@@ -565,7 +565,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-22c";
+const BUILD = "2026-08-22d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3932,6 +3932,20 @@ $("netProbeBtn").onclick = async ()=>{
       const r = await fetch(url, {cache:"no-store"});
       const ms = Date.now() - t0;
       lines.push(name + ": " + (r.ok ? "OK" : "HTTP " + r.status) + " (" + ms + "ms)");
+    }catch(e){
+      lines.push(name + ": 失敗 " + errText(e) + " (" + (Date.now()-t0) + "ms)");
+    }
+  }
+  // CORSで弾かれているのか、そもそも届いていないのかを見分ける。
+  // no-cors は中身を読めない代わりにCORSの制約を受けない。これが通れば経路は生きている
+  for(const [name, url] of [
+    ["翻訳API(no-cors)", "https://translate.googleapis.com/translate_a/single?client=gtx&sl=es&tl=ja&dt=t&q=hola"],
+    ["別のGoogle(no-cors)", "https://www.gstatic.com/generate_204"]
+  ]){
+    const t0 = Date.now();
+    try{
+      const r = await fetch(url, {mode:"no-cors", cache:"no-store"});
+      lines.push(name + ": 通った type=" + r.type + " (" + (Date.now()-t0) + "ms)");
     }catch(e){
       lines.push(name + ": 失敗 " + errText(e) + " (" + (Date.now()-t0) + "ms)");
     }
