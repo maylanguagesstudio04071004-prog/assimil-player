@@ -236,6 +236,8 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .wd-row.busy{border-color:var(--accent)}
 .wd-row.miss .wd-in{border-color:var(--danger)}
 .tr-hint{font-size:11px; color:var(--sub); margin-top:4px}
+.tr-hint .tr-fill{font-size:11px; margin-left:6px; padding:2px 8px; border-radius:7px;
+  background:var(--accent-soft); color:var(--accent); border:0}
 .msg{font-size:13px; margin-top:10px; color:var(--accent); min-height:18px}
 .msg.err{color:var(--danger)}
 .small-note{font-size:12px; color:var(--sub); margin-top:8px; line-height:1.7}
@@ -569,7 +571,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-23i";
+const BUILD = "2026-08-23j";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3715,7 +3717,38 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
     if($("pageWords").style.display !== "none") renderWordsPage();
   };
 
-  // 単語は開いた瞬間に訳を取りにいく。手入力が先にあればそちらを優先する
+  /* 単語を開いたら、手元のデータから訳を探して入れる(2026-08-23)。
+     通信はしない。出どころは 他の課の単語登録 → 語形成レイヤー → 引き専用辞書 の順。
+     完全一致は入れてしまう(どこから来たかは必ず書く)。前方一致は取り違えるので
+     「入れる」を押したときだけ入れる。手入力が先にあればそちらを優先する。 */
+  if(type === "word"){
+    const jaTa = trPop.querySelector('[data-field="ja"]');
+    if(jaTa && !jaTa.value.trim()){
+      const hit = lookupWordNote(lang, text);
+      if(hit){
+        const src = hit.src === "単語" ? "他の課の単語登録" : hit.src;
+        const hint = document.createElement("div");
+        hint.className = "tr-hint";
+        if(hit.kind === "exact"){
+          jaTa.value = hit.note.ja;
+          hint.textContent = src + "から入れました。違っていれば直してください";
+          fitTextareas(trPop);
+        } else {
+          hint.innerHTML = '<span class="tr-cand"></span><button class="tr-fill">入れる</button>';
+          hint.querySelector(".tr-cand").textContent =
+            "近い語 " + hit.note.text + "(" + src + "): " + hit.note.ja;
+          hint.querySelector(".tr-fill").onclick = ()=>{
+            jaTa.value = hit.note.ja;
+            fitTextareas(trPop);
+            hint.textContent = "近い語 " + hit.note.text + " から入れました。形が違うので必ず直してください";
+            jaTa.focus();
+          };
+        }
+        jaTa.parentNode.appendChild(hint);
+      }
+    }
+  }
+  // 通信で取りにいく旧経路。AUTO_TRANSLATE=false の間は動かない
   if(AUTO_TRANSLATE && type === "word"){
     const jaTa = trPop.querySelector('[data-field="ja"]');
     if(jaTa && !jaTa.value.trim()){
