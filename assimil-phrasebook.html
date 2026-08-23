@@ -565,7 +565,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-23d";
+const BUILD = "2026-08-23e";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3565,16 +3565,15 @@ async function translateMyMemory(text, lang){
 }
 async function translateOne(text, lang){
   const sl = LANGCODE[lang] || "auto";
-  try{
-    const data = await trFetchJson("/translate_a/single?client=gtx&sl="
-      + encodeURIComponent(sl) + "&tl=ja&dt=t&q=" + encodeURIComponent(text));
-    TR_LAST_SOURCE = "";
-    return (data[0] || []).map(seg=>seg[0]).join("");
-  }catch(e){
-    const out = await translateMyMemory(text, lang);   // ここも失敗したら理由がそのまま出る
-    TR_LAST_SOURCE = "MyMemory";
-    return out;
-  }
+  const data = await trFetchJson("/translate_a/single?client=gtx&sl="
+    + encodeURIComponent(sl) + "&tl=ja&dt=t&q=" + encodeURIComponent(text));
+  TR_LAST_SOURCE = "";
+  return (data[0] || []).map(seg=>seg[0]).join("");
+  /* MyMemory を予備にした版を 2026-08-23 に撤去した。
+     単語で原語をそのまま返す(Bienvenue → Bienvenue)、勝手な文を作る
+     (le métro → 「いいえ、地下鉄だ」/ la clé → 「あの鍵よ！」)ため、
+     それが ja 欄に保存されると害になる。文だけは使えたが、単語登録には向かない。
+     戻すなら translateMyMemory() を呼ぶ try/catch をここに復活させる */
 }
 // ポップアップ内の入力欄を内容に合わせて自動で伸ばす(長い訳も全文見えるように)
 function fitTextareas(root){
@@ -3961,8 +3960,7 @@ $("netProbeBtn").onclick = async ()=>{
     ["同一オリジン", "./manifest.json"],
     ["別オリジン(GitHub)", "https://api.github.com/"],
     ["翻訳API(Google)", "https://translate.googleapis.com/translate_a/single?client=gtx&sl=es&tl=ja&dt=t&q=hola"],
-    ["翻訳API(予備clients5)", "https://clients5.google.com/translate_a/single?client=gtx&sl=es&tl=ja&dt=t&q=hola"],
-    ["予備(MyMemory)", "https://api.mymemory.translated.net/get?q=hola&langpair=es|ja"]
+    ["翻訳API(予備clients5)", "https://clients5.google.com/translate_a/single?client=gtx&sl=es&tl=ja&dt=t&q=hola"]
   ];
   const lines = [];
   for(const [name, url] of targets){
