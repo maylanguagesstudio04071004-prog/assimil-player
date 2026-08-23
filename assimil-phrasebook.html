@@ -565,7 +565,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-23a";
+const BUILD = "2026-08-23b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3962,6 +3962,15 @@ $("netProbeBtn").onclick = async ()=>{
     }
   }
   lines.push("表示のしかた: " + (window.matchMedia("(display-mode: standalone)").matches ? "ホーム画面アプリ" : "ブラウザのタブ"));
+  // どのService Workerが動いているか(2026-08-23)。古いSWが残ると外部通信を横取りして失敗する
+  try{
+    const ctrl = navigator.serviceWorker && navigator.serviceWorker.controller;
+    lines.push("Service Worker: " + (ctrl ? ctrl.scriptURL.split("/").pop() : "なし(素通し)"));
+    if(window.caches && caches.keys){
+      const ks = await caches.keys();
+      lines.push("キャッシュ: " + (ks.join(", ") || "なし") + "  ← v7 なら新しいSW");
+    }
+  }catch(e){ lines.push("Service Worker: 調べられません " + errText(e)); }
   out.innerHTML = lines.map(esc).join("<br>");
   btn.disabled = false;
 };
