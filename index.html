@@ -707,7 +707,7 @@ async function migrateNative(){
   if (!langs.length) switchTab(false); // 初回はライブラリへ
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
   if ('serviceWorker' in navigator && location.protocol === 'https:')
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js?v=7').catch(() => {});  // 版を付けて確実に入れ替える(2026-08-23)
 })();
 </script>
 </body>
