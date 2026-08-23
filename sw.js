@@ -1,4 +1,4 @@
-const CACHE = 'assimil-player-v6';
+const CACHE = 'assimil-player-v7';
 const ASSETS = ['./', './index.html', './assimil-phrasebook.html', './manifest.json', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -19,6 +19,12 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const req = e.request;
+  // 別オリジンへの要求(翻訳API など)には一切さわらない(2026-08-23)。
+  // ここで respondWith すると、SW内の fetch が失敗したときに
+  // "FetchEvent.respondWith received an error: TypeError: Load failed" になり、
+  // ページ側からは原因の分からない通信エラーとして見える。実際にAtlasの自動翻訳が
+  // これで動かなくなっていた。キャッシュ用のSWが外部APIを仲介する理由はない。
+  if (new URL(req.url).origin !== self.location.origin) return;
   const accept = req.headers.get('accept') || '';
   // HTML/画面: ネットワーク優先(最新を取得) → オフライン時のみキャッシュ
   if (req.mode === 'navigate' || accept.includes('text/html')) {
