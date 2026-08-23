@@ -565,7 +565,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-23e";
+const BUILD = "2026-08-23f";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3534,6 +3534,12 @@ function hideTrPop(){ flushTr(); trPop.style.display = "none"; trPop.innerHTML =
    端末によっては translate.googleapis.com が許可ヘッダ(CORS)を返さず、
    応答は届いているのにブラウザが捨ててしまう。そのとき clients5 側で通ることがある。
    1つ目が通れば2つ目は叩かないので、これまでと速さは同じ */
+/* 自動翻訳を出すかどうか(2026-08-23)。Mayの端末では Google が Safari に
+   許可ヘッダ(CORS)を返さず、どの言語でも必ず失敗する。押せると押してしまうので出さない。
+   Service Worker は無関係と確認済み。代替APIは単語で使い物にならなかった(MyMemoryの撤去参照)。
+   訳は手入力するか、ClaudeがJSONで作って渡す。
+   環境が変わって使えるようになったら、下を true に戻せば元どおり */
+const AUTO_TRANSLATE = false;
 const TR_HOSTS = ["https://translate.googleapis.com", "https://clients5.google.com"];
 async function trFetchJson(path){
   let last = null;
@@ -3646,7 +3652,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   });
   // 単語は開いた瞬間に自動翻訳を取りにいくのでボタンを出さない(2026-08-15)
   html += '<div class="tr-actions">'
-    + ((note.ja || type==="word") ? '' : '<button class="tr-auto">自動翻訳を試す</button>')
+    + ((note.ja || type==="word" || !AUTO_TRANSLATE) ? '' : '<button class="tr-auto">自動翻訳を試す</button>')
     + (!note.roman && ROMAN_LANGS.has(lang) ? '<button class="tr-auto tr-romanbtn">読みを自動取得</button>' : '')
     + '<button class="tr-close btn">閉じる</button>'
     + '</div>';
@@ -3677,7 +3683,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   };
 
   // 単語は開いた瞬間に訳を取りにいく。手入力が先にあればそちらを優先する
-  if(type === "word"){
+  if(AUTO_TRANSLATE && type === "word"){
     const jaTa = trPop.querySelector('[data-field="ja"]');
     if(jaTa && !jaTa.value.trim()){
       const hint = document.createElement("div");
@@ -3811,6 +3817,7 @@ function renderWordsPage(){
                    : wdScope === "lang"   ? currentLang : "全言語";
   $("wdCount").textContent = scopeLabel + " · " + rows.length + " 件"
     + (wdOnly === "todo" ? "(訳が未入力のもの)" : "");
+  $("wdAutoBtn").style.display = AUTO_TRANSLATE ? "" : "none";
   $("wdAutoBtn").disabled = wdRunning || !rows.some(r=>!r.ja.trim());
   const box = $("wdList");
   box.innerHTML = "";
