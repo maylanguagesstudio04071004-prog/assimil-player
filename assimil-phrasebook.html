@@ -281,6 +281,10 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 .sel-pop .sel-src{font-size:11.5px; color:var(--sub); margin-bottom:3px; overflow-wrap:anywhere}
 .sel-pop .sel-out{color:var(--text); overflow-wrap:anywhere}
 .sel-pop .sel-out.err{color:var(--danger); font-size:12px}
+.sel-pop .sel-out.sel-none{color:var(--sub)}
+.sel-pop .sel-sub{font-size:11.5px; color:var(--sub)}
+.sel-pop .sel-go{display:inline-block; margin-top:7px; font-size:12px; color:var(--accent);
+  text-decoration:none; border:1px solid var(--border); border-radius:8px; padding:3px 9px}
 </style>
 </head>
 <body>
@@ -565,7 +569,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-23f";
+const BUILD = "2026-08-23i";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -615,6 +619,11 @@ function load(raw){
     g.lang = toNative(g.lang);
     (g.examples||[]).forEach(e=>{ e.lang = toNative(e.lang); });
   });
+  /* 引き専用の辞書(2026-08-23)。本文の語を選んだときだけ使う。
+     words と役割が違う: words は「Mayが選んで登録した語」で「単」の画面に出る。
+     dict は画面には出さず、選択したときの引きにだけ使う。混ぜると「単」が数千語で埋まる。 */
+  if(!Array.isArray(d.dict)) d.dict = [];
+  d.dict.forEach(x=>{ x.lang = toNative(x.lang); });
   // 語根索引。rootsを持たない従来データも空配列で問題なく読める
   if(!Array.isArray(d.roots)) d.roots = [];
   d.roots.forEach(r=>{ r.lang = toNative(r.lang); });
@@ -3067,8 +3076,8 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds) && !Array.isArray(data.suffixChains)){
-    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / adds / profiles のいずれも見つかりません"; msgEl.className = "msg err"; return false;
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds) && !Array.isArray(data.suffixChains) && !Array.isArray(data.dict)){
+    msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / adds / profiles / dict のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   // 取り込みの直前を1回分だけ控えておく。上書きで消えたときに戻せるように(2026-08-15)
   makeUndo();
@@ -3132,6 +3141,27 @@ function importData(raw, msgEl){
       db.observations.push(orec);
     });
   }
+  let dictAdded = 0, dictUpdated = 0, dictDeleted = 0;
+  if(Array.isArray(data.dict)){
+    if(!Array.isArray(db.dict)) db.dict = [];
+    const at = new Map();
+    db.dict.forEach((x, i)=>{ at.set(toNative(String(x.lang)) + "\u0000" + String(x.text), i); });
+    const drop = [];
+    data.dict.forEach(x=>{
+      if(!x || !x.lang || !x.text) return;
+      const lang = toNative(String(x.lang)), text = String(x.text);
+      const key = lang + "\u0000" + text, i = at.has(key) ? at.get(key) : -1;
+      if(x.delete === true){ if(i>=0){ drop.push(i); at.delete(key); dictDeleted++; } return; }
+      const rec = {lang, text, ja:String(x.ja||"")};
+      if(x.roman) rec.roman = String(x.roman);
+      if(i>=0){ db.dict[i] = rec; dictUpdated++; }
+      else { at.set(key, db.dict.length); db.dict.push(rec); dictAdded++; }
+    });
+    drop.sort((a,b)=>b-a).forEach(i=>db.dict.splice(i,1));
+    if(drop.length) db.dict = db.dict.filter(Boolean);
+  }
+  wfDict = null;   // 語形成レイヤーが変わりうるので、選択翻訳の辞書は作り直させる
+  dictIndex = null;
   let notesAdded = 0, notesUpdated = 0, notesDeleted = 0;
   if(Array.isArray(data.notes)){
     data.notes.forEach(n=>{
@@ -3337,6 +3367,8 @@ function importData(raw, msgEl){
     : "取り込み完了:";
   if(notesAdded || notesUpdated || notesDeleted) msg += "(日本語訳など: 新規 " + notesAdded + " 件 / 上書き " + notesUpdated + " 件"
     + (notesDeleted ? " / 掃除 " + notesDeleted + " 件" : "") + ")";
+  if(dictAdded || dictUpdated || dictDeleted) msg += "(辞書: 新規 " + dictAdded + " 語 / 上書き " + dictUpdated + " 語"
+    + (dictDeleted ? " / 掃除 " + dictDeleted + " 語" : "") + ")";
   if(gAdded || gUpdated) msg += "(文法: 新規 " + gAdded + " 件 / 上書き " + gUpdated + " 件)";
   if(rootRes.added || rootRes.updated){
     msg += "(語根: 新規 " + rootRes.added + " 件 / 追記 " + rootRes.updated + " 件"
@@ -3429,6 +3461,7 @@ function renameLang(oldName, newName){
     (g.examples||[]).forEach(e=>{ if(e.lang===oldName) e.lang = newName; });
   });
   db.roots.forEach(r=>{ if(r.lang===oldName) r.lang = newName; });
+  (db.dict || []).forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
   const spd = localStorage.getItem(KEY + ".spd." + oldName);
   if(spd!=null){ lsSet(KEY + ".spd." + newName, spd); localStorage.removeItem(KEY + ".spd." + oldName); }
   if(currentLang===oldName){ currentLang = newName; lsSet(KEY + ".lang", newName); }
@@ -4147,6 +4180,8 @@ function placeSelPop(rect){
   selPop.style.left = left + "px";
   selPop.style.top = top + "px";
 }
+/* 通信で訳す旧経路。AUTO_TRANSLATE=false の間は呼ばれない。
+   Googleが再びCORSヘッダを返すようになったらフラグを戻すだけで復活する(撤去せず残す)。 */
 async function liveTranslateSelection(text, lang, rect){
   const seq = ++selSeq;
   selPop.innerHTML = '<div class="sel-src">' + esc(text) + '</div><div class="sel-out">訳を取得中…</div>';
@@ -4168,12 +4203,150 @@ async function liveTranslateSelection(text, lang, rect){
     selPop.innerHTML = '<div class="sel-out err">訳を取得できませんでした</div>';
   }
 }
+/* 選択した範囲を、まず端末の中の単語登録から引く(2026-08-23)。
+   通信は使わない。Googleはこの端末にCORSヘッダを返さないので fetch は必ず失敗する(§10)。
+   当たらないときのために「Googleで開く」を必ず添える。リンクはトップレベル遷移なので
+   CORSの対象外で、アドレスバーに貼るのと同じように通る。 */
+function selNorm(s, lang){
+  // 亜はタシュキール/アリフ異体字を落とさないと本文と語根索引が噛み合わない(0%→17%)
+  if(lang === "\u0627\u0644\u0639\u0631\u0628\u064A\u0629") s = normAr(String(s == null ? "" : s));
+  return String(s==null ? "" : s).toLowerCase().replace(/\u0451/g, "\u0435")
+    .replace(/^[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u2026\u2014\u2013-]+/, "")
+    .replace(/[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u2026\u2014\u2013-]+$/, "")
+    .replace(/\s+/g, " ").trim();
+}
+/* 単語登録のほかに、言語ごとの語形成レイヤー(尼=基語 / 亜=語根 / 土=接尾辞 / 独=前綴り /
+   泰=構成要素・類別詞 / 中=類別詞 / हिन्दी=積み重ね)からも「表層形→意味」を回収する。
+   Mayが既に作ってあるデータなので、増やす手間なしで当たる率が上がる。 */
+let wfDict = null;
+function buildWfDict(){
+  const d = {};
+  const put = (lang, w, m)=>{
+    w = String(w || "").trim(); m = String(m || "").trim();
+    if(!lang || !w || !m || w.length > 60) return;
+    const k = selNorm(w, lang);
+    if(!k) return;
+    (d[lang] || (d[lang] = {}));
+    if(!d[lang][k]) d[lang][k] = {text:w, ja:m};
+  };
+  (db.bases || []).forEach(x=>{
+    put(x.lang, x.base, x.baseMeaning);
+    (x.derived || []).forEach(v=>put(x.lang, v.word || v.surface, v.meaning));
+  });
+  (db.roots || []).forEach(x=>(x.words || []).forEach(w=>{
+    put(x.lang, w.lemma, w.meaning);
+    (w.forms || []).forEach(f=>put(x.lang, f.surface, w.meaning));
+  }));
+  (db.suffixes || []).forEach(x=>(x.examples || []).forEach(e=>put(x.lang, e.surface, e.meaning)));
+  (db.parts || []).forEach(x=>(x.compounds || []).forEach(e=>put(x.lang, e.word, e.meaning)));
+  (db.prefixes || []).forEach(x=>(x.verbs || []).forEach(v=>put(x.lang, v.verb, v.meaning)));
+  (db.classifiers || []).forEach(x=>put(x.lang, x.form, x.gloss));
+  (db.stacks || []).forEach(x=>(x.parts || []).forEach(pt=>put(x.lang, pt.w, pt.g)));
+  (db.suffixChains || []).forEach(x=>(x.parts || []).forEach(pt=>put(x.lang, pt.w, pt.g)));
+  return d;
+}
+/* 引き専用の辞書。件数が多いので、言語ごとの索引を一度だけ作って使い回す。 */
+let dictIndex = null;
+function buildDictIndex(){
+  const d = {};
+  (db.dict || []).forEach(x=>{
+    const lang = x.lang, ja = String(x.ja || "").trim();
+    if(!lang || !ja) return;
+    const k = selNorm(x.text, lang);
+    if(!k) return;
+    (d[lang] || (d[lang] = {}));
+    if(!d[lang][k]) d[lang][k] = x;
+  });
+  return d;
+}
+function dictLookup(lang, q){
+  if(!dictIndex) dictIndex = buildDictIndex();
+  const t = dictIndex[lang];
+  if(!t) return null;
+  if(t[q]) return {kind:"exact", note:t[q], src:"辞書"};
+  let near = null, nearLen = 0;
+  for(const k in t){
+    let c = 0;
+    while(c < k.length && c < q.length && k[c] === q[c]) c++;
+    if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = t[k]; nearLen = c; }
+  }
+  return near ? {kind:"near", note:near, src:"辞書"} : null;
+}
+function wfLookup(lang, q){
+  if(!wfDict) wfDict = buildWfDict();
+  const t = wfDict[lang];
+  if(!t) return null;
+  if(t[q]) return {kind:"exact", note:{text:t[q].text, ja:t[q].ja}, src:"語形成"};
+  let near = null, nearLen = 0;
+  for(const k in t){
+    let c = 0;
+    while(c < k.length && c < q.length && k[c] === q[c]) c++;
+    if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = t[k]; nearLen = c; }
+  }
+  return near ? {kind:"near", note:{text:near.text, ja:near.ja}, src:"語形成"} : null;
+}
+
+// 完全一致がなければ前方一致も見る(露のような屈折語で「книгу→книга」を拾うため)。
+// 取り違えもあるので、前方一致は「近い語」と断って出す。
+function lookupWordNote(lang, text){
+  const q = selNorm(text, lang);
+  if(!q) return null;
+  let exact = null, near = null, nearLen = 0;
+  for(const n of db.notes){
+    if(n.lang !== lang || (n.type || "phrase") !== "word") continue;
+    if(!String(n.ja || "").trim()) continue;
+    const k = selNorm(n.text, lang);
+    if(!k) continue;
+    if(k === q){ exact = n; break; }
+    let c = 0;
+    while(c < k.length && c < q.length && k[c] === q[c]) c++;
+    if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = n; nearLen = c; }
+  }
+  if(exact) return {kind:"exact", note:exact, src:"単語"};
+  // 完全一致はどの出典でも前方一致より確かなので、先に全部の完全一致を見る
+  const wf = wfLookup(lang, q), dc = dictLookup(lang, q);
+  if(wf && wf.kind === "exact") return wf;
+  if(dc && dc.kind === "exact") return dc;
+  if(near) return {kind:"near", note:near, src:"単語"};
+  return wf || dc;
+}
+function selTrUrl(lang, text){
+  return "https://translate.google.com/?sl=" + encodeURIComponent(LANGCODE[lang] || "auto")
+    + "&tl=ja&op=translate&text=" + encodeURIComponent(text);
+}
+function showSelPop(text, lang, rect){
+  const hit = lookupWordNote(lang, text);
+  let body;
+  const tag = (hit && hit.src && hit.src !== "単語") ? ' <span class="sel-sub">' + esc(hit.src) + '</span>' : '';
+  if(hit && hit.kind === "exact"){
+    body = '<div class="sel-out">' + esc(hit.note.ja) + tag
+      + (String(hit.note.roman || "").trim() ? ' <span class="sel-sub">' + esc(hit.note.roman) + '</span>' : '')
+      + '</div>';
+  } else if(hit){
+    body = '<div class="sel-out"><span class="sel-sub">近い語 ' + esc(hit.note.text) + '</span>' + tag + '<br>'
+      + esc(hit.note.ja) + '</div>';
+  } else {
+    body = '<div class="sel-out sel-none">登録なし</div>';
+  }
+  selPop.innerHTML = '<div class="sel-src">' + esc(text) + '</div>' + body
+    + '<a class="sel-go" href="' + esc(selTrUrl(lang, text)) + '" target="_blank" rel="noopener">Googleで開く</a>';
+  selPop.style.display = "block";
+  placeSelPop(rect);
+}
+// リンクを押すと選択が外れて selectionchange が走る。先に閉じてしまうと押せないので、
+// ポップアップに触れている間は閉じない。
+let selPopHold = false;
+selPop.addEventListener("pointerdown", ()=>{
+  selPopHold = true;
+  setTimeout(()=>{ selPopHold = false; }, 1200);
+});
+
 document.addEventListener("selectionchange", ()=>{
   clearTimeout(selTimer);
   selTimer = setTimeout(()=>{
     const sel = window.getSelection();
     const text = sel.toString().trim();
-    if(!text || text.length > 200 || sel.rangeCount === 0){ hideSelPop(); return; }
+    if(!text || text.length > 200 || sel.rangeCount === 0){ if(!selPopHold) hideSelPop(); return; }
     const anchor = sel.anchorNode;
     const el = anchor && (anchor.nodeType === 1 ? anchor : anchor.parentElement);
     // 入力欄・編集フォーム・訳ポップアップ内の選択は無視
@@ -4183,10 +4356,11 @@ document.addEventListener("selectionchange", ()=>{
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     if(!rect || (rect.width===0 && rect.height===0)) return;
-    liveTranslateSelection(text, phraseHost.dataset.lang, rect);
+    if(AUTO_TRANSLATE) liveTranslateSelection(text, phraseHost.dataset.lang, rect);
+    else showSelPop(text, phraseHost.dataset.lang, rect);
   }, 400);
 });
-document.addEventListener("scroll", hideSelPop, true);
+document.addEventListener("scroll", ()=>{ if(!selPopHold) hideSelPop(); }, true);
 
 /* ---------- 音声(assimil-playerと同じ保存領域から再生) ---------- */
 // プレーヤーがIndexedDB "assimilPlayer" に「言語名|レッスン番号」で保存した音声をそのまま使う。
