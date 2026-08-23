@@ -565,7 +565,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-23b";
+const BUILD = "2026-08-23c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3485,7 +3485,8 @@ const ROMAN_LANGS = new Set(["हिन्दी","العربية","中文","Р�
 // "HTTP 429"=レート制限 / "HTTP 403"=拒否 / "Load failed"=Googleに届く前に止まっている
 function errText(e){
   const m = String((e && e.message) || e || "不明");
-  return m.length > 60 ? m.slice(0, 60) : m;
+  const sw = (navigator.serviceWorker && navigator.serviceWorker.controller) ? " / SW有" : " / SW無";
+  return (m.length > 130 ? m.slice(0, 130) : m) + sw;
 }
 async function fetchRoman(text, lang){
   const sl = LANGCODE[lang] || "auto";
@@ -4355,6 +4356,23 @@ $("audioCheckBtn").onclick = async ()=>{
 };
 
 renderLesson();
+/* 古いService Workerが残っていると、外部への通信(翻訳API)を横取りして
+   "FetchEvent.respondWith received an error" で失敗させる。v7より前が残っていたら
+   一度だけ登録解除して読み直す(2026-08-23)。dbはIndexedDBにあるので消えない */
+(async function dropStaleSW(){
+  try{
+    if(!navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+    if(!window.caches || !caches.keys) return;
+    if(sessionStorage.getItem("swDropped")) return;
+    const ks = await caches.keys();
+    if(!ks.some(k => /assimil-player-v[0-6]$/.test(k))) return;
+    sessionStorage.setItem("swDropped", "1");
+    const rs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(rs.map(r => r.unregister()));
+    await Promise.all(ks.map(k => caches.delete(k)));
+    location.reload();
+  }catch(e){}
+})();
 bootStorage();
 // 閉じる直前にもう一度書いておく(入力直後にアプリを閉じた場合の取りこぼし防止)
 window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
