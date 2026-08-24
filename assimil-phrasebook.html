@@ -571,7 +571,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-08-24a";
+const BUILD = "2026-08-24c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3727,19 +3727,27 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
       const hit = lookupWordNote(lang, text);
       if(hit){
         const src = hit.src === "単語" ? "他の課の単語登録" : hit.src;
+        // 読みも一緒に入れる。読みの欄が空のときだけ触る(2026-08-24)
+        const rmTa = trPop.querySelector('[data-field="roman"]');
+        const rm = String(hit.note.roman || "").trim();
+        const canRoman = ()=> rmTa && !rmTa.value.trim() && rm;
+        const fill = ()=>{
+          jaTa.value = hit.note.ja;
+          if(canRoman()) rmTa.value = rm;
+          fitTextareas(trPop);
+        };
         const hint = document.createElement("div");
         hint.className = "tr-hint";
         if(hit.kind === "exact"){
-          jaTa.value = hit.note.ja;
-          hint.textContent = src + "から入れました。違っていれば直してください";
-          fitTextareas(trPop);
+          const withRoman = canRoman();
+          fill();
+          hint.textContent = src + "から" + (withRoman ? "訳と読みを" : "") + "入れました。違っていれば直してください";
         } else {
           hint.innerHTML = '<span class="tr-cand"></span><button class="tr-fill">入れる</button>';
           hint.querySelector(".tr-cand").textContent =
-            "近い語 " + hit.note.text + "(" + src + "): " + hit.note.ja;
+            "近い語 " + hit.note.text + "(" + src + "): " + hit.note.ja + (rm ? " / " + rm : "");
           hint.querySelector(".tr-fill").onclick = ()=>{
-            jaTa.value = hit.note.ja;
-            fitTextareas(trPop);
+            fill();
             hint.textContent = "近い語 " + hit.note.text + " から入れました。形が違うので必ず直してください";
             jaTa.focus();
           };
@@ -4337,11 +4345,22 @@ function lookupWordNote(lang, text){
     while(c < k.length && c < q.length && k[c] === q[c]) c++;
     if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = n; nearLen = c; }
   }
-  if(exact) return {kind:"exact", note:exact, src:"単語"};
   // 完全一致はどの出典でも前方一致より確かなので、先に全部の完全一致を見る
   const wf = wfLookup(lang, q), dc = dictLookup(lang, q);
-  if(wf && wf.kind === "exact") return wf;
-  if(dc && dc.kind === "exact") return dc;
+  const exacts = [];
+  if(exact) exacts.push({kind:"exact", note:exact, src:"単語"});
+  if(wf && wf.kind === "exact") exacts.push(wf);
+  if(dc && dc.kind === "exact") exacts.push(dc);
+  if(exacts.length){
+    const win = exacts[0];
+    // 勝った出典に読みが無くて、別の出典が持っているなら読みだけ借りる。
+    // 語形成レイヤー(語根など)は意味しか持たないので、そのままだと読みが落ちる(2026-08-24)
+    if(!String(win.note.roman || "").trim()){
+      const lend = exacts.find(h=>String(h.note.roman || "").trim());
+      if(lend) return {kind:"exact", src:win.src, note:Object.assign({}, win.note, {roman:lend.note.roman})};
+    }
+    return win;
+  }
   if(near) return {kind:"near", note:near, src:"単語"};
   return wf || dc;
 }
