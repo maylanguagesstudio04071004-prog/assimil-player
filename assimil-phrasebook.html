@@ -4289,6 +4289,21 @@ function buildWfDict(){
   return d;
 }
 /* 引き専用の辞書。件数が多いので、言語ごとの索引を一度だけ作って使い回す。 */
+/* 分かち書きのない言語(泰・中)では、画面で選んだ範囲が長い語の「頭」だけになることがある。
+   泰の โรงพยาบาล(病院) をダブルタップすると โรง しか選ばれない、といった具合。
+   既定の「近い語」は先頭4文字以上を求めるので、3文字の โรง は9文字の โรงพยาบาล に届かない。
+   そこでこの2言語に限り「選んだ範囲が丸ごと頭に一致する」ものも近い語として拾う。
+   既定の規則で見つかったときはそちらを優先するので、他の言語の挙動は1文字も変わらない。
+   同じ長さで並んだときは短い語を選ぶ(โรง なら โรงแรม のような近いものから)。 2026-09-03 */
+const UNSPACED_LANGS = ["\u0e44\u0e17\u0e22", "\u4e2d\u6587"];
+function headMatch(lang, k, q){
+  // 頭だけでなく末尾も見る。โรงพยาบาล(病院) をダブルタップすると
+  // โรง(頭)が選ばれることも พยาบาล(末尾)が選ばれることもあるため
+  if(UNSPACED_LANGS.indexOf(lang) < 0 || q.length < 2 || k.length <= q.length) return 0;
+  if(k.slice(0, q.length) === q) return 2;              // 頭に一致するほうを優先
+  if(k.slice(k.length - q.length) === q) return 1;      // 末尾に一致
+  return 0;
+}
 let dictIndex = null;
 function buildDictIndex(){
   const d = {};
@@ -4307,26 +4322,32 @@ function dictLookup(lang, q){
   const t = dictIndex[lang];
   if(!t) return null;
   if(t[q]) return {kind:"exact", note:t[q], src:"辞書"};
-  let near = null, nearLen = 0;
+  let near = null, nearLen = 0, head = null, headLen = 0, headRank = 0;
   for(const k in t){
     let c = 0;
     while(c < k.length && c < q.length && k[c] === q[c]) c++;
     if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = t[k]; nearLen = c; }
+    else if(!near){ const hm = headMatch(lang, k, q);
+      if(hm && (!head || hm > headRank || (hm === headRank && k.length < headLen))){ head = t[k]; headLen = k.length; headRank = hm; } }
   }
-  return near ? {kind:"near", note:near, src:"辞書"} : null;
+  if(near) return {kind:"near", note:near, src:"辞書"};
+  return head ? {kind:"near", note:head, src:"辞書"} : null;
 }
 function wfLookup(lang, q){
   if(!wfDict) wfDict = buildWfDict();
   const t = wfDict[lang];
   if(!t) return null;
   if(t[q]) return {kind:"exact", note:{text:t[q].text, ja:t[q].ja}, src:"語形成"};
-  let near = null, nearLen = 0;
+  let near = null, nearLen = 0, head = null, headLen = 0, headRank = 0;
   for(const k in t){
     let c = 0;
     while(c < k.length && c < q.length && k[c] === q[c]) c++;
     if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = t[k]; nearLen = c; }
+    else if(!near){ const hm = headMatch(lang, k, q);
+      if(hm && (!head || hm > headRank || (hm === headRank && k.length < headLen))){ head = t[k]; headLen = k.length; headRank = hm; } }
   }
-  return near ? {kind:"near", note:{text:near.text, ja:near.ja}, src:"語形成"} : null;
+  if(near) return {kind:"near", note:{text:near.text, ja:near.ja}, src:"語形成"};
+  return head ? {kind:"near", note:{text:head.text, ja:head.ja}, src:"語形成"} : null;
 }
 
 // 完全一致がなければ前方一致も見る(露のような屈折語で「книгу→книга」を拾うため)。
@@ -4334,7 +4355,7 @@ function wfLookup(lang, q){
 function lookupWordNote(lang, text){
   const q = selNorm(text, lang);
   if(!q) return null;
-  let exact = null, near = null, nearLen = 0;
+  let exact = null, near = null, nearLen = 0, head = null, headLen = 0, headRank = 0;
   for(const n of db.notes){
     if(n.lang !== lang || (n.type || "phrase") !== "word") continue;
     if(!String(n.ja || "").trim()) continue;
@@ -4344,7 +4365,10 @@ function lookupWordNote(lang, text){
     let c = 0;
     while(c < k.length && c < q.length && k[c] === q[c]) c++;
     if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = n; nearLen = c; }
+    else if(!near){ const hm = headMatch(lang, k, q);
+      if(hm && (!head || hm > headRank || (hm === headRank && k.length < headLen))){ head = n; headLen = k.length; headRank = hm; } }
   }
+  if(!near && head) near = head;
   // 完全一致はどの出典でも前方一致より確かなので、先に全部の完全一致を見る
   const wf = wfLookup(lang, q), dc = dictLookup(lang, q);
   const exacts = [];
