@@ -2071,8 +2071,9 @@ function openLangProfile(lang){
         bd.langs.push(x);
       });
     if(bands.length){
+      /* 言語が増えるたびに書き換えるのを忘れるので、数は db から数える。2026-09-04 */
       c.innerHTML = '<h2>文法情報をどこに置くか</h2>'
-        + '<div class="small-note" style="margin:0 0 10px">13言語のキモを並べると、置き場所で分かれる。</div>';
+        + '<div class="small-note" style="margin:0 0 10px">' + db.profiles.length + '言語のキモを並べると、置き場所で分かれる。</div>';
       bands.forEach(bd=>{
         const h = document.createElement("div");
         h.className = "place-band";
@@ -3633,23 +3634,43 @@ function safeTopPad(){
   const pt = el ? parseFloat(getComputedStyle(el).paddingTop) || 14 : 14;
   return Math.max(8, pt - 6);
 }
+/* 実際に見えている範囲を返す。iOSの window.innerHeight はツールバーやホームインジケータの
+   裏側まで含むので、それで高さを決めると§の長い本文が画面の下で切れる(2026-09-05にMayが報告)。
+   visualViewport があるブラウザではそちらを使い、body の padding-bottom
+   (= env(safe-area-inset-bottom)) の分もよける。無いブラウザは従来どおり。 */
+function viewBox(){
+  const vv = window.visualViewport;
+  const bot = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+  if(vv && vv.height) return {top: vv.offsetTop || 0, height: vv.height - bot};
+  return {top: 0, height: window.innerHeight - bot};
+}
+let trPopRect = null;   // 開いている間、画面サイズが変わったら置き直すために覚えておく
 function placeTrPop(rect){
+  trPopRect = rect;
   const w = Math.min(320, window.innerWidth - 16), pad = 8;
-  const padT = safeTopPad();
+  const vb = viewBox();
+  const padT = Math.max(safeTopPad(), vb.top + pad);
+  const bottomLimit = vb.top + vb.height - pad;
   let left = rect.left + rect.width/2 - w/2;
   left = Math.max(pad, Math.min(left, window.innerWidth - w - pad));
   trPop.style.width = w + "px";
   trPop.style.left = left + "px";
-  // セーフエリアの下〜画面下端に必ず収まる高さに制限(超えた分は内部スクロール)
-  trPop.style.maxHeight = (window.innerHeight - padT - pad) + "px";
+  // 見えている範囲に必ず収まる高さに制限(超えた分は内部スクロール)
+  trPop.style.maxHeight = Math.max(120, bottomLimit - padT) + "px";
   // 仮配置して実際の高さを測り、はみ出すなら上へずらす(ただしセーフエリアより上には行かない)
   let top = Math.max(padT, rect.bottom + pad);
   trPop.style.top = top + "px";
   const h = trPop.offsetHeight;
-  if(top + h > window.innerHeight - pad){
-    top = Math.max(padT, window.innerHeight - h - pad);
+  if(top + h > bottomLimit){
+    top = Math.max(padT, bottomLimit - h);
     trPop.style.top = top + "px";
   }
+}
+// iOSはスクロールのたびにツールバーが出入りして見える高さが変わる。開いている間は追随させる。
+if(window.visualViewport){
+  const reflow = ()=>{ if(trPopRect && trPop && trPop.style.display === "block") placeTrPop(trPopRect); };
+  window.visualViewport.addEventListener("resize", reflow);
+  window.visualViewport.addEventListener("scroll", reflow);
 }
 function refreshNoteButtons(lang, lesson, text){
   const note = getNote(lang, lesson, text);
@@ -3819,9 +3840,13 @@ document.addEventListener("click", (ev)=>{
   if(trPop.contains(ev.target)) return;
   hideTrPop();
 });
-document.addEventListener("scroll", ()=>{
+document.addEventListener("scroll", (ev)=>{
   // 入力欄にフォーカス中(キーボード表示によるスクロール)は閉じない
   if(document.activeElement && trPop.contains(document.activeElement)) return;
+  // ポップアップの中をスクロールしたときは閉じない。captureで拾っているので
+  // 内側のスクロールもここに来ていて、長い§の続きを読もうとすると閉じていた
+  // (2026-09-05にMayが報告)
+  if(ev.target === trPop || (ev.target && ev.target.nodeType === 1 && trPop.contains(ev.target))) return;
   hideTrPop();
 }, true);
 
