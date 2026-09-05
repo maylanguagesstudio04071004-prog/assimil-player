@@ -571,7 +571,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-05a";
+const BUILD = "2026-09-05b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4279,8 +4279,10 @@ function selNorm(s, lang){
   return String(s==null ? "" : s).toLowerCase().replace(/\u0451/g, "\u0435")
     // \u0964\u0965 = デーヴァナーガリーのदंड、\u060C\u061B\u061F = アラビア語の読点/セミコロン/疑問符。
     // これを落とさないと「गई।」が「गई」と別物になって引けない(2026-08-24)
-    .replace(/^[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+/, "")
-    .replace(/[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+$/, "")
+    // \u00BF\u00A1 = スペイン語の前置きの ¿ ¡。! ? は落としていたのにこの2つが漏れていて、
+    // 疑問文・感嘆文の先頭の語(¿Qué など)が213語ぶん引けなかった(2026-09-05)
+    .replace(/^[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u00BF\u00A1\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+/, "")
+    .replace(/[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u00BF\u00A1\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+$/, "")
     .replace(/\s+/g, " ").trim();
 }
 /* 単語登録のほかに、言語ごとの語形成レイヤー(尼=基語 / 亜=語根 / 土=接尾辞 / 独=前綴り /
