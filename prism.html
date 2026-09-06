@@ -212,7 +212,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-06d";
+const BUILD = "2026-09-06e";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -509,6 +509,26 @@ function readingHtml(e){
     return '<div class="reading" style="color:var(--gap)">読み未転記</div>';
   return "";
 }
+/* 紙面がそのまま正しいとは限らない箇所。**原典を書き換えずに、横に並べる。**
+   - normalizedText: 紙面の綴りと標準の綴りが違う（伊 diciasette / diciassette）
+   - sourceNumeric / verifiedNumeric: 紙面の数値と確認した値（西 un billón）
+   - headword / gender: 紙面の見出し表記と性。term には見出し語だけが入っている（独） */
+function sourceFormHtml(e){
+  let h = "";
+  if(e.headword)
+    h += '<div class="sub">紙面の見出し: ' + esc(e.headword)
+      + (e.gender ? '（' + esc({m:"男性", f:"女性", n:"中性"}[e.gender] || e.gender) + '）' : '')
+      + '</div>';
+  if(e.normalizedText)
+    h += '<div class="sub">標準の綴り: <b>' + esc(e.normalizedText)
+      + '</b>（紙面は上の表記。置き換えていない）</div>';
+  if(e.sourceNumeric != null || e.verifiedNumeric != null){
+    const n = v => (v == null ? "—" : Number(v).toLocaleString("en-US"));
+    h += '<div class="sub">紙面の数値: <b>' + esc(n(e.sourceNumeric))
+      + '</b> ／ 確認した値: <b>' + esc(n(e.verifiedNumeric)) + '</b></div>';
+  }
+  return h;
+}
 function flagsHtml(e){
   const f = e.flags || [];
   if(!f.length && !e.reviewNote) return "";
@@ -516,11 +536,14 @@ function flagsHtml(e){
     semantic_review_required: "意味の対応が要確認",
     needs_image_review: "画像の再確認が必要",
     image_pattern_expanded: "紙面の括弧・選択肢を展開したもの（逐字の転記ではない）",
+    image_read_source_spelling: "紙面の綴りのまま（標準の綴りと違う）",
     review_note: "校訂前"
   };
   const bits = f.map(x => label[x] || x);
   if(e.reviewNote) bits.push(e.reviewNote);
-  return '<div class="flag">⚠ ' + bits.map(esc).join(" ／ ") + '</div>';
+  return '<div class="flag">⚠ ' + bits.map(esc).join(" ／ ") + '</div>'
+    + (e.reviewRef ? '<div class="sub">参照: <a href="' + esc(e.reviewRef)
+        + '" target="_blank" rel="noopener noreferrer">' + esc(e.reviewRef) + '</a></div>' : '');
 }
 function srcLineHtml(e){
   const s = source(e.sourceId), bt = bookTheme(e.bookThemeId);
@@ -541,6 +564,7 @@ function entryHtml(e){
     + (e.kind === "pattern" ? '<div class="kindmark">構文枠（単語ではなく、組み立ての形）</div>' : '')
     + '<div class="term">'+esc(e.term)+'</div>'
     + readingHtml(e)
+    + sourceFormHtml(e)
     + (e.ja && e.ja !== ((sense(e.senseId)||{}).name)
         ? '<div class="ja">'+esc(e.ja)+'</div>' : '')
     + (e.note ? '<div class="sub">'+esc(e.note)+'</div>': '')
@@ -702,6 +726,7 @@ function renderBt(id){
          : (e.status==="absent_in_source"
             ? '<div class="state miss">この資料には載っていない</div>'
             : '<div class="state none">対応する語が<b>ない</b>と資料が述べている</div>'))
+      + sourceFormHtml(e)
       + '<div class="ja">'+esc(sn.name)+(e.ja&&e.ja!==sn.name?' — '+esc(e.ja):'')+'</div>'
       + (e.note?'<div class="sub">'+esc(e.note)+'</div>':'')
       + flagsHtml(e)
@@ -977,6 +1002,12 @@ function importData(text){
         kind: it.kind === "pattern" ? "pattern" : "term",
         flags: Array.isArray(it.flags) ? it.flags.slice() : [],
         reviewNote: it.reviewNote || "",
+        reviewRef: it.reviewRef || "",
+        normalizedText: it.normalizedText || "",
+        sourceNumeric: (it.sourceNumeric != null ? Number(it.sourceNumeric) : null),
+        verifiedNumeric: (it.verifiedNumeric != null ? Number(it.verifiedNumeric) : null),
+        headword: it.headword || "",
+        gender: it.gender || "",
         numeric: (it.numeric != null ? Number(it.numeric) : null),
         sourceId: s.id, bookThemeId: btIdV,
         page: it.page != null ? String(it.page) : (bt.page || ""),
