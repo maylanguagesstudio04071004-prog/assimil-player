@@ -212,7 +212,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-07a";
+const BUILD = "2026-09-07b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -636,6 +636,17 @@ function openTheme(id){
 /* ---------- 語（意味）一覧 ---------- */
 function renderWords(){
   const q = ($("q").value||"").trim().toLowerCase();
+
+  /* 意味が2790件まで増えて、全件を出すと描画が重くなった(2026-09-07にMayの提案で変更)。
+     テーマで絞っているか、検索しているときだけ一覧を出す。
+     戻すなら、この if ブロックを消せば全件表示に戻る。 */
+  if(!themeFilter && !q){
+    $("wordList").innerHTML =
+      '<div class="empty">' + db.senses.length + ' の意味があります。<br>'
+      + '上の欄で探すか、「テーマ」タブから開いてください。</div>';
+    return;
+  }
+
   let list = db.senses.slice();
   if(themeFilter) list = list.filter(s => (s.themeIds||[]).includes(themeFilter));
   if(q) list = list.filter(s => {
@@ -648,7 +659,7 @@ function renderWords(){
   const head = themeFilter
     ? '<div class="row" style="margin-bottom:8px"><b class="grow">'
       + esc((theme(themeFilter)||{}).name||"") + '</b>'
-      + '<button class="btn" onclick="themeFilter=\'\';renderWords()">全テーマ</button></div>'
+      + '<button class="btn" onclick="themeFilter=\'\';renderWords()">テーマを外す</button></div>'
       + (atlasLinkFor((theme(themeFilter)||{}).name) ? '<div style="margin-bottom:8px">'
          + atlasLinkFor((theme(themeFilter)||{}).name) + '</div>' : '')
     : "";
