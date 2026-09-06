@@ -1,0 +1,1230 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Prism</title>
+<style>
+:root{
+  --bg:#fbfaf7; --card:#fff; --ink:#1c1b19; --sub:#6b6862; --line:#e2ded6;
+  --accent:#7a5c33; --accent-bg:#f2ece1; --danger:#b3261e; --ok:#2e6b3e;
+  --miss:#9a968e; --gap:#c9c4ba;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#171614; --card:#211f1c; --ink:#eae7e1; --sub:#a29d94; --line:#37342f;
+         --accent:#d9b98a; --accent-bg:#2c261d; --danger:#f2b8b5; --ok:#8fd0a1;
+         --miss:#7a766f; --gap:#4a463f; }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+header{
+  background:var(--card); border-bottom:1px solid var(--line);
+  padding:calc(8px + env(safe-area-inset-top)) 12px 8px; display:flex; align-items:baseline; gap:8px;
+  position:sticky; top:0; z-index:20;
+}
+header b{font-size:17px}
+header small{color:var(--sub); font-size:11px; flex:1}
+header a.hlink{color:var(--accent); text-decoration:none; font-size:12px; white-space:nowrap;
+  border:1px solid var(--line); border-radius:6px; padding:3px 7px}
+nav{display:flex; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:19}
+nav button{
+  flex:1; min-width:0; border:0; background:none; color:var(--sub); font:inherit; font-size:14px;
+  padding:9px 2px; border-bottom:2px solid transparent; cursor:pointer;
+}
+nav button.on{color:var(--accent); border-bottom-color:var(--accent); font-weight:600}
+main{padding:12px 12px 60px; max-width:760px; margin:0 auto}
+section{display:none}
+section.on{display:block}
+h2{font-size:16px; margin:0 0 10px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:11px 12px; margin-bottom:9px}
+.card.tap{cursor:pointer}
+.row{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.grow{flex:1; min-width:0}
+.sub{color:var(--sub); font-size:12.5px}
+.tag{display:inline-block; font-size:11px; color:var(--accent); background:var(--accent-bg);
+  border-radius:5px; padding:1px 6px; margin:0 4px 3px 0; white-space:nowrap}
+.tag.plain{color:var(--sub); background:transparent; border:1px solid var(--line)}
+.tag.tap{cursor:pointer}
+.term{font-size:20px; line-height:1.45; word-break:break-word}
+.reading{color:var(--sub); font-size:13.5px}
+.reading .added{color:var(--accent)}
+.ja{font-size:14px}
+.back{background:none;border:0;color:var(--accent);font:inherit;font-size:14px;padding:6px 0;cursor:pointer}
+button.btn{font:inherit; font-size:14px; padding:7px 12px; border-radius:8px; cursor:pointer;
+  border:1px solid var(--line); background:var(--card); color:var(--ink)}
+button.btn.pri{background:var(--accent); color:var(--card); border-color:var(--accent)}
+button.btn.warn{color:var(--danger); border-color:var(--danger)}
+input[type=text],input[type=search],textarea,select{
+  font:inherit; font-size:16px; width:100%; padding:8px 10px; border:1px solid var(--line);
+  border-radius:8px; background:var(--card); color:var(--ink)}
+textarea{min-height:90px; line-height:1.5}
+textarea.code{font-family:ui-monospace,Menlo,monospace; font-size:12.5px; min-height:150px}
+.langblock{border-top:1px solid var(--line); padding:9px 0 3px}
+.langblock:first-of-type{border-top:0}
+.langname{font-size:12px; color:var(--sub); letter-spacing:.02em; margin-bottom:3px}
+.state{font-size:13px; padding:3px 0}
+.state.gap{color:var(--gap)}
+.state.miss{color:var(--miss)}
+.state.none{color:var(--miss)}
+.state b{font-weight:600}
+.srcline{font-size:11.5px; color:var(--sub); margin-top:2px}
+.srcline button{background:none;border:0;color:var(--accent);font:inherit;font-size:11.5px;
+  padding:0;text-decoration:underline;cursor:pointer}
+.entry{padding:5px 0 7px}
+.entry + .entry{border-top:1px dashed var(--line)}
+.msg{font-size:13px; padding:8px 0; white-space:pre-wrap}
+.msg.err{color:var(--danger)}
+.msg.ok{color:var(--ok)}
+#warn{position:fixed; left:0; right:0; bottom:0; background:var(--danger); color:#fff;
+  font-size:13px; padding:8px 12px; display:none; z-index:50}
+.legend{font-size:11.5px; color:var(--sub); border:1px dashed var(--line); border-radius:8px;
+  padding:7px 9px; margin-bottom:10px}
+.legend span{display:inline-block; margin-right:10px}
+details{border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:9px; background:var(--card)}
+summary{cursor:pointer; font-size:14px}
+pre{overflow-x:auto; font-size:12px; background:var(--bg); padding:8px; border-radius:6px}
+.empty{color:var(--sub); font-size:14px; padding:18px 2px}
+img.page{max-width:100%; border:1px solid var(--line); border-radius:8px}
+.mini{font-size:12px; color:var(--sub)}
+.flag{font-size:12px; color:var(--danger); margin-top:3px; line-height:1.5}
+.kindmark{font-size:11px; color:var(--accent); background:var(--accent-bg);
+  display:inline-block; border-radius:5px; padding:1px 6px; margin-bottom:3px}
+.solo{font-size:11.5px; color:var(--sub)}
+hr{border:0; border-top:1px solid var(--line); margin:16px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <b id="appName">Prism</b>
+  <small>身近な単語から観察する</small>
+  <a class="hlink" id="atlasLink" href="./assimil-phrasebook.html">▶ Atlas</a>
+</header>
+
+<nav>
+  <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
+  <button id="tabWords"    onclick="showTab('Words')">語</button>
+  <button id="tabBooks"    onclick="showTab('Books')">本</button>
+  <button id="tabMemos"    onclick="showTab('Memos')">メモ</button>
+  <button id="tabSettings" onclick="showTab('Settings')">設定</button>
+</nav>
+
+<main>
+
+<section id="pageThemes">
+  <div id="themeList"></div>
+</section>
+
+<section id="pageWords">
+  <div style="margin-bottom:10px"><input type="search" id="q" placeholder="意味・原語・読みで探す" oninput="renderWords()"></div>
+  <div id="wordList"></div>
+</section>
+
+<section id="pageBooks">
+  <div id="bookList"></div>
+</section>
+
+<section id="pageMemos">
+  <div id="memoList"></div>
+</section>
+
+<section id="pageSettings">
+  <h2>取り込み</h2>
+  <div class="sub" style="margin-bottom:6px">ChatGPTで起こしたJSONを貼って「取り込む」。同じ本・同じテーマは差し替えになります。</div>
+  <textarea id="impText" class="code" placeholder='{"source":{...},"bookTheme":{...},"items":[...]}'></textarea>
+  <div class="row" style="margin:8px 0">
+    <button class="btn pri" onclick="doImport()">取り込む</button>
+    <button class="btn" onclick="doUndo()">直前の取り込みを戻す</button>
+  </div>
+  <div class="row" style="margin:0 0 8px">
+    <button class="btn" onclick="loadBundled()">同梱データ（prism-data.json）を読み込む</button>
+  </div>
+  <div class="sub" style="margin-bottom:8px">
+    大きいJSONをスマホに貼るのは無理があるので、アプリと同じ場所に置いたファイルから読みます。</div>
+  <div id="impMsg" class="msg"></div>
+
+  <details>
+    <summary>形式（ChatGPTに依頼するとき用）</summary>
+    <div id="fmtHelp"></div>
+  </details>
+
+  <hr>
+  <h2>元ページの画像</h2>
+  <div class="sub" style="margin-bottom:6px">普段は使いません。確認したいページだけ入れてください。</div>
+  <div class="row" style="margin-bottom:6px">
+    <select id="imgBt" class="grow"></select>
+  </div>
+  <input type="file" id="imgFile" accept="image/*" style="font-size:14px">
+  <div id="imgMsg" class="msg"></div>
+  <div id="imgList" style="margin-top:8px"></div>
+
+  <hr>
+  <h2>書き出し・バックアップ</h2>
+  <div class="row">
+    <button class="btn" onclick="doExport()">全データをJSONで保存</button>
+    <button class="btn" onclick="doExportAtlas()">Atlas用の下書きを作る</button>
+  </div>
+  <div id="expMsg" class="msg"></div>
+
+  <hr>
+  <h2>言語の表示順</h2>
+  <div id="langOrder"></div>
+
+  <hr>
+  <h2>保存の状態</h2>
+  <div id="storeInfo" class="sub"></div>
+  <div class="row" style="margin-top:8px">
+    <button class="btn" onclick="loadDemo()">デモデータを入れる</button>
+    <button class="btn warn" onclick="wipeAll()">全部消す</button>
+  </div>
+</section>
+
+<section id="pageSense">
+  <button class="back" onclick="goBack()">‹ 戻る</button>
+  <div id="senseBody"></div>
+</section>
+
+<section id="pageBookTheme">
+  <button class="back" onclick="goBack()">‹ 戻る</button>
+  <div id="btBody"></div>
+</section>
+
+<section id="pageImage">
+  <button class="back" onclick="goBack()">‹ 戻る</button>
+  <div id="imgBody"></div>
+</section>
+
+</main>
+
+<div id="warn"></div>
+
+<script>
+/* ===========================================================
+   Prism — 身近な単語から観察する多言語比較アプリ
+   ひとつの意味を通すと、言語ごとに違う色に分かれて出てくる。
+   Language Atlas (assimil-phrasebook.html) とは別アプリ。
+   保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
+   =========================================================== */
+const BUILD = "2026-09-06c";
+const KEY   = "prism.v1";
+const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* Atlasと同じ自己表記に揃える（◇概念リンクと言語名の突合のため） */
+const NATIVE = {
+  "英語":"English","中国語":"中文","イタリア語":"Italiano","スペイン語":"Español",
+  "フランス語":"Français","ドイツ語":"Deutsch","トルコ語":"Türkçe","アラビア語":"العربية",
+  "ヒンディー語":"हिन्दी","インドネシア語":"Bahasa Indonesia","タイ語":"ไทย","ロシア語":"Русский",
+  "オランダ語":"Nederlands","ベトナム語":"Tiếng Việt","ポルトガル語":"Português","韓国語":"한국어",
+  "日本語":"日本語","हिंदी":"हिन्दी"
+};
+function toNative(l){ return NATIVE[String(l||"").trim()] || String(l||"").trim(); }
+
+/* Atlasに◇概念として実在するtopic（2026-09-06時点）。
+   ここに一致する共通テーマ名だけ、Atlasへのリンクを出す。 */
+const ATLAS_CONCEPTS = ["-ment","ことわざ","なまり","丁寧さ","句動詞","名前","場所と方向",
+                        "家族","接続法","数","時間","曜日","月","過去","遠さ"];
+const ATLAS_URL = "./assimil-phrasebook.html";
+
+/* ---------- データの形 ----------
+db = {
+  savedAt,
+  langs:      ["Italiano", ...],                      // 表示順・自己表記
+  sources:    [{id,title,kind,lang,edition,note}],    // 本
+  themes:     [{id,name,atlas,note}],                 // 横断用の共通テーマ
+  bookThemes: [{id,sourceId,name,page,themeIds[],note}], // 本ごとのテーマ分類（そのまま保持）
+  senses:     [{id,name,key,solo,order,note,themeIds[]}], // 比較の軸（意味）
+  entries:    [{id,senseId,lang,term,reading,readingSrc,readingStatus,ja,note,
+                sourceId,bookThemeId,page,status,kind,flags[],reviewNote,numeric,srcId}],
+  memos:      [{id,tType,tId,text,at}],
+  images:     [{id,sourceId,bookThemeId,page,name,at,url}]  // url があれば配信ファイルを見る
+}
+solo: 共通の比較キーが付いていない項目（その資料だけの語）。比較軸と混ぜない。
+kind: "term" | "pattern"（構文枠・記入枠。単語として読ませない）
+readingStatus: "" = 読みあり / "not_transcribed" = まだ写していない
+              "not_required" = その言語には要らない（Atlasの方針。尼・英・西・伊）
+              "mixed_review" = 言語が混在していて保留
+readingLevel: "reused"（既存辞書のまま）/ "rules"（規則で組み立て・＋）/ "draft"（新規判断・校閲前・＊）
+※ いま入っている読みは原語から付けたAtlas式のローマ字。紙面のカナ読みはまだ写していない。
+status: "present" | "absent_in_source" | "no_expression"
+  present            … 資料にこの語が載っていた
+  absent_in_source   … その資料を見たが、この意味は載っていなかった
+  no_expression      … 「その言語には対応する表現がない」と資料が述べている（noteに根拠）
+  レコードそのものが無い … まだ取り込んでいない（＝何も分かっていない）
+------------------------------------- */
+function emptyDb(){
+  return {savedAt:0, langs:[], sources:[], themes:[], bookThemes:[],
+          senses:[], entries:[], memos:[], images:[]};
+}
+let db = emptyDb();
+
+const sid  = s => "s:" + s;
+const tid  = s => "t:" + s;
+const btid = (src,name) => "bt:" + src + "/" + name;
+const eid  = (src,lang,sn,term) => "e:" + src + "/" + lang + "/" + sn + "/" + (term||"");
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+const byId = (arr,id) => arr.find(x => x.id === id);
+const theme = id => byId(db.themes,id);
+const sense = id => byId(db.senses,id);
+const source = id => byId(db.sources,id);
+const bookTheme = id => byId(db.bookThemes,id);
+
+/* ---------- 保存 ---------- */
+const STORE = {mode:"?", lastOk:0, lastErr:"", lsOk:true, bytes:0};
+
+function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+function warnBar(msg){
+  const w = $("warn");
+  if(!msg){ w.style.display="none"; return; }
+  w.textContent = msg; w.style.display="block";
+}
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    let r;
+    try{ r = indexedDB.open(IDB_NAME, IDB_VER); }catch(e){ return rej(e); }
+    r.onupgradeneeded = () => {
+      const h = r.result;
+      if(!h.objectStoreNames.contains(ST_DB))  h.createObjectStore(ST_DB);
+      if(!h.objectStoreNames.contains(ST_IMG)) h.createObjectStore(ST_IMG);
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror   = () => rej(r.error);
+  });
+}
+/* IndexedDBに入れるのは必ず「文字列」。オブジェクトを入れると
+   読み出しのJSON.parseが落ちて、空のdbが本物を上書きする（Atlasで実際に起きた事故）。 */
+async function idbPut(store, key, val){
+  const h = await idbOpen();
+  await new Promise((res,rej)=>{
+    const tx = h.transaction(store,"readwrite");
+    tx.objectStore(store).put(val,key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+  h.close();
+}
+async function idbGet(store, key){
+  const h = await idbOpen();
+  const v = await new Promise((res,rej)=>{
+    const tx = h.transaction(store,"readonly");
+    const q  = tx.objectStore(store).get(key);
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+  });
+  h.close(); return v;
+}
+async function idbDel(store, key){
+  const h = await idbOpen();
+  await new Promise((res,rej)=>{
+    const tx = h.transaction(store,"readwrite");
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+  h.close();
+}
+
+let saveTimer = null;
+function save(){
+  db.savedAt = Date.now();
+  const text = JSON.stringify(db);
+  STORE.bytes = text.length;
+  STORE.lsOk = lsSet(KEY, text);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{
+      await idbPut(ST_DB,"main",text);
+      STORE.mode = "IndexedDB"; STORE.lastOk = Date.now(); STORE.lastErr = "";
+      warnBar("");
+    }catch(e){
+      STORE.mode = "localStorageのみ"; STORE.lastErr = String(e && e.message || e);
+      if(!STORE.lsOk) warnBar("保存できていません: " + STORE.lastErr);
+    }
+    if($("pageSettings").classList.contains("on")) renderStore();
+  }, 120);
+}
+async function bootStorage(){
+  let here = null, there = null;
+  try{ here = JSON.parse(localStorage.getItem(KEY) || "null"); }catch(e){}
+  try{
+    const t = await idbGet(ST_DB,"main");
+    if(typeof t === "string") there = JSON.parse(t);
+    STORE.mode = "IndexedDB";
+  }catch(e){ STORE.mode = "localStorageのみ"; STORE.lastErr = String(e && e.message || e); }
+  const pick = (a,b) => (b && (b.savedAt||0) >= ((a&&a.savedAt)||0)) ? b : a;
+  const d = pick(here, there);
+  db = normalizeDb(d || emptyDb());
+  try{ STORE.bytes = JSON.stringify(db).length; }catch(e){}
+  if(STORE.mode !== "IndexedDB")
+    warnBar("IndexedDBが使えません。localStorageは約5MBで一杯になります。設定→書き出しでこまめに控えを取ってください。");
+}
+function normalizeDb(d){
+  const e = emptyDb();
+  for(const k in e) if(Array.isArray(e[k]) && !Array.isArray(d[k])) d[k] = [];
+  for(const k in e) if(!(k in d)) d[k] = e[k];
+  return d;
+}
+
+/* ---------- 画面切替 ---------- */
+const TABS = ["Themes","Words","Books","Memos","Settings"];
+const SUBS = ["pageSense","pageBookTheme","pageImage"];
+let curTab = "Themes";
+let backStack = [];
+
+function showTab(name, keepStack){
+  curTab = name;
+  if(!keepStack) backStack = [];
+  TABS.forEach(t=>{
+    $("page"+t).classList.toggle("on", t===name);
+    $("tab"+t).classList.toggle("on", t===name);
+  });
+  SUBS.forEach(p => $(p).classList.remove("on"));
+  window.scrollTo(0,0);
+  ({Themes:renderThemes, Words:renderWords, Books:renderBooks,
+    Memos:renderMemos, Settings:renderSettings}[name])();
+}
+function openSub(id, render){
+  backStack.push(()=>{ TABS.forEach(t=>$("page"+t).classList.remove("on"));
+                       SUBS.forEach(p=>$(p).classList.remove("on")); });
+  TABS.forEach(t => $("page"+t).classList.remove("on"));
+  SUBS.forEach(p => $(p).classList.toggle("on", p===id));
+  $("tab"+curTab).classList.add("on");
+  render(); window.scrollTo(0,0);
+}
+let subHist = [];
+function pushSub(fn){ subHist.push(fn); fn(); }
+function goBack(){
+  subHist.pop();
+  const prev = subHist[subHist.length-1];
+  if(prev){ prev(); } else { showTab(curTab); }
+  window.scrollTo(0,0);
+}
+function openSense(id){ subHist.push(()=>_openSense(id)); _openSense(id); }
+function _openSense(id){
+  TABS.forEach(t => $("page"+t).classList.remove("on"));
+  SUBS.forEach(p => $(p).classList.toggle("on", p==="pageSense"));
+  $("tab"+curTab).classList.add("on");
+  renderSense(id); window.scrollTo(0,0);
+}
+function openBookTheme(id){ subHist.push(()=>_openBt(id)); _openBt(id); }
+function _openBt(id){
+  TABS.forEach(t => $("page"+t).classList.remove("on"));
+  SUBS.forEach(p => $(p).classList.toggle("on", p==="pageBookTheme"));
+  $("tab"+curTab).classList.add("on");
+  renderBt(id); window.scrollTo(0,0);
+}
+function openImage(id){ subHist.push(()=>_openImg(id)); _openImg(id); }
+function _openImg(id){
+  TABS.forEach(t => $("page"+t).classList.remove("on"));
+  SUBS.forEach(p => $(p).classList.toggle("on", p==="pageImage"));
+  $("tab"+curTab).classList.add("on");
+  renderImage(id); window.scrollTo(0,0);
+}
+
+/* ---------- 表示の共通部品 ---------- */
+const LEGEND =
+  '<div class="legend">'
+  + '<span>語＝資料に載っていた</span>'
+  + '<span class="state miss">未掲載＝その資料に無かった</span>'
+  + '<span class="state none">なしと明記＝資料がそう述べている</span>'
+  + '<span class="state gap">未取り込み＝まだ調べていない</span>'
+  + '<div style="margin-top:5px; border-top:1px dashed var(--line); padding-top:5px">'
+  + '読み＝原語から付けたAtlas式のローマ字（<b>紙面のカナ読みではない</b>）'
+  + '<span style="margin-left:8px">＋規則で組み立て</span>'
+  + '<span style="margin-left:8px">＊新規・校閲前</span></div>'
+  + '</div>';
+
+function entriesOf(senseId, lang){
+  return db.entries.filter(e => e.senseId===senseId && (!lang || e.lang===lang));
+}
+/* 「N言語」の数え方: 語が実際にあった言語だけを数える。
+   未掲載・対応語なしは「調べた結果」であって語ではないので数に入れない。 */
+/* 比較画面に並べる言語。
+   「未取り込み（まだ調べていない）」は、その言語の本に同じテーマのページがあるときだけ意味を持つ。
+   共通キーの無い個別項目(solo)や、本を持たない併記ラベルにまで出すと、
+   「調べていない」と「そもそも比較対象にしていない」が混ざる。 */
+function langsForSense(senseId){
+  const sn = sense(senseId) || {};
+  const have = new Set(entriesOf(senseId).map(e=>e.lang));
+  if(sn.solo) return db.langs.filter(l => have.has(l));
+  const tIds = sn.themeIds || [];
+  const expected = new Set();
+  db.bookThemes.forEach(bt=>{
+    if(!(bt.themeIds||[]).some(t => tIds.includes(t))) return;
+    const src = source(bt.sourceId);
+    if(src && src.lang) expected.add(src.lang);
+  });
+  const out = db.langs.filter(l => have.has(l) || expected.has(l));
+  return out.length ? out : db.langs.filter(l => have.has(l));
+}
+function langsOf(senseId){
+  const s = new Set(entriesOf(senseId).filter(e=>e.status==="present").map(e=>e.lang));
+  return db.langs.filter(l => s.has(l));
+}
+function themeTags(ids, clickable){
+  return (ids||[]).map(id=>{
+    const t = theme(id); if(!t) return "";
+    return '<span class="tag'+(clickable?' tap':'')+'"'
+      + (clickable?' onclick="openTheme(\''+esc(id)+'\')"':'') + '>'+esc(t.name)+'</span>';
+  }).join("");
+}
+function atlasLinkFor(name){
+  if(!ATLAS_CONCEPTS.includes(name)) return "";
+  return '<a class="tag" style="text-decoration:none" href="'
+    + ATLAS_URL + '#con=' + encodeURIComponent(name) + '">◇ Atlasの「'+esc(name)+'」</a>';
+}
+/* 読みの状態。「無い」「不要」「まだ写していない」「保留」を分ける。
+   いま入っている読みは Atlas式のローマ字で、原語から付けたもの。
+   **紙面のカナ読みの転記ではない**（カナ読みは紙面にあるが、まだ写していない）。 */
+const READ_MARK = {
+  reused: ["",  ""],
+  rules:  ["＋", "Atlas式の規則で組み立てた読み"],
+  draft:  ["＊", "新しく音を判断した読み。校閲前"]
+};
+function readingHtml(e){
+  if(e.reading){
+    const m = READ_MARK[e.readingLevel] || ["", ""];
+    return '<div class="reading">' + esc(e.reading)
+      + (m[0] ? ' <span class="added" title="'+esc(m[1])+'">'+m[0]+'</span>' : '')
+      + '</div>'
+      + (e.readingNote ? '<div class="sub">読みについて: '+esc(e.readingNote)+'</div>' : '');
+  }
+  if(e.readingStatus === "not_required") return "";   // Atlasの方針で読み不要
+  if(e.readingStatus === "mixed_review"){
+    let h = '<div class="reading" style="color:var(--gap)">読みは保留（言語が混在している）</div>';
+    (e.readingParts||[]).forEach(pt=>{
+      h += '<div class="sub">' + esc(pt.lang) + ': ' + esc(pt.text)
+        + (pt.reading ? ' — ' + esc(pt.reading) : ' — 読みなし（この言語の記法が無い）') + '</div>';
+    });
+    return h;
+  }
+  if(e.readingStatus === "not_transcribed")
+    return '<div class="reading" style="color:var(--gap)">読み未転記</div>';
+  return "";
+}
+function flagsHtml(e){
+  const f = e.flags || [];
+  if(!f.length && !e.reviewNote) return "";
+  const label = {
+    semantic_review_required: "意味の対応が要確認",
+    needs_image_review: "画像の再確認が必要",
+    review_note: "校訂前"
+  };
+  const bits = f.map(x => label[x] || x);
+  if(e.reviewNote) bits.push(e.reviewNote);
+  return '<div class="flag">⚠ ' + bits.map(esc).join(" ／ ") + '</div>';
+}
+function srcLineHtml(e){
+  const s = source(e.sourceId), bt = bookTheme(e.bookThemeId);
+  const bits = [];
+  if(s)  bits.push(esc(s.title) + (s.edition ? "（"+esc(s.edition)+"）" : ""));
+  if(bt) bits.push('<button onclick="openBookTheme(\''+esc(bt.id)+'\')">'+esc(bt.name)+'</button>');
+  if(e.page) bits.push("p."+esc(e.page));
+  return bits.length ? '<div class="srcline">'+bits.join(" ／ ")+'</div>' : "";
+}
+function entryHtml(e){
+  if(e.status === "absent_in_source")
+    return '<div class="entry"><div class="state miss">この資料には載っていない</div>'
+      + (e.note?'<div class="sub">'+esc(e.note)+'</div>':'') + srcLineHtml(e) + '</div>';
+  if(e.status === "no_expression")
+    return '<div class="entry"><div class="state none">対応する語が<b>ない</b>と資料が述べている</div>'
+      + (e.note?'<div class="sub">'+esc(e.note)+'</div>':'') + srcLineHtml(e) + '</div>';
+  return '<div class="entry">'
+    + (e.kind === "pattern" ? '<div class="kindmark">構文枠（単語ではなく、組み立ての形）</div>' : '')
+    + '<div class="term">'+esc(e.term)+'</div>'
+    + readingHtml(e)
+    + (e.ja && e.ja !== ((sense(e.senseId)||{}).name)
+        ? '<div class="ja">'+esc(e.ja)+'</div>' : '')
+    + (e.note ? '<div class="sub">'+esc(e.note)+'</div>': '')
+    + flagsHtml(e)
+    + srcLineHtml(e) + '</div>';
+}
+
+/* ---------- テーマ ---------- */
+function renderThemes(){
+  const el = $("themeList");
+  if(!db.themes.length){
+    el.innerHTML = '<div class="empty">まだテーマがありません。設定タブからJSONを取り込んでください。</div>';
+    return;
+  }
+  el.innerHTML = db.themes.map(t=>{
+    const senses = db.senses.filter(s => (s.themeIds||[]).includes(t.id));
+    const langs  = new Set();
+    senses.forEach(s => entriesOf(s.id).forEach(e => { if(e.status==="present") langs.add(e.lang); }));
+    return '<div class="card tap" onclick="openTheme(\''+esc(t.id)+'\')">'
+      + '<div class="row"><b class="grow">'+esc(t.name)+'</b>'
+      + '<span class="sub">'+senses.length+'語 ／ '+langs.size+'言語</span></div>'
+      + (t.note?'<div class="sub">'+esc(t.note)+'</div>':'')
+      + '</div>';
+  }).join("");
+}
+let themeFilter = "";
+function openTheme(id){
+  themeFilter = id; showTab("Words", true);
+  $("q").value = ""; renderWords();
+  window.scrollTo(0,0);
+}
+
+/* ---------- 語（意味）一覧 ---------- */
+function renderWords(){
+  const q = ($("q").value||"").trim().toLowerCase();
+  let list = db.senses.slice();
+  if(themeFilter) list = list.filter(s => (s.themeIds||[]).includes(themeFilter));
+  if(q) list = list.filter(s => {
+    if(s.name.toLowerCase().includes(q)) return true;
+    return entriesOf(s.id).some(e =>
+      (e.term||"").toLowerCase().includes(q) ||
+      (e.reading||"").toLowerCase().includes(q) ||
+      (e.ja||"").toLowerCase().includes(q));
+  });
+  const head = themeFilter
+    ? '<div class="row" style="margin-bottom:8px"><b class="grow">'
+      + esc((theme(themeFilter)||{}).name||"") + '</b>'
+      + '<button class="btn" onclick="themeFilter=\'\';renderWords()">全テーマ</button></div>'
+      + (atlasLinkFor((theme(themeFilter)||{}).name) ? '<div style="margin-bottom:8px">'
+         + atlasLinkFor((theme(themeFilter)||{}).name) + '</div>' : '')
+    : "";
+  /* 比較軸（共通キーのあるもの）を先に、その中は素材の順で。
+     solo（その資料だけの項目）は後ろにまとめる。混ぜない。 */
+  list.sort((a,b)=>{
+    if(!!a.solo !== !!b.solo) return a.solo ? 1 : -1;
+    const ao = a.order==null ? 1e9 : a.order, bo = b.order==null ? 1e9 : b.order;
+    if(ao !== bo) return ao - bo;
+    return String(a.name).localeCompare(String(b.name), "ja");
+  });
+  const nKeyed = list.filter(x=>!x.solo).length;
+  const countLine = '<div class="sub" style="margin-bottom:8px">'
+    + '比較軸 ' + nKeyed + ' ／ その資料だけの項目 ' + (list.length-nKeyed) + '</div>';
+  $("wordList").innerHTML = head + countLine + (list.length ? list.map(s=>{
+    const ls = langsOf(s.id);
+    const preview = ls.slice(0,4).map(l=>{
+      const e = entriesOf(s.id,l).filter(x=>x.status!=="absent_in_source" && x.status!=="no_expression")[0];
+      return e ? esc(e.term) : "";
+    }).filter(Boolean).join(" ・ ");
+    return '<div class="card tap" onclick="openSense(\''+esc(s.id)+'\')">'
+      + '<div class="row"><b class="grow">'+esc(s.name)+'</b>'
+      + '<span class="sub">'+(s.solo ? "この資料のみ" : ls.length+"言語")+'</span></div>'
+      + (preview?'<div class="sub" style="font-size:13.5px">'+preview+(ls.length>4?" …":"")+'</div>':'')
+      + '</div>';
+  }).join("") : '<div class="empty">該当なし。</div>');
+}
+
+/* ---------- 比較（意味 → 各言語） ---------- */
+function renderSense(id){
+  const s = sense(id);
+  if(!s){ $("senseBody").innerHTML = '<div class="empty">見つかりません。</div>'; return; }
+  const tnames = (s.themeIds||[]).map(i=>(theme(i)||{}).name).filter(Boolean);
+  let h = '<div class="row" style="margin-bottom:4px"><h2 class="grow" style="margin:0">'+esc(s.name)+'</h2></div>';
+  h += '<div style="margin-bottom:8px">' + themeTags(s.themeIds,true)
+     + tnames.map(atlasLinkFor).join("") + '</div>';
+  if(s.note) h += '<div class="sub" style="margin-bottom:8px">'+esc(s.note)+'</div>';
+  if(s.solo){
+    h += '<div class="card" style="border-style:dashed"><b>共通の比較キーは付いていません。</b>'
+      + '<div class="sub">この資料の中の項目として取り込んだものです。'
+      + '他の言語の似た語と並べるかどうかは、まだ判断していません。</div></div>';
+  }else if(s.key && s.key !== s.name){
+    h += '<div class="sub" style="margin-bottom:8px">比較キー: <code>'+esc(s.key)+'</code>'
+      + '（素材側の仮キー。厳密な同義を保証するものではありません）</div>';
+  }
+  h += LEGEND;
+  h += '<div class="card">';
+  langsForSense(id).forEach(l=>{
+    const es = entriesOf(id,l);
+    h += '<div class="langblock"><div class="langname">'+esc(l)+'</div>';
+    h += es.length ? es.map(entryHtml).join("")
+                   : '<div class="state gap">未取り込み（まだ調べていない）</div>';
+    h += '</div>';
+  });
+  h += '</div>';
+  h += memoBox("sense", id);
+  $("senseBody").innerHTML = h;
+}
+
+/* ---------- 本 ---------- */
+function renderBooks(){
+  const el = $("bookList");
+  if(!db.sources.length){
+    el.innerHTML = '<div class="empty">まだ本がありません。設定タブからJSONを取り込んでください。</div>';
+    return;
+  }
+  el.innerHTML = db.sources.map(s=>{
+    const bts = db.bookThemes.filter(b=>b.sourceId===s.id)
+      .sort((a,b)=>(a.page||0)-(b.page||0));
+    return '<div class="card">'
+      + '<div class="row"><b class="grow">'+esc(s.title)+'</b>'
+      + (s.lang?'<span class="tag plain">'+esc(s.lang)+'</span>':'')+'</div>'
+      + (s.edition||s.note ? '<div class="sub">'
+          + [s.edition,s.note].filter(Boolean).map(esc).join(" ／ ")+'</div>' : '')
+      + '<div style="margin-top:6px">' + (bts.length ? bts.map(b=>
+          '<span class="tag tap" onclick="openBookTheme(\''+esc(b.id)+'\')">'
+          + esc(b.name) + (b.page?' p.'+esc(b.page):'') + '</span>').join("")
+        : '<span class="sub">テーマ未取り込み</span>') + '</div>'
+      + '</div>';
+  }).join("");
+}
+function renderBt(id){
+  const bt = bookTheme(id);
+  if(!bt){ $("btBody").innerHTML = '<div class="empty">見つかりません。</div>'; return; }
+  const s = source(bt.sourceId) || {};
+  const es = db.entries.filter(e=>e.bookThemeId===id).slice().sort((a,b)=>{
+    const A = sense(a.senseId)||{}, B = sense(b.senseId)||{};
+    if(!!A.solo !== !!B.solo) return A.solo ? 1 : -1;
+    const ao = A.order==null ? 1e9 : A.order, bo = B.order==null ? 1e9 : B.order;
+    return ao - bo;
+  });
+  const imgs = db.images.filter(i=>i.bookThemeId===id);
+  let h = '<div class="sub">'+esc(s.title||"")+(s.edition?"（"+esc(s.edition)+"）":"")+'</div>';
+  h += '<h2 style="margin:2px 0 4px">'+esc(bt.name)+(bt.page?' <span class="sub">p.'+esc(bt.page)+'</span>':'')+'</h2>';
+  h += '<div style="margin-bottom:8px">' + themeTags(bt.themeIds,true) + '</div>';
+  if(bt.note) h += '<details style="margin-bottom:8px"><summary class="sub">'
+    + 'この資料についての断り書き</summary><div class="sub" style="margin-top:6px">'
+    + esc(bt.note) + '</div></details>';
+  if(imgs.length) h += '<div style="margin-bottom:10px">' + imgs.map(i=>
+      '<button class="btn" onclick="openImage(\''+esc(i.id)+'\')">元ページを見る'
+      + (i.page?' p.'+esc(i.page):'')+'</button>').join(" ") + '</div>';
+  /* DKのような多言語の本でだけ、行ごとに言語を出す。1言語の本では毎行同じ字が並ぶだけ。 */
+  const multiLang = new Set(es.map(e=>e.lang)).size > 1;
+  h += '<div class="card">' + (es.length ? es.map(e=>{
+    const sn = sense(e.senseId) || {name:"?"};
+    return '<div class="entry">'
+      + (multiLang ? '<div class="langname">'+esc(e.lang)+'</div>' : '')
+      + (e.kind === "pattern" ? '<div class="kindmark">構文枠</div>' : '')
+      + (e.status==="present" || !e.status
+         ? '<div class="term">'+esc(e.term)+'</div>' + readingHtml(e)
+         : (e.status==="absent_in_source"
+            ? '<div class="state miss">この資料には載っていない</div>'
+            : '<div class="state none">対応する語が<b>ない</b>と資料が述べている</div>'))
+      + '<div class="ja">'+esc(sn.name)+(e.ja&&e.ja!==sn.name?' — '+esc(e.ja):'')+'</div>'
+      + (e.note?'<div class="sub">'+esc(e.note)+'</div>':'')
+      + flagsHtml(e)
+      + '<div class="srcline"><button onclick="openSense(\''+esc(e.senseId)+'\')">'
+      + '他の言語と比べる</button></div>'
+      + '</div>';
+  }).join("") : '<div class="empty">語がありません。</div>') + '</div>';
+  h += memoBox("bookTheme", id);
+  $("btBody").innerHTML = h;
+}
+
+/* ---------- 画像 ---------- */
+async function renderImage(id){
+  const m = byId(db.images,id);
+  const el = $("imgBody");
+  if(!m){ el.innerHTML = '<div class="empty">見つかりません。</div>'; return; }
+  const bt = bookTheme(m.bookThemeId), s = source(m.sourceId);
+  el.innerHTML = '<div class="sub">'+esc((s||{}).title||"")+' ／ '+esc((bt||{}).name||"")
+    + (m.page?' p.'+esc(m.page):'')+'</div><div class="sub">読み込み中…</div>';
+  if(m.url){
+    el.innerHTML = '<div class="sub">'+esc((s||{}).title||"")+' ／ '+esc((bt||{}).name||"")
+      + (m.page?' p.'+esc(m.page):'')+'</div>'
+      + '<div class="sub" style="margin-bottom:6px">拡大は端末のピンチ操作で。</div>'
+      + '<img class="page" src="'+esc(m.url)+'" alt="">';
+    return;
+  }
+  try{
+    const data = await idbGet(ST_IMG, id);
+    el.innerHTML = '<div class="sub">'+esc((s||{}).title||"")+' ／ '+esc((bt||{}).name||"")
+      + (m.page?' p.'+esc(m.page):'')+'</div>'
+      + (data ? '<img class="page" src="'+data+'" alt="">' : '<div class="empty">画像が見つかりません。</div>');
+  }catch(e){ el.innerHTML = '<div class="msg err">画像を読めません: '+esc(e.message)+'</div>'; }
+}
+
+/* ---------- 観察メモ ---------- */
+function memosFor(tType,tId){ return db.memos.filter(m=>m.tType===tType && m.tId===tId); }
+function memoBox(tType,tId){
+  const ms = memosFor(tType,tId);
+  return '<h2 style="margin-top:16px">観察メモ</h2>'
+    + ms.map(m=>'<div class="card"><div style="white-space:pre-wrap">'+esc(m.text)+'</div>'
+        + '<div class="row" style="margin-top:6px"><span class="sub grow">'+esc(fmtAt(m.at))+'</span>'
+        + '<button class="btn warn" onclick="delMemo(\''+esc(m.id)+'\')">消す</button></div></div>').join("")
+    + '<textarea id="memoIn" placeholder="気づいたこと・疑問"></textarea>'
+    + '<div class="row" style="margin-top:6px"><button class="btn pri" onclick="addMemo(\''
+      + esc(tType)+'\',\''+esc(tId)+'\')">メモを足す</button></div>';
+}
+function fmtAt(t){ const d = new Date(t||0);
+  return isNaN(d) ? "" : d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"
+    +String(d.getDate()).padStart(2,"0"); }
+function addMemo(tType,tId){
+  const v = ($("memoIn").value||"").trim();
+  if(!v) return;
+  db.memos.unshift({id:uid(), tType, tId, text:v, at:Date.now()});
+  save();
+  if(tType==="sense") renderSense(tId); else if(tType==="bookTheme") renderBt(tId);
+}
+function delMemo(id){
+  const m = byId(db.memos,id); if(!m) return;
+  if(!confirm("このメモを消します。よろしいですか。")) return;
+  db.memos = db.memos.filter(x=>x.id!==id); save();
+  if(m.tType==="sense") renderSense(m.tId);
+  else if(m.tType==="bookTheme") renderBt(m.tId);
+  else renderMemos();
+}
+function memoTargetLabel(m){
+  if(m.tType==="sense"){ const s=sense(m.tId); return s?("語："+s.name):"（消えた語）"; }
+  if(m.tType==="bookTheme"){ const b=bookTheme(m.tId);
+    const s=b&&source(b.sourceId); return b?("本："+(s?s.title+" / ":"")+b.name):"（消えた本のテーマ）"; }
+  if(m.tType==="theme"){ const t=theme(m.tId); return t?("テーマ："+t.name):"（消えたテーマ）"; }
+  return m.tType;
+}
+function renderMemos(){
+  const el = $("memoList");
+  if(!db.memos.length){
+    el.innerHTML = '<div class="empty">まだメモがありません。語や本のテーマの画面から書けます。</div>';
+    return;
+  }
+  el.innerHTML = db.memos.slice().sort((a,b)=>b.at-a.at).map(m=>{
+    const jump = m.tType==="sense" ? 'openSense(\''+esc(m.tId)+'\')'
+               : m.tType==="bookTheme" ? 'openBookTheme(\''+esc(m.tId)+'\')' : '';
+    return '<div class="card'+(jump?' tap':'')+'"'+(jump?' onclick="'+jump+'"':'')+'>'
+      + '<div class="sub">'+esc(memoTargetLabel(m))+'</div>'
+      + '<div style="white-space:pre-wrap; margin-top:3px">'+esc(m.text)+'</div>'
+      + '<div class="sub" style="margin-top:4px">'+esc(fmtAt(m.at))+'</div></div>';
+  }).join("");
+}
+
+/* ---------- 取り込み ---------- */
+function upsertTheme(name, atlas, note){
+  name = String(name||"").trim(); if(!name) return null;
+  let t = byId(db.themes, tid(name));
+  if(!t){ t = {id:tid(name), name, atlas:atlas||(ATLAS_CONCEPTS.includes(name)?name:""), note:note||""};
+          db.themes.push(t); return t; }
+  if(atlas) t.atlas = atlas;
+  if(note)  t.note  = note;
+  return t;
+}
+/* 意味（比較の軸）。key は言語をまたぐ安定キー。
+   素材の comparison_key のように表示名と別のキーがあるときは key を渡す。
+   key が無ければ表示名そのものがキーになる。 */
+function upsertSense(name, themeIds, note, opt){
+  opt = opt || {};
+  name = String(name||"").trim();
+  const key = String(opt.key || name).trim();
+  if(!key) return null;
+  let s = byId(db.senses, sid(key));
+  if(!s){
+    s = {id:sid(key), key, name:name||key, solo:!!opt.solo, order:null, note:note||"", themeIds:[]};
+    db.senses.push(s);
+  }
+  if(name && !s.name) s.name = name;
+  if(opt.solo) s.solo = true;
+  if(opt.order != null && s.order == null) s.order = Number(opt.order);
+  (themeIds||[]).forEach(t => { if(!s.themeIds.includes(t)) s.themeIds.push(t); });
+  if(note && !s.note) s.note = note;
+  return s;
+}
+function upsertLang(l){
+  l = toNative(l); if(!l) return "";
+  if(!db.langs.includes(l)) db.langs.push(l);
+  return l;
+}
+
+async function makeUndo(){
+  try{ await idbPut(ST_DB,"undo", JSON.stringify(db)); }catch(e){}
+}
+async function doUndo(){
+  const m = $("impMsg");
+  try{
+    const t = await idbGet(ST_DB,"undo");
+    if(typeof t !== "string"){ m.className="msg err"; m.textContent="戻せる取り込みがありません。"; return; }
+    if(!confirm("直前の取り込みを取り消します。よろしいですか。")) return;
+    db = normalizeDb(JSON.parse(t));
+    await idbDel(ST_DB,"undo");
+    save(); showTab("Settings");
+    m.className="msg ok"; m.textContent="直前の取り込みを取り消しました。";
+  }catch(e){ m.className="msg err"; m.textContent="取り消せません: "+e.message; }
+}
+
+async function doImport(){
+  const m = $("impMsg");
+  const text = $("impText").value.trim();
+  if(!text){ m.className="msg err"; m.textContent="JSONが空です。"; return; }
+  await makeUndo();
+  try{
+    const r = importData(text);
+    m.className = r.errors.length ? "msg err" : "msg ok";
+    m.textContent = r.summary + (r.errors.length ? "\n\n問題:\n" + r.errors.join("\n") : "");
+    save(); renderSettings();
+  }catch(e){
+    m.className="msg err"; m.textContent="取り込めません: " + e.message;
+  }
+}
+
+function importData(text){
+  const raw = JSON.parse(text);
+  const blocks = Array.isArray(raw) ? raw : (Array.isArray(raw.imports) ? raw.imports : [raw]);
+  const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0};
+  const errors = [];
+
+  blocks.forEach((b, bi)=>{
+    const where = "ブロック" + (bi+1);
+
+    (b.langs||[]).forEach(upsertLang);
+
+    (b.themes||[]).forEach(t=>{
+      const name = typeof t === "string" ? t : t.name;
+      const before = db.themes.length;
+      upsertTheme(name, t.atlas, t.note);
+      if(db.themes.length > before) c.theme++;
+    });
+
+    (b.senses||[]).forEach(s=>{
+      const tIds = (s.themes||[]).map(n=>{
+        const before = db.themes.length; const t = upsertTheme(n);
+        if(db.themes.length>before) c.theme++; return t && t.id;
+      }).filter(Boolean);
+      const before = db.senses.length;
+      upsertSense(s.name, tIds, s.note);
+      if(db.senses.length > before) c.sense++;
+    });
+
+    (b.memos||[]).forEach(mm=>{
+      const t = String(mm.target||"");
+      const i = t.indexOf(":");
+      const kind = t.slice(0,i), name = t.slice(i+1);
+      const tId = kind==="sense" ? sid(name) : kind==="theme" ? tid(name) : null;
+      if(!tId){ errors.push(where+": メモの対象 '"+t+"' が読めません（sense:名前 / theme:名前）"); return; }
+      db.memos.unshift({id:uid(), tType:kind, tId, text:String(mm.text||""), at:Date.now()});
+      c.memo++;
+    });
+
+    if(!b.source && !b.items) return;
+    if(!b.source || !b.source.id || !b.source.title){
+      errors.push(where+": source に id と title が要ります。"); return;
+    }
+    let s = byId(db.sources, b.source.id);
+    if(!s){ s = {id:b.source.id, title:"", kind:"", lang:"", edition:"", note:""};
+            db.sources.push(s); c.src++; }
+    s.title = b.source.title;
+    s.kind    = b.source.kind    || s.kind;
+    s.lang    = b.source.lang ? toNative(b.source.lang) : s.lang;
+    s.edition = b.source.edition || s.edition;
+    s.note    = b.source.note    || s.note;
+    if(s.lang) upsertLang(s.lang);
+
+    if(!b.bookTheme || !b.bookTheme.name){
+      errors.push(where+": bookTheme に name が要ります。"); return;
+    }
+    const btIdV = btid(s.id, b.bookTheme.name);
+    let bt = byId(db.bookThemes, btIdV);
+    if(!bt){ bt = {id:btIdV, sourceId:s.id, name:b.bookTheme.name, page:"", themeIds:[], note:""};
+             db.bookThemes.push(bt); c.bt++; }
+    if(b.bookTheme.page != null) bt.page = String(b.bookTheme.page);
+    if(b.bookTheme.note) bt.note = b.bookTheme.note;
+    /* 元ページ画像を配信ファイルとして持つ場合（IndexedDBに入れない）。
+       取り込み直しても増えないよう、bookThemeごとに1件に固定する。 */
+    if(b.bookTheme.image){
+      const imgId = "img:" + btIdV;
+      db.images = db.images.filter(x => x.id !== imgId);
+      db.images.push({id:imgId, sourceId:s.id, bookThemeId:btIdV,
+                      page:String(b.bookTheme.page||""), name:b.bookTheme.image,
+                      url:b.bookTheme.image, at:Date.now()});
+    }
+    const btThemeIds = (b.bookTheme.themes||[]).map(n=>{
+      const before = db.themes.length; const t = upsertTheme(n);
+      if(db.themes.length>before) c.theme++; return t && t.id;
+    }).filter(Boolean);
+    btThemeIds.forEach(id=>{ if(!bt.themeIds.includes(id)) bt.themeIds.push(id); });
+
+    /* 同じ本・同じテーマの語は丸ごと差し替える（取り込み直しても増殖しない）。
+       メモは意味・テーマ・本のテーマに付いているので、ここでは消えない。 */
+    const old = db.entries.filter(e => e.bookThemeId === btIdV);
+    c.repl += old.length;
+    db.entries = db.entries.filter(e => e.bookThemeId !== btIdV);
+
+    (b.items||[]).forEach((it, ii)=>{
+      const at = where + " items[" + ii + "]";
+      const senseName = String(it.sense||"").trim();
+      const senseKey  = String(it.senseKey||"").trim();
+      if(!senseName && !senseKey){ errors.push(at+": sense（意味の名前）が空です。"); return; }
+      const lang = toNative(it.lang || s.lang);
+      if(!lang){ errors.push(at+": 言語が決まりません（source.lang か item.lang）。"); return; }
+      upsertLang(lang);
+      const itemThemeIds = (it.themes||[]).map(n=>{
+        const before = db.themes.length; const t = upsertTheme(n);
+        if(db.themes.length>before) c.theme++; return t && t.id;
+      }).filter(Boolean);
+      const before = db.senses.length;
+      const sn = upsertSense(senseName || senseKey, btThemeIds.concat(itemThemeIds), it.senseNote,
+                             {key:senseKey, solo:!!it.solo, order:it.order});
+      if(db.senses.length > before) c.sense++;
+
+      const status = it.status || (it.term ? "present" : "");
+      if(!status){ errors.push(at+": term が無く status も無いので、何を言っているのか決まりません。"); return; }
+      if(status === "present" && !it.term){ errors.push(at+": term が空です。"); return; }
+      if(status === "no_expression" && !it.note)
+        errors.push(at+": 「対応する語がない」には根拠のnoteを付けてください（取り込みは続けます）。");
+
+      /* srcId（素材側のレコードID）があればそれを識別子にする。
+         取り込み直しても、素材のIDが同じかぎり同じentryになる。 */
+      db.entries.push({
+        id: it.srcId ? ("e:" + it.srcId) : eid(s.id, lang, sn.id, it.term || status),
+        srcId: it.srcId || "",
+        senseId: sn.id, lang,
+        term: it.term || "", reading: it.reading || "",
+        readingSrc: it.readingSrc === "added" ? "added" : "book",
+        readingStatus: it.readingStatus || "",
+        readingLevel: it.readingLevel || "",
+        readingNote: it.readingNote || "",
+        readingParts: Array.isArray(it.readingParts) ? it.readingParts.slice() : [],
+        ja: it.ja || "", note: it.note || "",
+        kind: it.kind === "pattern" ? "pattern" : "term",
+        flags: Array.isArray(it.flags) ? it.flags.slice() : [],
+        reviewNote: it.reviewNote || "",
+        numeric: (it.numeric != null ? Number(it.numeric) : null),
+        sourceId: s.id, bookThemeId: btIdV,
+        page: it.page != null ? String(it.page) : (bt.page || ""),
+        status
+      });
+      c.add++;
+    });
+  });
+
+  const summary =
+    "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
+    + "新規: 本 " + c.src + " / 本のテーマ " + c.bt + " / 共通テーマ " + c.theme
+    + " / 意味 " + c.sense + " / メモ " + c.memo;
+  return {summary, errors, counts:c};
+}
+
+/* アプリと同じ場所の prism-data.json を取り込む。
+   iPhoneで400KBのJSONを貼るのは現実的でないため（2026-09-06）。
+   ファイルが無いときは黙って何もせず、理由を画面に出す。 */
+async function loadBundled(){
+  const m = $("impMsg");
+  m.className = "msg"; m.textContent = "読み込み中…";
+  let text;
+  try{
+    const res = await fetch("./prism-data.json", {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    text = await res.text();
+  }catch(e){
+    m.className = "msg err";
+    m.textContent = "prism-data.json を読めません（" + e.message + "）。\n"
+      + "アプリと同じ場所にファイルが置かれているか確認してください。";
+    return;
+  }
+  await makeUndo();
+  try{
+    const r = importData(text);
+    m.className = r.errors.length ? "msg err" : "msg ok";
+    m.textContent = r.summary + (r.errors.length ? "\n\n問題:\n" + r.errors.join("\n") : "");
+    save(); renderSettings();
+  }catch(e){
+    m.className = "msg err"; m.textContent = "取り込めません: " + e.message;
+  }
+}
+
+/* ---------- 書き出し ---------- */
+function download(name, text, type){
+  const b = new Blob([text], {type: type || "application/json"});
+  const u = URL.createObjectURL(b);
+  const a = document.createElement("a");
+  a.href = u; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(u); a.remove(); }, 500);
+}
+function stamp(){ const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function doExport(){
+  const t = JSON.stringify(db, null, 1);
+  download("prism-"+stamp()+".json", t);
+  $("expMsg").className="msg ok";
+  $("expMsg").textContent = "書き出しました（" + Math.round(t.length/1024) + " KB）。画像は含みません。";
+}
+/* Atlas の「取込」タブに貼れる ◇概念 の下書きを作る。
+   中身は自動生成せず、こちらで見つけた語を並べるだけ。文章はMayが書く。 */
+function doExportAtlas(){
+  const out = {grammar:[]};
+  db.themes.forEach(t=>{
+    if(!ATLAS_CONCEPTS.includes(t.name)) return;
+    const senses = db.senses.filter(s=>(s.themeIds||[]).includes(t.id));
+    let body = "【Prismから】" + t.name + " に集めた語（" + stamp() + "時点）\n\n";
+    senses.forEach(s=>{
+      body += "◆ " + s.name + "\n";
+      db.langs.forEach(l=>{
+        const es = entriesOf(s.id,l).filter(e=>e.status==="present");
+        if(!es.length) return;
+        body += "  " + l + ": " + es.map(e=>e.term + (e.reading?"（"+e.reading+"）":"")).join(" / ") + "\n";
+      });
+      body += "\n";
+    });
+    out.grammar.push({topic:t.name, lang:"", lesson:0, type:"concept", related:[], body, examples:[]});
+  });
+  if(!out.grammar.length){
+    $("expMsg").className="msg err";
+    $("expMsg").textContent = "Atlasの◇と同じ名前のテーマがまだありません（"+ATLAS_CONCEPTS.join("・")+"）。";
+    return;
+  }
+  download("prism-to-atlas-"+stamp()+".json", JSON.stringify(out, null, 1));
+  $("expMsg").className="msg ok";
+  $("expMsg").textContent = "◇" + out.grammar.map(g=>g.topic).join("・")
+    + " の下書きを書き出しました。Atlasの「取込」に貼る前に、必ず中身を読んで直してください（既存の◇を上書きします）。";
+}
+
+/* ---------- 設定 ---------- */
+function renderSettings(){
+  renderStore(); renderLangOrder(); renderImgPicker(); renderFmtHelp();
+}
+function renderStore(){
+  $("storeInfo").innerHTML =
+    "版: <b>"+BUILD+"</b><br>"
+    + "主な保存先: <b>"+esc(STORE.mode)+"</b><br>"
+    + "控えのlocalStorage: <b>"+(STORE.lsOk?"書けています":"満杯で書けません")+"</b><br>"
+    + "いまの大きさ: 約"+Math.round(STORE.bytes/1024)+" KB<br>"
+    + "本"+db.sources.length+" ／ 本のテーマ"+db.bookThemes.length+" ／ 共通テーマ"+db.themes.length
+    + " ／ 意味"+db.senses.length+" ／ 語"+db.entries.length+" ／ 画像"+db.images.length
+    + " ／ メモ"+db.memos.length
+    + (STORE.lastErr ? '<br><span style="color:var(--danger)">'+esc(STORE.lastErr)+'</span>' : '');
+}
+function renderLangOrder(){
+  $("langOrder").innerHTML = db.langs.length ? db.langs.map((l,i)=>
+    '<div class="row card" style="padding:7px 10px">'
+    + '<span class="grow">'+esc(l)+'</span>'
+    + '<button class="btn" onclick="moveLang('+i+',-1)">↑</button>'
+    + '<button class="btn" onclick="moveLang('+i+',1)">↓</button></div>').join("")
+    : '<div class="sub">言語はJSONを取り込むと増えます。</div>';
+}
+function moveLang(i,d){
+  const j = i+d; if(j<0||j>=db.langs.length) return;
+  const a = db.langs; [a[i],a[j]] = [a[j],a[i]]; save(); renderLangOrder();
+}
+function renderImgPicker(){
+  const sel = $("imgBt");
+  sel.innerHTML = '<option value="">元ページを結びつける本のテーマを選ぶ</option>'
+    + db.bookThemes.map(b=>{
+        const s = source(b.sourceId)||{};
+        return '<option value="'+esc(b.id)+'">'+esc(s.title||"")+' / '+esc(b.name)
+          +(b.page?' p.'+esc(b.page):'')+'</option>'; }).join("");
+  $("imgList").innerHTML = db.images.length ? db.images.map(i=>{
+    const b = bookTheme(i.bookThemeId)||{}, s = source(i.sourceId)||{};
+    return '<div class="row card" style="padding:7px 10px">'
+      + '<span class="grow sub">'+esc(s.title||"")+' / '+esc(b.name||"")+(i.page?' p.'+esc(i.page):'')+'</span>'
+      + '<button class="btn" onclick="openImage(\''+esc(i.id)+'\')">見る</button>'
+      + '<button class="btn warn" onclick="delImage(\''+esc(i.id)+'\')">消す</button></div>';
+  }).join("") : '';
+}
+$("imgFile").addEventListener("change", async ev=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const btId = $("imgBt").value;
+  const m = $("imgMsg");
+  if(!btId){ m.className="msg err"; m.textContent="先に本のテーマを選んでください。"; ev.target.value=""; return; }
+  const bt = bookTheme(btId);
+  try{
+    const data = await new Promise((res,rej)=>{
+      const r = new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error);
+      r.readAsDataURL(f);
+    });
+    const id = uid();
+    await idbPut(ST_IMG, id, data);
+    db.images.push({id, sourceId:bt.sourceId, bookThemeId:btId, page:bt.page||"", name:f.name, at:Date.now()});
+    save(); renderImgPicker(); renderStore();
+    m.className="msg ok"; m.textContent = f.name + " を入れました（約"+Math.round(data.length/1024)+" KB）。";
+  }catch(e){ m.className="msg err"; m.textContent="入れられません: "+e.message; }
+  ev.target.value = "";
+});
+async function delImage(id){
+  if(!confirm("この画像を消します。よろしいですか。")) return;
+  try{ await idbDel(ST_IMG,id); }catch(e){}
+  db.images = db.images.filter(x=>x.id!==id); save(); renderImgPicker(); renderStore();
+}
+function wipeAll(){
+  if(!confirm("すべてのデータを消します。書き出しは済んでいますか。")) return;
+  if(!confirm("本当に消しますか。元に戻せません。")) return;
+  db = emptyDb(); save(); showTab("Settings");
+}
+
+function renderFmtHelp(){
+  $("fmtHelp").innerHTML =
+   '<div class="sub">この形でJSONを作ってもらってください。1ページ＝1ブロックが目安です。</div>'
+   + '<pre>' + esc(FMT) + '</pre>'
+   + '<div class="sub">・<b>sense</b> は表示名、<b>senseKey</b> は言語をまたぐ安定キー（省略時は sense がキー）。\n'
+   + '・<b>solo</b>: true ＝共通の比較キーが無い、その資料だけの項目。比較軸と混ざらないよう分けて扱います。\n'
+   + '・<b>status</b>：載っていた＝省略、その資料に無かった＝"absent_in_source"、資料が「対応語なし」と述べている＝"no_expression"（noteに根拠）。\n'
+   + '　何も書かない（itemを作らない）＝まだ調べていない、という意味になります。この3つを混ぜないでください。\n'
+   + '・<b>readingStatus</b>：""＝読みあり／"not_transcribed"＝まだ写していない／"not_required"＝その言語には要らない（警告を出しません）／"mixed_review"＝言語が混在していて保留。\n'
+   + '・<b>readingLevel</b>："reused"＝既存辞書のまま／"rules"＝規則で組み立て（＋）／"draft"＝新規判断・校閲前（＊）。\n'
+   + '・<b>readingSrc</b>："book"＝本に書いてあった読み、"added"＝こちらで足した読み（画面に＋が付きます）。\n'
+   + '・<b>kind</b>:"pattern" ＝構文枠・記入枠。単語として読ませません。\n'
+   + '・<b>flags</b>:["semantic_review_required","needs_image_review"] / <b>reviewNote</b> は⚠付きで出ます。\n'
+   + '・<b>srcId</b> に素材側のレコードIDを入れると、取り込み直しても同じ語として扱われます。\n'
+   + '・<b>bookTheme.image</b> に配信ファイルのパス（例 prism-images/10.jpg）を書くと「元ページを見る」が出ます。\n'
+   + '・DKのような多言語の本は、source に lang を書かず item ごとに lang を書きます。\n'
+   + '・同じ本の同じ bookTheme を取り込み直すと、その範囲の語だけ差し替わります。メモは消えません。\n'
+   + '\n※ ChatGPTには、この形ではなく素材の形（schema_version 2）で出してもらい、'
+   + '「素材をPrism形式にする.py」で変換しています。詳しくは ChatGPTへの依頼文.md。</div>';
+}
+const FMT = `{
+  "source": {
+    "id": "sashi-th",
+    "title": "旅の指さし会話帳 タイ",
+    "kind": "pointbook",
+    "lang": "タイ語",
+    "edition": "第3版",
+    "note": ""
+  },
+  "bookTheme": { "name": "数字", "page": 24, "themes": ["数"] },
+  "items": [
+    { "sense": "1", "term": "หนึ่ง", "reading": "ヌン", "readingSrc": "book", "ja": "1" },
+    { "sense": "2", "term": "สอง", "reading": "ソーン", "readingSrc": "book" },
+    { "sense": "21", "status": "absent_in_source", "note": "20の次は30。21は載っていない" }
+  ]
+}`;
+
+/* ---------- デモ（実在の書籍ではありません） ---------- */
+function loadDemo(){
+  if(db.entries.length && !confirm("いまのデータに、はっきり印を付けたデモを足します。よろしいですか。")) return;
+  const demo = {imports:[
+    {source:{id:"demo-a", title:"デモ用ダミーA（実在の書籍ではありません）", kind:"pointbook",
+             lang:"イタリア語", edition:"—", note:"画面の確認用。実資料が入ったら消してください。"},
+     bookTheme:{name:"曜日（デモ）", page:1, themes:["曜日"]},
+     items:[{sense:"月曜日", term:"lunedì", reading:"ルネディ", readingSrc:"added"},
+            {sense:"火曜日", term:"martedì", reading:"マルテディ", readingSrc:"added"},
+            {sense:"日曜日", term:"domenica", reading:"ドメニカ", readingSrc:"added"}]},
+    {source:{id:"demo-b", title:"デモ用ダミーB（実在の書籍ではありません）", kind:"dict",
+             note:"多言語の本の例。itemごとにlangを持つ。"},
+     bookTheme:{name:"数（デモ）", page:1, themes:["数"]},
+     items:[{sense:"1", lang:"英語", term:"one", ja:"1"},
+            {sense:"1", lang:"ドイツ語", term:"eins", ja:"1"},
+            {sense:"2", lang:"英語", term:"two"},
+            {sense:"2", lang:"ドイツ語", term:"zwei"},
+            {sense:"0", lang:"英語", status:"absent_in_source",
+             note:"このデモ資料には0が載っていない、という状態の見え方"}]}
+  ]};
+  const r = importData(JSON.stringify(demo));
+  save(); showTab("Themes");
+  alert(r.summary);
+}
+
+/* ---------- Atlasから来たとき ----------
+   assimil-phrasebook.html の◇ページのリンク → prism.html#theme=曜日
+   同名テーマが無ければテーマ一覧のままにして、理由を出す（黙って無視しない）。 */
+function openFromHash(){
+  const m = /^#theme=(.+)$/.exec(location.hash || "");
+  if(!m) return false;
+  let name; try{ name = decodeURIComponent(m[1]); }catch(e){ name = m[1]; }
+  const t = byId(db.themes, tid(name));
+  if(t){ curTab = "Themes"; openTheme(t.id); return true; }
+  showTab("Themes");
+  $("themeList").insertAdjacentHTML("afterbegin",
+    '<div class="card"><b>「'+esc(name)+'」はまだ取り込んでいません。</b>'
+    + '<div class="sub">Atlasの◇にはありますが、こちらにはまだ語がありません。</div></div>');
+  return true;
+}
+window.addEventListener("hashchange", openFromHash);
+
+/* ---------- 起動 ---------- */
+(async function boot(){
+  try{ await bootStorage(); }
+  catch(e){ db = emptyDb(); warnBar("読み込みに失敗しました: " + (e && e.message)); }
+  showTab("Themes");
+  openFromHash();
+})();
+window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
+</script>
+</body>
+</html>
