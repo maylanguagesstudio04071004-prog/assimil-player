@@ -571,7 +571,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-05b";
+const BUILD = "2026-09-06b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2687,6 +2687,17 @@ function openTopicPage(topic){
   const panel = $("mapPanel");
   panel.innerHTML = '<div class="map-head"><b>' + gMark(entries[0]) + ' ' + esc(topic) + '</b>'
     + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  /* 別アプリ Prism(身近な単語の比較)の同名テーマへ渡す(2026-09-06)。
+     ◇のときだけ出す。Prism側にそのテーマが無ければ、向こうで一覧に落ちる。
+     戻すなら以下のifブロックを消す。 */
+  if(entries[0].type === "concept"){
+    const pb = document.createElement("a");
+    pb.href = "./prism.html#theme=" + encodeURIComponent(topic);
+    pb.textContent = "🔺 Prism の「" + topic + "」";
+    pb.style.cssText = "display:inline-block; margin:2px 0 10px; font-size:13px; color:var(--accent);"
+      + "text-decoration:none; border:1px solid var(--border); border-radius:8px; padding:7px 11px";
+    panel.appendChild(pb);
+  }
   entries.forEach(g=>{
     const c = document.createElement("div");
     c.className = "card";
@@ -4684,7 +4695,32 @@ renderLesson();
     location.reload();
   }catch(e){}
 })();
-bootStorage();
+/* Prism から ◇概念へ直接来られるようにする(2026-09-06)。
+   例: assimil-phrasebook.html#con=%E6%9B%9C%E6%97%A5 → §タブの◇一覧を開き、その軸を出す。
+   該当が無いときは黙って何もしないのではなく、◇一覧の先頭に理由を出す。
+   戻すなら openFromHash の定義と呼び出し・hashchange を消す。 */
+function openFromHash(){
+  const m = /^#con=(.+)$/.exec(location.hash || "");
+  if(!m) return;
+  let topic; try{ topic = decodeURIComponent(m[1]); }catch(e){ topic = m[1]; }
+  showTab("tabFav");
+  favView = "con";
+  renderFavs();
+  if(db.grammar.some(g => g.type === "concept" && g.topic === topic)){
+    openTopicPage(topic);
+  }else{
+    const box = $("favList");
+    if(box){
+      const d = document.createElement("div");
+      d.className = "small-note";
+      d.style.cssText = "margin:2px 4px 12px; color:var(--danger)";
+      d.textContent = "◇「" + topic + "」はこのアプリにまだありません。";
+      box.insertBefore(d, box.firstChild);
+    }
+  }
+}
+window.addEventListener("hashchange", openFromHash);
+bootStorage().then(openFromHash, openFromHash);
 // 閉じる直前にもう一度書いておく(入力直後にアプリを閉じた場合の取りこぼし防止)
 window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
 </script>
