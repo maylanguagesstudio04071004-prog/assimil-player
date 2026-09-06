@@ -212,7 +212,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-06e";
+const BUILD = "2026-09-07a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -240,7 +240,9 @@ db = {
   savedAt,
   langs:      ["Italiano", ...],                      // 表示順・自己表記
   sources:    [{id,title,kind,lang,edition,note}],    // 本
-  themes:     [{id,name,atlas,note}],                 // 横断用の共通テーマ
+  themes:     [{id,name,atlas,note,notes[]}],         // 横断用の共通テーマ
+              // notes: [{lang,status,note}] 「その本にはこのテーマのページが無い」など。
+              //        未取り込みとも「載っていない」とも違う第4の状態。
   bookThemes: [{id,sourceId,name,page,themeIds[],note}], // 本ごとのテーマ分類（そのまま保持）
   senses:     [{id,name,key,solo,order,note,themeIds[]}], // 比較の軸（意味）
   entries:    [{id,senseId,lang,term,reading,readingSrc,readingStatus,ja,note,
@@ -450,6 +452,22 @@ function entriesOf(senseId, lang){
    「未取り込み（まだ調べていない）」は、その言語の本に同じテーマのページがあるときだけ意味を持つ。
    共通キーの無い個別項目(solo)や、本を持たない併記ラベルにまで出すと、
    「調べていない」と「そもそも比較対象にしていない」が混ざる。 */
+/* その言語・そのテーマについて「本にページが無い」と分かっているか。
+   未取り込み（まだ調べていない）とは別の状態なので、区別して出す。 */
+function themeNoteFor(senseId, lang){
+  const tIds = (sense(senseId)||{}).themeIds || [];
+  for(const tid_ of tIds){
+    const t = theme(tid_); if(!t) continue;
+    const n = (t.notes||[]).find(x => x.lang === lang);
+    if(n) return n;
+  }
+  return null;
+}
+function naLabel(n){
+  return n.status === "no_compiled_page_in_source"
+    ? "この本には、このテーマをまとめたページが無い"
+    : "この本では扱いが違う（" + (n.status||"") + "）";
+}
 function langsForSense(senseId){
   const sn = sense(senseId) || {};
   const have = new Set(entriesOf(senseId).map(e=>e.lang));
@@ -460,6 +478,10 @@ function langsForSense(senseId){
     if(!(bt.themeIds||[]).some(t => tIds.includes(t))) return;
     const src = source(bt.sourceId);
     if(src && src.lang) expected.add(src.lang);
+  });
+  (tIds||[]).forEach(t0=>{
+    const t = theme(t0);
+    (t && t.notes || []).forEach(n => { if(n.lang) expected.add(n.lang); });
   });
   const out = db.langs.filter(l => have.has(l) || expected.has(l));
   return out.length ? out : db.langs.filter(l => have.has(l));
@@ -513,8 +535,20 @@ function readingHtml(e){
    - normalizedText: 紙面の綴りと標準の綴りが違う（伊 diciasette / diciassette）
    - sourceNumeric / verifiedNumeric: 紙面の数値と確認した値（西 un billón）
    - headword / gender: 紙面の見出し表記と性。term には見出し語だけが入っている（独） */
+const REGISTER = {
+  informal: "くだけた言い方",
+  very_informal: "かなりくだけた言い方",
+  vulgar: "下品・侮蔑にあたる語（原典の収録）",
+  formal: "あらたまった言い方"
+};
 function sourceFormHtml(e){
   let h = "";
+  if(e.register)
+    h += '<div class="kindmark" style="color:var(--danger); background:transparent;'
+      + ' border:1px solid var(--danger); margin:2px 0 3px">'
+      + esc(REGISTER[e.register] || e.register) + '</div>';
+  if(e.section)
+    h += '<div class="sub">紙面の欄: ' + esc(e.section) + '</div>';
   if(e.headword)
     h += '<div class="sub">紙面の見出し: ' + esc(e.headword)
       + (e.gender ? '（' + esc({m:"男性", f:"女性", n:"中性"}[e.gender] || e.gender) + '）' : '')
@@ -587,6 +621,8 @@ function renderThemes(){
       + '<div class="row"><b class="grow">'+esc(t.name)+'</b>'
       + '<span class="sub">'+senses.length+'語 ／ '+langs.size+'言語</span></div>'
       + (t.note?'<div class="sub">'+esc(t.note)+'</div>':'')
+      + (t.notes||[]).map(n=>'<div class="state miss" style="font-size:12px">'
+          + esc(n.lang) + '：' + esc(naLabel(n)) + '</div>').join("")
       + '</div>';
   }).join("");
 }
@@ -650,6 +686,13 @@ function renderSense(id){
   h += '<div style="margin-bottom:8px">' + themeTags(s.themeIds,true)
      + tnames.map(atlasLinkFor).join("") + '</div>';
   if(s.note) h += '<div class="sub" style="margin-bottom:8px">'+esc(s.note)+'</div>';
+  /* 対になる語（近い⇄遠い など）。素材が対のキーを持っていて、
+     こちらにもその意味があるときだけ出す。すべての用法で反対語という意味ではない。 */
+  const opp = [...new Set(entriesOf(id).map(e=>e.opposite).filter(Boolean))]
+    .map(k => sense(sid(k))).filter(Boolean);
+  if(opp.length) h += '<div style="margin-bottom:8px">' + opp.map(o =>
+      '<span class="tag tap" onclick="openSense(\''+esc(o.id)+'\')">⇄ '+esc(o.name)+'</span>'
+    ).join("") + '</div>';
   if(s.solo){
     h += '<div class="card" style="border-style:dashed"><b>共通の比較キーは付いていません。</b>'
       + '<div class="sub">この資料の中の項目として取り込んだものです。'
@@ -663,8 +706,14 @@ function renderSense(id){
   langsForSense(id).forEach(l=>{
     const es = entriesOf(id,l);
     h += '<div class="langblock"><div class="langname">'+esc(l)+'</div>';
-    h += es.length ? es.map(entryHtml).join("")
-                   : '<div class="state gap">未取り込み（まだ調べていない）</div>';
+    if(es.length){ h += es.map(entryHtml).join(""); }
+    else {
+      const na = themeNoteFor(id, l);
+      h += na
+        ? '<div class="state miss">' + esc(naLabel(na)) + '</div>'
+          + (na.note ? '<div class="sub">'+esc(na.note)+'</div>' : '')
+        : '<div class="state gap">未取り込み（まだ調べていない）</div>';
+    }
     h += '</div>';
   });
   h += '</div>';
@@ -818,8 +867,10 @@ function renderMemos(){
 function upsertTheme(name, atlas, note){
   name = String(name||"").trim(); if(!name) return null;
   let t = byId(db.themes, tid(name));
-  if(!t){ t = {id:tid(name), name, atlas:atlas||(ATLAS_CONCEPTS.includes(name)?name:""), note:note||""};
+  if(!t){ t = {id:tid(name), name, atlas:atlas||(ATLAS_CONCEPTS.includes(name)?name:""),
+               note:note||"", notes:[]};
           db.themes.push(t); return t; }
+  if(!Array.isArray(t.notes)) t.notes = [];
   if(atlas) t.atlas = atlas;
   if(note)  t.note  = note;
   return t;
@@ -884,7 +935,7 @@ async function doImport(){
 function importData(text){
   const raw = JSON.parse(text);
   const blocks = Array.isArray(raw) ? raw : (Array.isArray(raw.imports) ? raw.imports : [raw]);
-  const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0};
+  const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, themeNote:0};
   const errors = [];
 
   blocks.forEach((b, bi)=>{
@@ -907,6 +958,14 @@ function importData(text){
       const before = db.senses.length;
       upsertSense(s.name, tIds, s.note);
       if(db.senses.length > before) c.sense++;
+    });
+
+    (b.themeNotes||[]).forEach(tn=>{
+      const t = upsertTheme(tn.theme);
+      if(!t){ errors.push(where+": themeNotes の theme 名が空です。"); return; }
+      t.notes = (t.notes||[]).filter(x => !(x.lang===tn.lang && x.status===tn.status));
+      t.notes.push({lang:tn.lang||"", status:tn.status||"", note:tn.note||""});
+      c.themeNote++;
     });
 
     (b.memos||[]).forEach(mm=>{
@@ -1003,6 +1062,9 @@ function importData(text){
         flags: Array.isArray(it.flags) ? it.flags.slice() : [],
         reviewNote: it.reviewNote || "",
         reviewRef: it.reviewRef || "",
+        opposite: it.opposite || "",
+        section: it.section || "",
+        register: it.register || "",
         normalizedText: it.normalizedText || "",
         sourceNumeric: (it.sourceNumeric != null ? Number(it.sourceNumeric) : null),
         verifiedNumeric: (it.verifiedNumeric != null ? Number(it.verifiedNumeric) : null),
@@ -1020,7 +1082,8 @@ function importData(text){
   const summary =
     "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
     + "新規: 本 " + c.src + " / 本のテーマ " + c.bt + " / 共通テーマ " + c.theme
-    + " / 意味 " + c.sense + " / メモ " + c.memo;
+    + " / 意味 " + c.sense + " / メモ " + c.memo
+    + (c.themeNote ? " / テーマの在否メモ " + c.themeNote : "");
   return {summary, errors, counts:c};
 }
 
