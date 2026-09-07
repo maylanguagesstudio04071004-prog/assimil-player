@@ -212,7 +212,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-07b";
+const BUILD = "2026-09-07c";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -535,6 +535,7 @@ function readingHtml(e){
    - normalizedText: 紙面の綴りと標準の綴りが違う（伊 diciasette / diciassette）
    - sourceNumeric / verifiedNumeric: 紙面の数値と確認した値（西 un billón）
    - headword / gender: 紙面の見出し表記と性。term には見出し語だけが入っている（独） */
+const ASPECT = {perfective:"完了体", imperfective:"不完了体"};
 const REGISTER = {
   informal: "くだけた言い方",
   very_informal: "かなりくだけた言い方",
@@ -547,6 +548,9 @@ function sourceFormHtml(e){
     h += '<div class="kindmark" style="color:var(--danger); background:transparent;'
       + ' border:1px solid var(--danger); margin:2px 0 3px">'
       + esc(REGISTER[e.register] || e.register) + '</div>';
+  if(e.aspect)
+    h += '<div class="sub">体: ' + esc(ASPECT[e.aspect] || e.aspect)
+      + '（原典に書かれているものだけ。無いものを推測していない）</div>';
   if(e.section)
     h += '<div class="sub">紙面の欄: ' + esc(e.section) + '</div>';
   if(e.headword)
@@ -571,6 +575,7 @@ function flagsHtml(e){
     needs_image_review: "画像の再確認が必要",
     image_pattern_expanded: "紙面の括弧・選択肢を展開したもの（逐字の転記ではない）",
     image_read_source_spelling: "紙面の綴りのまま（標準の綴りと違う）",
+    source_layout_requires_review: "紙面での置かれ方が要確認（原典の並びをそのまま採らない）",
     review_note: "校訂前"
   };
   const bits = f.map(x => label[x] || x);
@@ -771,9 +776,10 @@ function renderBt(id){
   if(bt.note) h += '<details style="margin-bottom:8px"><summary class="sub">'
     + 'この資料についての断り書き</summary><div class="sub" style="margin-top:6px">'
     + esc(bt.note) + '</div></details>';
-  if(imgs.length) h += '<div style="margin-bottom:10px">' + imgs.map(i=>
-      '<button class="btn" onclick="openImage(\''+esc(i.id)+'\')">元ページを見る'
-      + (i.page?' p.'+esc(i.page):'')+'</button>').join(" ") + '</div>';
+  if(imgs.length) h += '<div style="margin-bottom:10px">' + imgs.map((i,n)=>
+      '<button class="btn" style="margin:0 6px 6px 0" onclick="openImage(\''+esc(i.id)+'\')">'
+      + (n ? '別の撮影' + (imgs.length>2 ? ' '+n : '') : '元ページを見る')
+      + (i.page?' p.'+esc(i.page):'')+'</button>').join("") + '</div>';
   /* DKのような多言語の本でだけ、行ごとに言語を出す。1言語の本では毎行同じ字が並ぶだけ。 */
   const multiLang = new Set(es.map(e=>e.lang)).size > 1;
   h += '<div class="card">' + (es.length ? es.map(e=>{
@@ -809,6 +815,7 @@ async function renderImage(id){
   if(m.url){
     el.innerHTML = '<div class="sub">'+esc((s||{}).title||"")+' ／ '+esc((bt||{}).name||"")
       + (m.page?' p.'+esc(m.page):'')+'</div>'
+      + (m.note ? '<div class="sub">'+esc(m.note)+'</div>' : '')
       + '<div class="sub" style="margin-bottom:6px">拡大は端末のピンチ操作で。</div>'
       + '<img class="page" src="'+esc(m.url)+'" alt="">';
     return;
@@ -1014,12 +1021,20 @@ function importData(text){
     if(b.bookTheme.note) bt.note = b.bookTheme.note;
     /* 元ページ画像を配信ファイルとして持つ場合（IndexedDBに入れない）。
        取り込み直しても増えないよう、bookThemeごとに1件に固定する。 */
-    if(b.bookTheme.image){
-      const imgId = "img:" + btIdV;
-      db.images = db.images.filter(x => x.id !== imgId);
-      db.images.push({id:imgId, sourceId:s.id, bookThemeId:btIdV,
-                      page:String(b.bookTheme.page||""), name:b.bookTheme.image,
-                      url:b.bookTheme.image, at:Date.now()});
+    const btImgs = [];
+    if(b.bookTheme.image) btImgs.push({file:b.bookTheme.image, note:""});
+    (b.bookTheme.images||[]).forEach(x=>{
+      if(x && x.file) btImgs.push({file:x.file, note:x.note||""});
+    });
+    if(btImgs.length){
+      /* 取り込み由来の画像は毎回作り直す。手で入れた画像（url なし）は消さない。 */
+      db.images = db.images.filter(x => !(x.bookThemeId === btIdV && x.url));
+      btImgs.forEach((x,i)=>{
+        db.images.push({id:"img:" + btIdV + (i ? "#" + i : ""),
+                        sourceId:s.id, bookThemeId:btIdV,
+                        page:String(b.bookTheme.page||""), name:x.file,
+                        url:x.file, note:x.note||"", at:Date.now()});
+      });
     }
     const btThemeIds = (b.bookTheme.themes||[]).map(n=>{
       const before = db.themes.length; const t = upsertTheme(n);
@@ -1076,6 +1091,7 @@ function importData(text){
         opposite: it.opposite || "",
         section: it.section || "",
         register: it.register || "",
+        aspect: it.aspect || "",
         normalizedText: it.normalizedText || "",
         sourceNumeric: (it.sourceNumeric != null ? Number(it.sourceNumeric) : null),
         verifiedNumeric: (it.verifiedNumeric != null ? Number(it.verifiedNumeric) : null),
