@@ -158,6 +158,8 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
     <div id="fmtHelp"></div>
   </details>
 
+  <!-- 元ページの画像は撤去した(2026-09-09)。ページ数は各語の出典行に出ている。
+       戻すなら、この節と renderImgPicker() / imgFile のリスナーを復活させる。
   <hr>
   <h2>元ページの画像</h2>
   <div class="sub" style="margin-bottom:6px">普段は使いません。確認したいページだけ入れてください。</div>
@@ -167,6 +169,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
   <input type="file" id="imgFile" accept="image/*" style="font-size:14px">
   <div id="imgMsg" class="msg"></div>
   <div id="imgList" style="margin-top:8px"></div>
+  -->
 
   <hr>
   <h2>書き出し・バックアップ</h2>
@@ -215,7 +218,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-09b";
+const BUILD = "2026-09-09c";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -812,10 +815,13 @@ function renderBt(id){
   if(bt.note) h += '<details style="margin-bottom:8px"><summary class="sub">'
     + 'この資料についての断り書き</summary><div class="sub" style="margin-top:6px">'
     + esc(bt.note) + '</div></details>';
+  /* 元ページ画像のボタンは撤去(2026-09-09)。ページ数は上の見出しに出ている。
+     戻すなら下を復活させる。
   if(imgs.length) h += '<div style="margin-bottom:10px">' + imgs.map((i,n)=>
       '<button class="btn" style="margin:0 6px 6px 0" onclick="openImage(\''+esc(i.id)+'\')">'
       + (n ? '別の撮影' + (imgs.length>2 ? ' '+n : '') : '元ページを見る')
       + (i.page?' p.'+esc(i.page):'')+'</button>').join("") + '</div>';
+  */
   /* DKのような多言語の本でだけ、行ごとに言語を出す。1言語の本では毎行同じ字が並ぶだけ。 */
   const multiLang = new Set(es.map(e=>e.lang)).size > 1;
   h += '<div class="card">' + (es.length ? es.map(e=>{
@@ -1057,21 +1063,24 @@ function importData(text){
     if(b.bookTheme.note) bt.note = b.bookTheme.note;
     /* 元ページ画像を配信ファイルとして持つ場合（IndexedDBに入れない）。
        取り込み直しても増えないよう、bookThemeごとに1件に固定する。 */
+    /* 元ページ画像は撤去した(2026-09-09にMayが判断。「見にいかない。本を見に行けるよう
+       ページ数があれば十分」)。取り込み由来の画像レコードはここで掃除する。
+       手で入れた画像（url なし）は消さない。
+       戻すなら、下のコメントを復活させ、変換スクリプトの IMG_DIR まわりも戻す。 */
+    db.images = db.images.filter(x => !(x.bookThemeId === btIdV && x.url));
+    /*
     const btImgs = [];
     if(b.bookTheme.image) btImgs.push({file:b.bookTheme.image, note:""});
     (b.bookTheme.images||[]).forEach(x=>{
       if(x && x.file) btImgs.push({file:x.file, note:x.note||""});
     });
-    if(btImgs.length){
-      /* 取り込み由来の画像は毎回作り直す。手で入れた画像（url なし）は消さない。 */
-      db.images = db.images.filter(x => !(x.bookThemeId === btIdV && x.url));
-      btImgs.forEach((x,i)=>{
-        db.images.push({id:"img:" + btIdV + (i ? "#" + i : ""),
-                        sourceId:s.id, bookThemeId:btIdV,
-                        page:String(b.bookTheme.page||""), name:x.file,
-                        url:x.file, note:x.note||"", at:Date.now()});
-      });
-    }
+    btImgs.forEach((x,i)=>{
+      db.images.push({id:"img:" + btIdV + (i ? "#" + i : ""),
+                      sourceId:s.id, bookThemeId:btIdV,
+                      page:String(b.bookTheme.page||""), name:x.file,
+                      url:x.file, note:x.note||"", at:Date.now()});
+    });
+    */
     const btThemeIds = (b.bookTheme.themes||[]).map(n=>{
       const before = db.themes.length; const t = upsertTheme(n);
       if(db.themes.length>before) c.theme++; return t && t.id;
@@ -1226,7 +1235,7 @@ function doExportAtlas(){
 
 /* ---------- 設定 ---------- */
 function renderSettings(){
-  renderStore(); renderLangOrder(); renderImgPicker(); renderFmtHelp();
+  renderStore(); renderLangOrder(); renderFmtHelp();   // renderImgPicker() は撤去(2026-09-09)
 }
 function renderStore(){
   $("storeInfo").innerHTML =
@@ -1251,6 +1260,10 @@ function moveLang(i,d){
   const j = i+d; if(j<0||j>=db.langs.length) return;
   const a = db.langs; [a[i],a[j]] = [a[j],a[i]]; save(); renderLangOrder();
 }
+/* 元ページ画像まわりは撤去した(2026-09-09にMayが判断)。
+   画面から画像を消しただけで、db.images / IndexedDB の img ストアは残してある。
+   戻すなら、この下のコメントを外し、設定タブのHTMLと renderSettings() の
+   renderImgPicker() 呼び出しも復活させる。
 function renderImgPicker(){
   const sel = $("imgBt");
   sel.innerHTML = '<option value="">元ページを結びつける本のテーマを選ぶ</option>'
@@ -1290,6 +1303,8 @@ async function delImage(id){
   try{ await idbDel(ST_IMG,id); }catch(e){}
   db.images = db.images.filter(x=>x.id!==id); save(); renderImgPicker(); renderStore();
 }
+*/
+
 function wipeAll(){
   if(!confirm("すべてのデータを消します。書き出しは済んでいますか。")) return;
   if(!confirm("本当に消しますか。元に戻せません。")) return;
