@@ -215,7 +215,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-09a";
+const BUILD = "2026-09-09b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -239,7 +239,7 @@ function toNative(l){ return NATIVE[String(l||"").trim()] || String(l||"").trim(
 const THEME_GROUPS = [
   {name:"数と時",     note:"", themes:["数字","時間","月日と年月","1年と天気"]},
   {name:"身のまわり", note:"", themes:["色・買い物","街歩き/散歩"]},
-  {name:"人と話す",   note:"", themes:["呼びかけ","あいさつ","人間関係"]},
+  {name:"人と話す",   note:"", themes:["あいさつ","自己紹介","呼びかけ","人間関係"]},
   {name:"語のはたらき", note:"", themes:["形容詞","動詞・疑問詞"]},
   {name:"Atlasの◇と同じ軸",
    note:"上のテーマの一部を切り出したもの。Atlasの◇へ行き来するための入口。",
