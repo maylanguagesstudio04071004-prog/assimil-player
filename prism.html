@@ -97,6 +97,9 @@ img.page{max-width:100%; border:1px solid var(--line); border-radius:8px}
 .kindmark{font-size:11px; color:var(--accent); background:var(--accent-bg);
   display:inline-block; border-radius:5px; padding:1px 6px; margin-bottom:3px}
 .solo{font-size:11.5px; color:var(--sub)}
+.ghead{font-size:12px; color:var(--sub); letter-spacing:.04em; font-weight:600;
+  margin:16px 2px 7px; padding-bottom:4px; border-bottom:1px solid var(--line)}
+#themeList .ghead:first-child{margin-top:2px}
 hr{border:0; border-top:1px solid var(--line); margin:16px 0}
 </style>
 </head>
@@ -212,7 +215,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-07c";
+const BUILD = "2026-09-09a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -228,6 +231,20 @@ const NATIVE = {
   "日本語":"日本語","हिंदी":"हिन्दी"
 };
 function toNative(l){ return NATIVE[String(l||"").trim()] || String(l||"").trim(); }
+
+/* テーマ一覧の並べ方（2026-09-09）。内容ごとにまとめて出す。
+   ここに書いていないテーマは末尾の「その他」に落ちる。**消えない**ので、
+   素材に新しいテーマが来たら、ここへ足すだけでよい。
+   並べ替えたいときはこの配列を書き換える。 */
+const THEME_GROUPS = [
+  {name:"数と時",     note:"", themes:["数字","時間","月日と年月","1年と天気"]},
+  {name:"身のまわり", note:"", themes:["色・買い物","街歩き/散歩"]},
+  {name:"人と話す",   note:"", themes:["呼びかけ","あいさつ","人間関係"]},
+  {name:"語のはたらき", note:"", themes:["形容詞","動詞・疑問詞"]},
+  {name:"Atlasの◇と同じ軸",
+   note:"上のテーマの一部を切り出したもの。Atlasの◇へ行き来するための入口。",
+   themes:["数","曜日","月"]}
+];
 
 /* Atlasに◇概念として実在するtopic（2026-09-06時点）。
    ここに一致する共通テーマ名だけ、Atlasへのリンクを出す。 */
@@ -612,24 +629,43 @@ function entryHtml(e){
 }
 
 /* ---------- テーマ ---------- */
+function themeCard(t){
+  const senses = db.senses.filter(s => (s.themeIds||[]).includes(t.id));
+  const langs  = new Set();
+  senses.forEach(s => entriesOf(s.id).forEach(e => { if(e.status==="present") langs.add(e.lang); }));
+  return '<div class="card tap" onclick="openTheme(\''+esc(t.id)+'\')">'
+    + '<div class="row"><b class="grow">'+esc(t.name)+'</b>'
+    + '<span class="sub">'+senses.length+'語 ／ '+langs.size+'言語</span></div>'
+    + (t.note?'<div class="sub">'+esc(t.note)+'</div>':'')
+    + (t.notes||[]).map(n=>'<div class="state miss" style="font-size:12px">'
+        + esc(n.lang) + '：' + esc(naLabel(n)) + '</div>').join("")
+    + '</div>';
+}
 function renderThemes(){
   const el = $("themeList");
   if(!db.themes.length){
     el.innerHTML = '<div class="empty">まだテーマがありません。設定タブからJSONを取り込んでください。</div>';
     return;
   }
-  el.innerHTML = db.themes.map(t=>{
-    const senses = db.senses.filter(s => (s.themeIds||[]).includes(t.id));
-    const langs  = new Set();
-    senses.forEach(s => entriesOf(s.id).forEach(e => { if(e.status==="present") langs.add(e.lang); }));
-    return '<div class="card tap" onclick="openTheme(\''+esc(t.id)+'\')">'
-      + '<div class="row"><b class="grow">'+esc(t.name)+'</b>'
-      + '<span class="sub">'+senses.length+'語 ／ '+langs.size+'言語</span></div>'
-      + (t.note?'<div class="sub">'+esc(t.note)+'</div>':'')
-      + (t.notes||[]).map(n=>'<div class="state miss" style="font-size:12px">'
-          + esc(n.lang) + '：' + esc(naLabel(n)) + '</div>').join("")
-      + '</div>';
-  }).join("");
+  const byName = new Map(db.themes.map(t => [t.name, t]));
+  const used = new Set();
+  let h = "";
+  THEME_GROUPS.forEach(g=>{
+    const ts = g.themes.map(n => byName.get(n)).filter(Boolean);
+    if(!ts.length) return;
+    ts.forEach(t => used.add(t.id));
+    h += '<div class="ghead">'+esc(g.name)+'</div>'
+      + (g.note ? '<div class="sub" style="margin:-4px 2px 7px">'+esc(g.note)+'</div>' : '')
+      + ts.map(themeCard).join("");
+  });
+  const rest = db.themes.filter(t => !used.has(t.id));
+  if(rest.length){
+    h += '<div class="ghead">その他</div>'
+      + '<div class="sub" style="margin:-4px 2px 7px">まだ分類していないテーマ。'
+      + 'prism.html の THEME_GROUPS に足すと上に入る。</div>'
+      + rest.map(themeCard).join("");
+  }
+  el.innerHTML = h;
 }
 let themeFilter = "";
 function openTheme(id){
