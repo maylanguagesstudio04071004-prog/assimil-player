@@ -218,7 +218,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-10a";
+const BUILD = "2026-09-10b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -636,6 +636,7 @@ function flagsHtml(e){
     needs_image_review: "画像の再確認が必要",
     image_pattern_expanded: "紙面の括弧・選択肢を展開したもの（逐字の転記ではない）",
     image_read_source_spelling: "紙面の綴りのまま（標準の綴りと違う）",
+    supplement: "本には無い。比較のために足した語（書籍の転記ではない）",
     source_layout_requires_review: "紙面での置かれ方が要確認（原典の並びをそのまま採らない）",
     review_note: "校訂前"
   };
