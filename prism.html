@@ -218,7 +218,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-09c";
+const BUILD = "2026-09-10a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -383,6 +383,7 @@ async function bootStorage(){
   const pick = (a,b) => (b && (b.savedAt||0) >= ((a&&a.savedAt)||0)) ? b : a;
   const d = pick(here, there);
   db = normalizeDb(d || emptyDb());
+  labelIndex = null; entryIndex = null;
   try{ STORE.bytes = JSON.stringify(db).length; }catch(e){}
   if(STORE.mode !== "IndexedDB")
     warnBar("IndexedDBが使えません。localStorageは約5MBで一杯になります。設定→書き出しでこまめに控えを取ってください。");
@@ -463,8 +464,48 @@ const LEGEND =
   + '<span style="margin-left:8px">＊新規・校閲前</span></div>'
   + '</div>';
 
+/* 同じ日本語ラベルを持つ意味どうしの索引（2026-09-10）。
+   個別項目3041件のうち837件は、他の本にも同じラベルで存在している
+   （「クリスマス」は8言語）。素材が比較キーを付けていないだけなので、
+   **統合はせず**、行き来できるようにするためだけに使う。
+   素材の指示: 同じ日本語ラベルというだけで統合・削除しない。 */
+let labelIndex = null;
+function labelMap(){
+  if(labelIndex) return labelIndex;
+  labelIndex = new Map();
+  db.senses.forEach(s=>{
+    if(!labelIndex.has(s.name)) labelIndex.set(s.name, []);
+    labelIndex.get(s.name).push(s.id);
+  });
+  return labelIndex;
+}
+function sameLabel(id){
+  const s = sense(id); if(!s) return [];
+  return (labelMap().get(s.name) || []).filter(x => x !== id).map(sense).filter(Boolean);
+}
+/* そのラベルの一群が、合わせて何言語ぶんあるか */
+function labelGroupLangs(id){
+  const set = new Set();
+  [sense(id)].concat(sameLabel(id)).forEach(x =>
+    x && entriesOf(x.id).forEach(e => { if(e.status === "present") set.add(e.lang); }));
+  return set;
+}
+/* 意味 → 語 の索引(2026-09-10)。
+   毎回 db.entries(6千件)を舐めていて、テーマ一覧の描画が1.2秒かかっていた。
+   取り込みのたびに捨てて作り直す。 */
+let entryIndex = null;
+function entryMap(){
+  if(entryIndex) return entryIndex;
+  entryIndex = new Map();
+  db.entries.forEach(e=>{
+    if(!entryIndex.has(e.senseId)) entryIndex.set(e.senseId, []);
+    entryIndex.get(e.senseId).push(e);
+  });
+  return entryIndex;
+}
 function entriesOf(senseId, lang){
-  return db.entries.filter(e => e.senseId===senseId && (!lang || e.lang===lang));
+  const es = entryMap().get(senseId) || [];
+  return lang ? es.filter(e => e.lang === lang) : es;
 }
 /* 「N言語」の数え方: 語が実際にあった言語だけを数える。
    未掲載・対応語なしは「調べた結果」であって語ではないので数に入れない。 */
@@ -678,6 +719,80 @@ function openTheme(id){
 }
 
 /* ---------- 語（意味）一覧 ---------- */
+/* 意味カード1枚。ラベル一致の一群は、その一群の原語をまとめて見せる。 */
+function senseCard(s, mode){
+  let ls, preview, right;
+  if(mode === "label"){
+    const grp = [s].concat(sameLabel(s.id));
+    const terms = [];
+    grp.forEach(x => entriesOf(x.id).forEach(e => {
+      if(e.status === "present" && e.term && terms.length < 5) terms.push(e.term);
+    }));
+    preview = terms.join(" ・ ");
+    right = labelGroupLangs(s.id).size + "言語（ラベル一致）";
+  } else {
+    ls = langsOf(s.id);
+    preview = ls.slice(0,4).map(l=>{
+      const e = entriesOf(s.id,l).filter(x=>x.status==="present")[0];
+      return e ? esc(e.term) : "";
+    }).filter(Boolean).join(" ・ ") + (ls.length>4 ? " …" : "");
+    right = s.solo ? "この資料のみ" : ls.length + "言語";
+  }
+  return '<div class="card tap" onclick="openSense(\''+esc(s.id)+'\')">'
+    + '<div class="row"><b class="grow">'+esc(s.name)+'</b>'
+    + '<span class="sub">'+esc(right)+'</span></div>'
+    + (preview ? '<div class="sub" style="font-size:13.5px">'+preview+'</div>' : '')
+    + '</div>';
+}
+/* テーマ一覧の3段組み。
+   比較軸 → 同じ日本語ラベルで並ぶ語 → この本だけの語（本ごとに畳む） */
+function sectionedList(list){
+  const axis = [], label = [], only = [];
+  list.forEach(s=>{
+    if(!s.solo){ axis.push(s); return; }
+    (labelGroupLangs(s.id).size >= 2 ? label : only).push(s);
+  });
+  let h = "";
+  if(axis.length)
+    h += '<div class="ghead">比較軸 '+axis.length+'</div>'
+      + '<div class="sub" style="margin:-4px 2px 7px">素材が同じ比較キーを付けた語。'
+      + '言語をまたいで並ぶ。</div>'
+      + axis.map(s=>senseCard(s,"axis")).join("");
+  if(label.length){
+    /* ラベルが同じものは1枚にまとめて出す。代表は最初の1件。 */
+    const seen = new Set(); const cards = [];
+    label.forEach(s=>{
+      if(seen.has(s.id)) return;
+      [s].concat(sameLabel(s.id)).forEach(x => x && seen.add(x.id));
+      cards.push(senseCard(s,"label"));
+    });
+    h += '<div class="ghead">同じ日本語ラベルで並ぶ語 '+cards.length+'</div>'
+      + '<div class="sub" style="margin:-4px 2px 7px">比較キーは付いていない。'
+      + '<b>紙面の日本語ラベルが同じというだけ</b>で、同義とは限らない。</div>'
+      + cards.join("");
+  }
+  if(only.length){
+    const byBook = new Map();
+    only.forEach(s=>{
+      const e = entriesOf(s.id)[0];
+      const k = e ? e.sourceId : "";
+      if(!byBook.has(k)) byBook.set(k, []);
+      byBook.get(k).push(s);
+    });
+    h += '<div class="ghead">この本だけの語 '+only.length+'</div>'
+      + '<div class="sub" style="margin:-4px 2px 7px">他の本に同じラベルの語が無いもの。'
+      + '本ごとにたたんである。</div>';
+    [...byBook.entries()]
+      .sort((a,b)=> b[1].length - a[1].length)
+      .forEach(([sid_, ss])=>{
+        const src = source(sid_) || {title:"?"};
+        h += '<details><summary>'+esc(src.title)+' <span class="sub">'+ss.length+'</span></summary>'
+          + '<div style="margin-top:8px">' + ss.map(s=>senseCard(s,"axis")).join("") + '</div>'
+          + '</details>';
+      });
+  }
+  return h || '<div class="empty">該当なし。</div>';
+}
 function renderWords(){
   const q = ($("q").value||"").trim().toLowerCase();
 
@@ -707,32 +822,44 @@ function renderWords(){
       + (atlasLinkFor((theme(themeFilter)||{}).name) ? '<div style="margin-bottom:8px">'
          + atlasLinkFor((theme(themeFilter)||{}).name) + '</div>' : '')
     : "";
-  /* 比較軸（共通キーのあるもの）を先に、その中は素材の順で。
-     solo（その資料だけの項目）は後ろにまとめる。混ぜない。 */
-  list.sort((a,b)=>{
-    if(!!a.solo !== !!b.solo) return a.solo ? 1 : -1;
+  const byOrder = (a,b)=>{
     const ao = a.order==null ? 1e9 : a.order, bo = b.order==null ? 1e9 : b.order;
     if(ao !== bo) return ao - bo;
     return String(a.name).localeCompare(String(b.name), "ja");
+  };
+  list.sort((a,b)=>{
+    if(!!a.solo !== !!b.solo) return a.solo ? 1 : -1;
+    return byOrder(a,b);
+  });
+
+  /* テーマを開いたときは3段に分ける(2026-09-10)。
+     フラットな381件だと、比較軸が個別項目に埋もれて見えなくなる。
+     検索中は結果が少ないので分けない。戻すなら下の if を false にする。 */
+  if(themeFilter && !q){
+    $("wordList").innerHTML = head + sectionedList(list);
+    return;
+  }
+
+  /* 検索結果でも、同じ日本語ラベルの語は1枚にまとめる。
+     「クリスマス」で8枚並ぶより、8言語ぶんが1枚に見えるほうが読める。 */
+  const seen = new Set(); const cards = [];
+  list.forEach(s0=>{
+    if(seen.has(s0.id)) return;
+    if(s0.solo && labelGroupLangs(s0.id).size >= 2){
+      [s0].concat(sameLabel(s0.id)).forEach(x => x && seen.add(x.id));
+      cards.push(senseCard(s0, "label"));
+    }else{
+      seen.add(s0.id);
+      cards.push(senseCard(s0, "axis"));
+    }
   });
   const nKeyed = list.filter(x=>!x.solo).length;
   const countLine = '<div class="sub" style="margin-bottom:8px">'
-    + '比較軸 ' + nKeyed + ' ／ その資料だけの項目 ' + (list.length-nKeyed) + '</div>';
-  $("wordList").innerHTML = head + countLine + (list.length ? list.map(s=>{
-    const ls = langsOf(s.id);
-    const preview = ls.slice(0,4).map(l=>{
-      const e = entriesOf(s.id,l).filter(x=>x.status!=="absent_in_source" && x.status!=="no_expression")[0];
-      return e ? esc(e.term) : "";
-    }).filter(Boolean).join(" ・ ");
-    return '<div class="card tap" onclick="openSense(\''+esc(s.id)+'\')">'
-      + '<div class="row"><b class="grow">'+esc(s.name)+'</b>'
-      + '<span class="sub">'+(s.solo ? "この資料のみ" : ls.length+"言語")+'</span></div>'
-      + (preview?'<div class="sub" style="font-size:13.5px">'+preview+(ls.length>4?" …":"")+'</div>':'')
-      + '</div>';
-  }).join("") : '<div class="empty">該当なし。</div>');
+    + cards.length + ' 件（比較軸 ' + nKeyed + '）</div>';
+  $("wordList").innerHTML = head + countLine
+    + (cards.length ? cards.join("") : '<div class="empty">該当なし。</div>');
 }
 
-/* ---------- 比較（意味 → 各言語） ---------- */
 function renderSense(id){
   const s = sense(id);
   if(!s){ $("senseBody").innerHTML = '<div class="empty">見つかりません。</div>'; return; }
@@ -756,6 +883,29 @@ function renderSense(id){
     h += '<div class="sub" style="margin-bottom:8px">比較キー: <code>'+esc(s.key)+'</code>'
       + '（素材側の仮キー。厳密な同義を保証するものではありません）</div>';
   }
+  /* 同じ日本語ラベルの語(2026-09-10)。比較キーが付いていないだけで、
+     他の本に同じラベルの語があることが多い。**統合はしない。**
+     戻すなら下のブロックを消す。 */
+  const same = sameLabel(id);
+  if(same.length){
+    const rows = [];
+    same.forEach(o => entriesOf(o.id).forEach(e=>{
+      if(e.status !== "present" || !e.term) return;
+      rows.push('<div class="entry" style="cursor:pointer" onclick="openSense(\''+esc(o.id)+'\')">'
+        + '<div class="langname">'+esc(e.lang)+'</div>'
+        + '<div class="term" style="font-size:17px">'+esc(e.term)+'</div>'
+        + readingHtml(e)
+        + '<div class="srcline">'+esc((source(e.sourceId)||{}).title||"")+'</div></div>');
+    }));
+    if(rows.length){
+      h += '<h2 style="margin:14px 0 6px">同じ日本語ラベルの語</h2>'
+        + '<div class="sub" style="margin-bottom:6px">比較キーは付いていない。'
+        + '<b>紙面の日本語ラベルが「'+esc(s.name)+'」で同じというだけ</b>で、'
+        + '同義とは限らない。押すとその語へ移る。</div>'
+        + '<div class="card">' + rows.join("") + '</div>';
+    }
+  }
+
   h += LEGEND;
   h += '<div class="card">';
   langsForSense(id).forEach(l=>{
@@ -971,6 +1121,7 @@ async function doUndo(){
     if(typeof t !== "string"){ m.className="msg err"; m.textContent="戻せる取り込みがありません。"; return; }
     if(!confirm("直前の取り込みを取り消します。よろしいですか。")) return;
     db = normalizeDb(JSON.parse(t));
+    labelIndex = null; entryIndex = null;
     await idbDel(ST_DB,"undo");
     save(); showTab("Settings");
     m.className="msg ok"; m.textContent="直前の取り込みを取り消しました。";
@@ -993,6 +1144,7 @@ async function doImport(){
 }
 
 function importData(text){
+  labelIndex = null; entryIndex = null;   // 意味も語も増減するので索引を作り直させる
   const raw = JSON.parse(text);
   const blocks = Array.isArray(raw) ? raw : (Array.isArray(raw.imports) ? raw.imports : [raw]);
   const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, themeNote:0};
@@ -1151,6 +1303,7 @@ function importData(text){
     });
   });
 
+  labelIndex = null; entryIndex = null;   // 取り込みで中身が変わったので捨てる
   const summary =
     "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
     + "新規: 本 " + c.src + " / 本のテーマ " + c.bt + " / 共通テーマ " + c.theme
@@ -1308,7 +1461,7 @@ async function delImage(id){
 function wipeAll(){
   if(!confirm("すべてのデータを消します。書き出しは済んでいますか。")) return;
   if(!confirm("本当に消しますか。元に戻せません。")) return;
-  db = emptyDb(); save(); showTab("Settings");
+  db = emptyDb(); labelIndex = null; entryIndex = null; save(); showTab("Settings");
 }
 
 function renderFmtHelp(){
