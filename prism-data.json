@@ -102317,6 +102317,445 @@
      "readingLevel": "reused"
     }
    ]
+  },
+  {
+   "source": {
+    "id": "supplement",
+    "title": "補い（本には無い。Claudeが足した）",
+    "kind": "supplement",
+    "note": "『旅の指さし会話帳』に載っていない箇所を、比較のために足したもの。書籍の転記ではない。 読みは既にPrismにある語の読みをつないで組み立てた（校閲前）。"
+   },
+   "bookTheme": {
+    "name": "数（補い）",
+    "page": "",
+    "themes": [
+     "数字",
+     "数"
+    ],
+    "note": "本の見開きではない。Prismで足した分をまとめた枠。"
+   },
+   "items": [
+    {
+     "srcId": "sup_number_0_ноль",
+     "senseKey": "number_0",
+     "sense": "0",
+     "order": 1000,
+     "lang": "ロシア語",
+     "term": "ноль",
+     "numeric": 0,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。нуль という形もある。",
+     "reading": "nol",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_0_null",
+     "senseKey": "number_0",
+     "sense": "0",
+     "order": 1000,
+     "lang": "ドイツ語",
+     "term": "null",
+     "numeric": 0,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。",
+     "reading": "nul",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_13_on_üç",
+     "senseKey": "number_13",
+     "sense": "13",
+     "order": 1013,
+     "lang": "トルコ語",
+     "term": "on üç",
+     "numeric": 13,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。on(10)+üç(3)",
+     "reading": "on üch",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_14_สิบสี่",
+     "senseKey": "number_14",
+     "sense": "14",
+     "order": 1014,
+     "lang": "タイ語",
+     "term": "สิบสี่",
+     "numeric": 14,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。สิบ(10)+สี่(4)",
+     "reading": "sìp sìi",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_14_on_dört",
+     "senseKey": "number_14",
+     "sense": "14",
+     "order": 1014,
+     "lang": "トルコ語",
+     "term": "on dört",
+     "numeric": 14,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。on+dört(4)",
+     "reading": "on dört",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_15_สิบห้า",
+     "senseKey": "number_15",
+     "sense": "15",
+     "order": 1015,
+     "lang": "タイ語",
+     "term": "สิบห้า",
+     "numeric": 15,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。สิบ+ห้า(5)",
+     "reading": "sìp Hâa",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_15_on_beş",
+     "senseKey": "number_15",
+     "sense": "15",
+     "order": 1015,
+     "lang": "トルコ語",
+     "term": "on beş",
+     "numeric": 15,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。on+beş(5)",
+     "reading": "on besh",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_16_สิบหก",
+     "senseKey": "number_16",
+     "sense": "16",
+     "order": 1016,
+     "lang": "タイ語",
+     "term": "สิบหก",
+     "numeric": 16,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。สิบ+หก(6)",
+     "reading": "sìp Hòk",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_16_on_altı",
+     "senseKey": "number_16",
+     "sense": "16",
+     "order": 1016,
+     "lang": "トルコ語",
+     "term": "on altı",
+     "numeric": 16,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。on+altı(6)",
+     "reading": "on altə",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_17_สิบเจ็ด",
+     "senseKey": "number_17",
+     "sense": "17",
+     "order": 1017,
+     "lang": "タイ語",
+     "term": "สิบเจ็ด",
+     "numeric": 17,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。สิบ+เจ็ด(7)",
+     "reading": "sìp djèt",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_17_on_yedi",
+     "senseKey": "number_17",
+     "sense": "17",
+     "order": 1017,
+     "lang": "トルコ語",
+     "term": "on yedi",
+     "numeric": 17,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。on+yedi(7)",
+     "reading": "on yedi",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_18_สิบแปด",
+     "senseKey": "number_18",
+     "sense": "18",
+     "order": 1018,
+     "lang": "タイ語",
+     "term": "สิบแปด",
+     "numeric": 18,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。สิบ+แปด(8)",
+     "reading": "sìp pɛ̀ɛt",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_18_on_sekiz",
+     "senseKey": "number_18",
+     "sense": "18",
+     "order": 1018,
+     "lang": "トルコ語",
+     "term": "on sekiz",
+     "numeric": 18,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。on+sekiz(8)",
+     "reading": "on sekiz",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_19_สิบเก้า",
+     "senseKey": "number_19",
+     "sense": "19",
+     "order": 1019,
+     "lang": "タイ語",
+     "term": "สิบเก้า",
+     "numeric": 19,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。สิบ+เก้า(9)",
+     "reading": "sìp kâo",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_19_on_dokuz",
+     "senseKey": "number_19",
+     "sense": "19",
+     "order": 1019,
+     "lang": "トルコ語",
+     "term": "on dokuz",
+     "numeric": 19,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。on+dokuz(9)",
+     "reading": "on dokuz",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_30_tiga_puluh",
+     "senseKey": "number_30",
+     "sense": "30",
+     "order": 1030,
+     "lang": "インドネシア語",
+     "term": "tiga puluh",
+     "numeric": 30,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。tiga(3)+puluh(十の位)",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup_number_50_lima_puluh",
+     "senseKey": "number_50",
+     "sense": "50",
+     "order": 1050,
+     "lang": "インドネシア語",
+     "term": "lima puluh",
+     "numeric": 50,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。lima(5)+puluh",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup_number_60_หกสิบ",
+     "senseKey": "number_60",
+     "sense": "60",
+     "order": 1060,
+     "lang": "タイ語",
+     "term": "หกสิบ",
+     "numeric": 60,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。หก(6)+สิบ",
+     "reading": "Hòk sìp",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_60_enam_puluh",
+     "senseKey": "number_60",
+     "sense": "60",
+     "order": 1060,
+     "lang": "インドネシア語",
+     "term": "enam puluh",
+     "numeric": 60,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。enam(6)+puluh",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup_number_70_เจ็ดสิบ",
+     "senseKey": "number_70",
+     "sense": "70",
+     "order": 1070,
+     "lang": "タイ語",
+     "term": "เจ็ดสิบ",
+     "numeric": 70,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。เจ็ด(7)+สิบ",
+     "reading": "djèt sìp",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_70_tujuh_puluh",
+     "senseKey": "number_70",
+     "sense": "70",
+     "order": 1070,
+     "lang": "インドネシア語",
+     "term": "tujuh puluh",
+     "numeric": 70,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。tujuh(7)+puluh",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup_number_80_แปดสิบ",
+     "senseKey": "number_80",
+     "sense": "80",
+     "order": 1080,
+     "lang": "タイ語",
+     "term": "แปดสิบ",
+     "numeric": 80,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。แปด(8)+สิบ",
+     "reading": "pɛ̀ɛt sìp",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_80_delapan_puluh",
+     "senseKey": "number_80",
+     "sense": "80",
+     "order": 1080,
+     "lang": "インドネシア語",
+     "term": "delapan puluh",
+     "numeric": 80,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。delapan(8)+puluh",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup_number_90_เก้าสิบ",
+     "senseKey": "number_90",
+     "sense": "90",
+     "order": 1090,
+     "lang": "タイ語",
+     "term": "เก้าสิบ",
+     "numeric": 90,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。เก้า(9)+สิบ",
+     "reading": "kâo sìp",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_90_sembilan_puluh",
+     "senseKey": "number_90",
+     "sense": "90",
+     "order": 1090,
+     "lang": "インドネシア語",
+     "term": "sembilan puluh",
+     "numeric": 90,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。sembilan(9)+puluh",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup_number_10000_दस_हज़ार",
+     "senseKey": "number_10000",
+     "sense": "10,000",
+     "order": 11000,
+     "lang": "ヒンディー語",
+     "term": "दस हज़ार",
+     "numeric": 10000,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。दस(10)+हज़ार(1000)。他言語も「10×1000」の形で載っている。",
+     "reading": "das hazaar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup_number_10000_zehntausend",
+     "senseKey": "number_10000",
+     "sense": "10,000",
+     "order": 11000,
+     "lang": "ドイツ語",
+     "term": "zehntausend",
+     "numeric": 10000,
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。zehn(10)+tausend(1000)",
+     "reading": "tseentauzent",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    }
+   ]
   }
  ]
 }
