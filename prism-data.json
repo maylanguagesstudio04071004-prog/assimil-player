@@ -102320,6 +102320,3668 @@
   },
   {
    "source": {
+    "id": "supplement-atlas5",
+    "kind": "supplement",
+    "title": "補い（Atlasの5言語。本は無い）",
+    "note": "Prismに『旅の指さし会話帳』が無い5言語（英語・アラビア語・中国語・ベトナム語・オランダ語）を、Atlasの◇と行き来する3テーマ（数・曜日・月）にだけ足したもの。書籍の転記ではない。読みはAtlasの記法に合わせたが校閲前。"
+   },
+   "bookTheme": {
+    "name": "数（補い・5言語）",
+    "page": "",
+    "themes": [
+     "数字",
+     "数"
+    ],
+    "note": "本の見開きではない。Atlasにあってこちらに無い5言語を、閉じた集合にだけ足した枠。"
+   },
+   "items": [
+    {
+     "srcId": "sup5_number_0_英語",
+     "senseKey": "number_0",
+     "sense": "0",
+     "order": 1000,
+     "lang": "英語",
+     "term": "zero",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 0,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_0_オランダ語",
+     "senseKey": "number_0",
+     "sense": "0",
+     "order": 1000,
+     "lang": "オランダ語",
+     "term": "nul",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 0,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_0_ベトナム語",
+     "senseKey": "number_0",
+     "sense": "0",
+     "order": 1000,
+     "lang": "ベトナム語",
+     "term": "không",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 0,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_0_中国語",
+     "senseKey": "number_0",
+     "sense": "0",
+     "order": 1000,
+     "lang": "中国語",
+     "term": "零",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 0,
+     "reading": "líng",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_0_アラビア語",
+     "senseKey": "number_0",
+     "sense": "0",
+     "order": 1000,
+     "lang": "アラビア語",
+     "term": "صفر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 0,
+     "reading": "Sifr",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_1_英語",
+     "senseKey": "number_1",
+     "sense": "1",
+     "order": 1001,
+     "lang": "英語",
+     "term": "one",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 1,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_1_オランダ語",
+     "senseKey": "number_1",
+     "sense": "1",
+     "order": 1001,
+     "lang": "オランダ語",
+     "term": "een",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 1,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_1_ベトナム語",
+     "senseKey": "number_1",
+     "sense": "1",
+     "order": 1001,
+     "lang": "ベトナム語",
+     "term": "một",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 1,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_1_中国語",
+     "senseKey": "number_1",
+     "sense": "1",
+     "order": 1001,
+     "lang": "中国語",
+     "term": "一",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。 Atlasの辞書には別の文脈の 一 yí があるが、単独の数は yī。",
+     "numeric": 1,
+     "reading": "yī",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_1_アラビア語",
+     "senseKey": "number_1",
+     "sense": "1",
+     "order": 1001,
+     "lang": "アラビア語",
+     "term": "واحد",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 1,
+     "reading": "wāHid",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_2_英語",
+     "senseKey": "number_2",
+     "sense": "2",
+     "order": 1002,
+     "lang": "英語",
+     "term": "two",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 2,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_2_オランダ語",
+     "senseKey": "number_2",
+     "sense": "2",
+     "order": 1002,
+     "lang": "オランダ語",
+     "term": "twee",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 2,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_2_ベトナム語",
+     "senseKey": "number_2",
+     "sense": "2",
+     "order": 1002,
+     "lang": "ベトナム語",
+     "term": "hai",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 2,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_2_中国語",
+     "senseKey": "number_2",
+     "sense": "2",
+     "order": 1002,
+     "lang": "中国語",
+     "term": "二",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 2,
+     "reading": "èr",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_2_アラビア語",
+     "senseKey": "number_2",
+     "sense": "2",
+     "order": 1002,
+     "lang": "アラビア語",
+     "term": "اثنان",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 2,
+     "reading": "ithnān",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_3_英語",
+     "senseKey": "number_3",
+     "sense": "3",
+     "order": 1003,
+     "lang": "英語",
+     "term": "three",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 3,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_3_オランダ語",
+     "senseKey": "number_3",
+     "sense": "3",
+     "order": 1003,
+     "lang": "オランダ語",
+     "term": "drie",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 3,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_3_ベトナム語",
+     "senseKey": "number_3",
+     "sense": "3",
+     "order": 1003,
+     "lang": "ベトナム語",
+     "term": "ba",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 3,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_3_中国語",
+     "senseKey": "number_3",
+     "sense": "3",
+     "order": 1003,
+     "lang": "中国語",
+     "term": "三",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 3,
+     "reading": "sān",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_3_アラビア語",
+     "senseKey": "number_3",
+     "sense": "3",
+     "order": 1003,
+     "lang": "アラビア語",
+     "term": "ثلاثة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 3,
+     "reading": "thalātha",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_4_英語",
+     "senseKey": "number_4",
+     "sense": "4",
+     "order": 1004,
+     "lang": "英語",
+     "term": "four",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 4,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_4_オランダ語",
+     "senseKey": "number_4",
+     "sense": "4",
+     "order": 1004,
+     "lang": "オランダ語",
+     "term": "vier",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 4,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_4_ベトナム語",
+     "senseKey": "number_4",
+     "sense": "4",
+     "order": 1004,
+     "lang": "ベトナム語",
+     "term": "bốn",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 4,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_4_中国語",
+     "senseKey": "number_4",
+     "sense": "4",
+     "order": 1004,
+     "lang": "中国語",
+     "term": "四",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 4,
+     "reading": "sì",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_4_アラビア語",
+     "senseKey": "number_4",
+     "sense": "4",
+     "order": 1004,
+     "lang": "アラビア語",
+     "term": "أربعة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 4,
+     "reading": "arba3a",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_5_英語",
+     "senseKey": "number_5",
+     "sense": "5",
+     "order": 1005,
+     "lang": "英語",
+     "term": "five",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 5,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_5_オランダ語",
+     "senseKey": "number_5",
+     "sense": "5",
+     "order": 1005,
+     "lang": "オランダ語",
+     "term": "vijf",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 5,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_5_ベトナム語",
+     "senseKey": "number_5",
+     "sense": "5",
+     "order": 1005,
+     "lang": "ベトナム語",
+     "term": "năm",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 5,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_5_中国語",
+     "senseKey": "number_5",
+     "sense": "5",
+     "order": 1005,
+     "lang": "中国語",
+     "term": "五",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 5,
+     "reading": "wǔ",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_5_アラビア語",
+     "senseKey": "number_5",
+     "sense": "5",
+     "order": 1005,
+     "lang": "アラビア語",
+     "term": "خمسة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 5,
+     "reading": "khamsa",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_6_英語",
+     "senseKey": "number_6",
+     "sense": "6",
+     "order": 1006,
+     "lang": "英語",
+     "term": "six",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 6,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_6_オランダ語",
+     "senseKey": "number_6",
+     "sense": "6",
+     "order": 1006,
+     "lang": "オランダ語",
+     "term": "zes",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 6,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_6_ベトナム語",
+     "senseKey": "number_6",
+     "sense": "6",
+     "order": 1006,
+     "lang": "ベトナム語",
+     "term": "sáu",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 6,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_6_中国語",
+     "senseKey": "number_6",
+     "sense": "6",
+     "order": 1006,
+     "lang": "中国語",
+     "term": "六",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 6,
+     "reading": "liù",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_6_アラビア語",
+     "senseKey": "number_6",
+     "sense": "6",
+     "order": 1006,
+     "lang": "アラビア語",
+     "term": "ستة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 6,
+     "reading": "sitta",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_7_英語",
+     "senseKey": "number_7",
+     "sense": "7",
+     "order": 1007,
+     "lang": "英語",
+     "term": "seven",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 7,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_7_オランダ語",
+     "senseKey": "number_7",
+     "sense": "7",
+     "order": 1007,
+     "lang": "オランダ語",
+     "term": "zeven",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 7,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_7_ベトナム語",
+     "senseKey": "number_7",
+     "sense": "7",
+     "order": 1007,
+     "lang": "ベトナム語",
+     "term": "bảy",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 7,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_7_中国語",
+     "senseKey": "number_7",
+     "sense": "7",
+     "order": 1007,
+     "lang": "中国語",
+     "term": "七",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 7,
+     "reading": "qī",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_7_アラビア語",
+     "senseKey": "number_7",
+     "sense": "7",
+     "order": 1007,
+     "lang": "アラビア語",
+     "term": "سبعة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 7,
+     "reading": "sab3a",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_8_英語",
+     "senseKey": "number_8",
+     "sense": "8",
+     "order": 1008,
+     "lang": "英語",
+     "term": "eight",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 8,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_8_オランダ語",
+     "senseKey": "number_8",
+     "sense": "8",
+     "order": 1008,
+     "lang": "オランダ語",
+     "term": "acht",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 8,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_8_ベトナム語",
+     "senseKey": "number_8",
+     "sense": "8",
+     "order": 1008,
+     "lang": "ベトナム語",
+     "term": "tám",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 8,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_8_中国語",
+     "senseKey": "number_8",
+     "sense": "8",
+     "order": 1008,
+     "lang": "中国語",
+     "term": "八",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 8,
+     "reading": "bā",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_8_アラビア語",
+     "senseKey": "number_8",
+     "sense": "8",
+     "order": 1008,
+     "lang": "アラビア語",
+     "term": "ثمانية",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 8,
+     "reading": "thamāniya",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_9_英語",
+     "senseKey": "number_9",
+     "sense": "9",
+     "order": 1009,
+     "lang": "英語",
+     "term": "nine",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 9,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_9_オランダ語",
+     "senseKey": "number_9",
+     "sense": "9",
+     "order": 1009,
+     "lang": "オランダ語",
+     "term": "negen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 9,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_9_ベトナム語",
+     "senseKey": "number_9",
+     "sense": "9",
+     "order": 1009,
+     "lang": "ベトナム語",
+     "term": "chín",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 9,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_9_中国語",
+     "senseKey": "number_9",
+     "sense": "9",
+     "order": 1009,
+     "lang": "中国語",
+     "term": "九",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 9,
+     "reading": "jiǔ",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_9_アラビア語",
+     "senseKey": "number_9",
+     "sense": "9",
+     "order": 1009,
+     "lang": "アラビア語",
+     "term": "تسعة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 9,
+     "reading": "tis3a",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_10_英語",
+     "senseKey": "number_10",
+     "sense": "10",
+     "order": 1010,
+     "lang": "英語",
+     "term": "ten",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 10,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_10_オランダ語",
+     "senseKey": "number_10",
+     "sense": "10",
+     "order": 1010,
+     "lang": "オランダ語",
+     "term": "tien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 10,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_10_ベトナム語",
+     "senseKey": "number_10",
+     "sense": "10",
+     "order": 1010,
+     "lang": "ベトナム語",
+     "term": "mười",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 10,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_10_中国語",
+     "senseKey": "number_10",
+     "sense": "10",
+     "order": 1010,
+     "lang": "中国語",
+     "term": "十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 10,
+     "reading": "shí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_10_アラビア語",
+     "senseKey": "number_10",
+     "sense": "10",
+     "order": 1010,
+     "lang": "アラビア語",
+     "term": "عشرة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 10,
+     "reading": "3ashara",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_11_英語",
+     "senseKey": "number_11",
+     "sense": "11",
+     "order": 1011,
+     "lang": "英語",
+     "term": "eleven",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 11,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_11_オランダ語",
+     "senseKey": "number_11",
+     "sense": "11",
+     "order": 1011,
+     "lang": "オランダ語",
+     "term": "elf",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 11,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_11_ベトナム語",
+     "senseKey": "number_11",
+     "sense": "11",
+     "order": 1011,
+     "lang": "ベトナム語",
+     "term": "mười một",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 11,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_11_中国語",
+     "senseKey": "number_11",
+     "sense": "11",
+     "order": 1011,
+     "lang": "中国語",
+     "term": "十一",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 11,
+     "reading": "shíyī",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_11_アラビア語",
+     "senseKey": "number_11",
+     "sense": "11",
+     "order": 1011,
+     "lang": "アラビア語",
+     "term": "أحد عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 11,
+     "reading": "aHada 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_12_英語",
+     "senseKey": "number_12",
+     "sense": "12",
+     "order": 1012,
+     "lang": "英語",
+     "term": "twelve",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 12,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_12_オランダ語",
+     "senseKey": "number_12",
+     "sense": "12",
+     "order": 1012,
+     "lang": "オランダ語",
+     "term": "twaalf",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 12,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_12_ベトナム語",
+     "senseKey": "number_12",
+     "sense": "12",
+     "order": 1012,
+     "lang": "ベトナム語",
+     "term": "mười hai",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 12,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_12_中国語",
+     "senseKey": "number_12",
+     "sense": "12",
+     "order": 1012,
+     "lang": "中国語",
+     "term": "十二",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 12,
+     "reading": "shí'èr",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_12_アラビア語",
+     "senseKey": "number_12",
+     "sense": "12",
+     "order": 1012,
+     "lang": "アラビア語",
+     "term": "اثنا عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 12,
+     "reading": "ithnā 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_13_英語",
+     "senseKey": "number_13",
+     "sense": "13",
+     "order": 1013,
+     "lang": "英語",
+     "term": "thirteen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 13,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_13_オランダ語",
+     "senseKey": "number_13",
+     "sense": "13",
+     "order": 1013,
+     "lang": "オランダ語",
+     "term": "dertien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 13,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_13_ベトナム語",
+     "senseKey": "number_13",
+     "sense": "13",
+     "order": 1013,
+     "lang": "ベトナム語",
+     "term": "mười ba",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 13,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_13_中国語",
+     "senseKey": "number_13",
+     "sense": "13",
+     "order": 1013,
+     "lang": "中国語",
+     "term": "十三",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 13,
+     "reading": "shísān",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_13_アラビア語",
+     "senseKey": "number_13",
+     "sense": "13",
+     "order": 1013,
+     "lang": "アラビア語",
+     "term": "ثلاثة عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 13,
+     "reading": "thalāthata 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_14_英語",
+     "senseKey": "number_14",
+     "sense": "14",
+     "order": 1014,
+     "lang": "英語",
+     "term": "fourteen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 14,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_14_オランダ語",
+     "senseKey": "number_14",
+     "sense": "14",
+     "order": 1014,
+     "lang": "オランダ語",
+     "term": "veertien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 14,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_14_ベトナム語",
+     "senseKey": "number_14",
+     "sense": "14",
+     "order": 1014,
+     "lang": "ベトナム語",
+     "term": "mười bốn",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 14,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_14_中国語",
+     "senseKey": "number_14",
+     "sense": "14",
+     "order": 1014,
+     "lang": "中国語",
+     "term": "十四",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 14,
+     "reading": "shísì",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_14_アラビア語",
+     "senseKey": "number_14",
+     "sense": "14",
+     "order": 1014,
+     "lang": "アラビア語",
+     "term": "أربعة عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 14,
+     "reading": "arba3ata 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_15_英語",
+     "senseKey": "number_15",
+     "sense": "15",
+     "order": 1015,
+     "lang": "英語",
+     "term": "fifteen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 15,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_15_オランダ語",
+     "senseKey": "number_15",
+     "sense": "15",
+     "order": 1015,
+     "lang": "オランダ語",
+     "term": "vijftien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 15,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_15_ベトナム語",
+     "senseKey": "number_15",
+     "sense": "15",
+     "order": 1015,
+     "lang": "ベトナム語",
+     "term": "mười lăm",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 15,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_15_中国語",
+     "senseKey": "number_15",
+     "sense": "15",
+     "order": 1015,
+     "lang": "中国語",
+     "term": "十五",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 15,
+     "reading": "shíwǔ",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_15_アラビア語",
+     "senseKey": "number_15",
+     "sense": "15",
+     "order": 1015,
+     "lang": "アラビア語",
+     "term": "خمسة عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 15,
+     "reading": "khamsata 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_16_英語",
+     "senseKey": "number_16",
+     "sense": "16",
+     "order": 1016,
+     "lang": "英語",
+     "term": "sixteen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 16,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_16_オランダ語",
+     "senseKey": "number_16",
+     "sense": "16",
+     "order": 1016,
+     "lang": "オランダ語",
+     "term": "zestien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 16,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_16_ベトナム語",
+     "senseKey": "number_16",
+     "sense": "16",
+     "order": 1016,
+     "lang": "ベトナム語",
+     "term": "mười sáu",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 16,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_16_中国語",
+     "senseKey": "number_16",
+     "sense": "16",
+     "order": 1016,
+     "lang": "中国語",
+     "term": "十六",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 16,
+     "reading": "shíliù",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_16_アラビア語",
+     "senseKey": "number_16",
+     "sense": "16",
+     "order": 1016,
+     "lang": "アラビア語",
+     "term": "ستة عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 16,
+     "reading": "sittata 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_17_英語",
+     "senseKey": "number_17",
+     "sense": "17",
+     "order": 1017,
+     "lang": "英語",
+     "term": "seventeen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 17,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_17_オランダ語",
+     "senseKey": "number_17",
+     "sense": "17",
+     "order": 1017,
+     "lang": "オランダ語",
+     "term": "zeventien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 17,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_17_ベトナム語",
+     "senseKey": "number_17",
+     "sense": "17",
+     "order": 1017,
+     "lang": "ベトナム語",
+     "term": "mười bảy",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 17,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_17_中国語",
+     "senseKey": "number_17",
+     "sense": "17",
+     "order": 1017,
+     "lang": "中国語",
+     "term": "十七",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 17,
+     "reading": "shíqī",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_17_アラビア語",
+     "senseKey": "number_17",
+     "sense": "17",
+     "order": 1017,
+     "lang": "アラビア語",
+     "term": "سبعة عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 17,
+     "reading": "sab3ata 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_18_英語",
+     "senseKey": "number_18",
+     "sense": "18",
+     "order": 1018,
+     "lang": "英語",
+     "term": "eighteen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 18,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_18_オランダ語",
+     "senseKey": "number_18",
+     "sense": "18",
+     "order": 1018,
+     "lang": "オランダ語",
+     "term": "achttien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 18,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_18_ベトナム語",
+     "senseKey": "number_18",
+     "sense": "18",
+     "order": 1018,
+     "lang": "ベトナム語",
+     "term": "mười tám",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 18,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_18_中国語",
+     "senseKey": "number_18",
+     "sense": "18",
+     "order": 1018,
+     "lang": "中国語",
+     "term": "十八",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 18,
+     "reading": "shíbā",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_18_アラビア語",
+     "senseKey": "number_18",
+     "sense": "18",
+     "order": 1018,
+     "lang": "アラビア語",
+     "term": "ثمانية عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 18,
+     "reading": "thamāniyata 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_19_英語",
+     "senseKey": "number_19",
+     "sense": "19",
+     "order": 1019,
+     "lang": "英語",
+     "term": "nineteen",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 19,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_19_オランダ語",
+     "senseKey": "number_19",
+     "sense": "19",
+     "order": 1019,
+     "lang": "オランダ語",
+     "term": "negentien",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 19,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_19_ベトナム語",
+     "senseKey": "number_19",
+     "sense": "19",
+     "order": 1019,
+     "lang": "ベトナム語",
+     "term": "mười chín",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 19,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_19_中国語",
+     "senseKey": "number_19",
+     "sense": "19",
+     "order": 1019,
+     "lang": "中国語",
+     "term": "十九",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 19,
+     "reading": "shíjiǔ",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_19_アラビア語",
+     "senseKey": "number_19",
+     "sense": "19",
+     "order": 1019,
+     "lang": "アラビア語",
+     "term": "تسعة عشر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 19,
+     "reading": "tis3ata 3ashar",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_20_英語",
+     "senseKey": "number_20",
+     "sense": "20",
+     "order": 1020,
+     "lang": "英語",
+     "term": "twenty",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 20,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_20_オランダ語",
+     "senseKey": "number_20",
+     "sense": "20",
+     "order": 1020,
+     "lang": "オランダ語",
+     "term": "twintig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 20,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_20_ベトナム語",
+     "senseKey": "number_20",
+     "sense": "20",
+     "order": 1020,
+     "lang": "ベトナム語",
+     "term": "hai mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 20,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_20_中国語",
+     "senseKey": "number_20",
+     "sense": "20",
+     "order": 1020,
+     "lang": "中国語",
+     "term": "二十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 20,
+     "reading": "èrshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_20_アラビア語",
+     "senseKey": "number_20",
+     "sense": "20",
+     "order": 1020,
+     "lang": "アラビア語",
+     "term": "عشرون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 20,
+     "reading": "3ishrūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_30_英語",
+     "senseKey": "number_30",
+     "sense": "30",
+     "order": 1030,
+     "lang": "英語",
+     "term": "thirty",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 30,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_30_オランダ語",
+     "senseKey": "number_30",
+     "sense": "30",
+     "order": 1030,
+     "lang": "オランダ語",
+     "term": "dertig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 30,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_30_ベトナム語",
+     "senseKey": "number_30",
+     "sense": "30",
+     "order": 1030,
+     "lang": "ベトナム語",
+     "term": "ba mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 30,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_30_中国語",
+     "senseKey": "number_30",
+     "sense": "30",
+     "order": 1030,
+     "lang": "中国語",
+     "term": "三十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 30,
+     "reading": "sānshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_30_アラビア語",
+     "senseKey": "number_30",
+     "sense": "30",
+     "order": 1030,
+     "lang": "アラビア語",
+     "term": "ثلاثون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 30,
+     "reading": "thalāthūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_40_英語",
+     "senseKey": "number_40",
+     "sense": "40",
+     "order": 1040,
+     "lang": "英語",
+     "term": "forty",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 40,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_40_オランダ語",
+     "senseKey": "number_40",
+     "sense": "40",
+     "order": 1040,
+     "lang": "オランダ語",
+     "term": "veertig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 40,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_40_ベトナム語",
+     "senseKey": "number_40",
+     "sense": "40",
+     "order": 1040,
+     "lang": "ベトナム語",
+     "term": "bốn mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 40,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_40_中国語",
+     "senseKey": "number_40",
+     "sense": "40",
+     "order": 1040,
+     "lang": "中国語",
+     "term": "四十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 40,
+     "reading": "sìshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_40_アラビア語",
+     "senseKey": "number_40",
+     "sense": "40",
+     "order": 1040,
+     "lang": "アラビア語",
+     "term": "أربعون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 40,
+     "reading": "arba3ūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_50_英語",
+     "senseKey": "number_50",
+     "sense": "50",
+     "order": 1050,
+     "lang": "英語",
+     "term": "fifty",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 50,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_50_オランダ語",
+     "senseKey": "number_50",
+     "sense": "50",
+     "order": 1050,
+     "lang": "オランダ語",
+     "term": "vijftig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 50,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_50_ベトナム語",
+     "senseKey": "number_50",
+     "sense": "50",
+     "order": 1050,
+     "lang": "ベトナム語",
+     "term": "năm mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 50,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_50_中国語",
+     "senseKey": "number_50",
+     "sense": "50",
+     "order": 1050,
+     "lang": "中国語",
+     "term": "五十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 50,
+     "reading": "wǔshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_50_アラビア語",
+     "senseKey": "number_50",
+     "sense": "50",
+     "order": 1050,
+     "lang": "アラビア語",
+     "term": "خمسون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 50,
+     "reading": "khamsūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_60_英語",
+     "senseKey": "number_60",
+     "sense": "60",
+     "order": 1060,
+     "lang": "英語",
+     "term": "sixty",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 60,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_60_オランダ語",
+     "senseKey": "number_60",
+     "sense": "60",
+     "order": 1060,
+     "lang": "オランダ語",
+     "term": "zestig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 60,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_60_ベトナム語",
+     "senseKey": "number_60",
+     "sense": "60",
+     "order": 1060,
+     "lang": "ベトナム語",
+     "term": "sáu mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 60,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_60_中国語",
+     "senseKey": "number_60",
+     "sense": "60",
+     "order": 1060,
+     "lang": "中国語",
+     "term": "六十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 60,
+     "reading": "liùshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_60_アラビア語",
+     "senseKey": "number_60",
+     "sense": "60",
+     "order": 1060,
+     "lang": "アラビア語",
+     "term": "ستون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 60,
+     "reading": "sittūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_70_英語",
+     "senseKey": "number_70",
+     "sense": "70",
+     "order": 1070,
+     "lang": "英語",
+     "term": "seventy",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 70,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_70_オランダ語",
+     "senseKey": "number_70",
+     "sense": "70",
+     "order": 1070,
+     "lang": "オランダ語",
+     "term": "zeventig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 70,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_70_ベトナム語",
+     "senseKey": "number_70",
+     "sense": "70",
+     "order": 1070,
+     "lang": "ベトナム語",
+     "term": "bảy mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 70,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_70_中国語",
+     "senseKey": "number_70",
+     "sense": "70",
+     "order": 1070,
+     "lang": "中国語",
+     "term": "七十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 70,
+     "reading": "qīshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_70_アラビア語",
+     "senseKey": "number_70",
+     "sense": "70",
+     "order": 1070,
+     "lang": "アラビア語",
+     "term": "سبعون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 70,
+     "reading": "sab3ūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_80_英語",
+     "senseKey": "number_80",
+     "sense": "80",
+     "order": 1080,
+     "lang": "英語",
+     "term": "eighty",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 80,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_80_オランダ語",
+     "senseKey": "number_80",
+     "sense": "80",
+     "order": 1080,
+     "lang": "オランダ語",
+     "term": "tachtig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 80,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_80_ベトナム語",
+     "senseKey": "number_80",
+     "sense": "80",
+     "order": 1080,
+     "lang": "ベトナム語",
+     "term": "tám mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 80,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_80_中国語",
+     "senseKey": "number_80",
+     "sense": "80",
+     "order": 1080,
+     "lang": "中国語",
+     "term": "八十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 80,
+     "reading": "bāshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_80_アラビア語",
+     "senseKey": "number_80",
+     "sense": "80",
+     "order": 1080,
+     "lang": "アラビア語",
+     "term": "ثمانون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 80,
+     "reading": "thamānūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_90_英語",
+     "senseKey": "number_90",
+     "sense": "90",
+     "order": 1090,
+     "lang": "英語",
+     "term": "ninety",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 90,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_90_オランダ語",
+     "senseKey": "number_90",
+     "sense": "90",
+     "order": 1090,
+     "lang": "オランダ語",
+     "term": "negentig",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 90,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_90_ベトナム語",
+     "senseKey": "number_90",
+     "sense": "90",
+     "order": 1090,
+     "lang": "ベトナム語",
+     "term": "chín mươi",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 90,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_90_中国語",
+     "senseKey": "number_90",
+     "sense": "90",
+     "order": 1090,
+     "lang": "中国語",
+     "term": "九十",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 90,
+     "reading": "jiǔshí",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_90_アラビア語",
+     "senseKey": "number_90",
+     "sense": "90",
+     "order": 1090,
+     "lang": "アラビア語",
+     "term": "تسعون",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 90,
+     "reading": "tis3ūn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_100_英語",
+     "senseKey": "number_100",
+     "sense": "100",
+     "order": 1100,
+     "lang": "英語",
+     "term": "one hundred",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 100,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_100_オランダ語",
+     "senseKey": "number_100",
+     "sense": "100",
+     "order": 1100,
+     "lang": "オランダ語",
+     "term": "honderd",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 100,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_100_ベトナム語",
+     "senseKey": "number_100",
+     "sense": "100",
+     "order": 1100,
+     "lang": "ベトナム語",
+     "term": "một trăm",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 100,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_100_中国語",
+     "senseKey": "number_100",
+     "sense": "100",
+     "order": 1100,
+     "lang": "中国語",
+     "term": "一百",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 100,
+     "reading": "yìbǎi",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_100_アラビア語",
+     "senseKey": "number_100",
+     "sense": "100",
+     "order": 1100,
+     "lang": "アラビア語",
+     "term": "مائة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。 مئة とも綴る。",
+     "numeric": 100,
+     "reading": "mi'a",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_1000_英語",
+     "senseKey": "number_1000",
+     "sense": "1,000",
+     "order": 2000,
+     "lang": "英語",
+     "term": "one thousand",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 1000,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_1000_オランダ語",
+     "senseKey": "number_1000",
+     "sense": "1,000",
+     "order": 2000,
+     "lang": "オランダ語",
+     "term": "duizend",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 1000,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_1000_ベトナム語",
+     "senseKey": "number_1000",
+     "sense": "1,000",
+     "order": 2000,
+     "lang": "ベトナム語",
+     "term": "một nghìn",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 1000,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_1000_中国語",
+     "senseKey": "number_1000",
+     "sense": "1,000",
+     "order": 2000,
+     "lang": "中国語",
+     "term": "一千",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 1000,
+     "reading": "yìqiān",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_1000_アラビア語",
+     "senseKey": "number_1000",
+     "sense": "1,000",
+     "order": 2000,
+     "lang": "アラビア語",
+     "term": "ألف",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 1000,
+     "reading": "alf",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_10000_英語",
+     "senseKey": "number_10000",
+     "sense": "10,000",
+     "order": 11000,
+     "lang": "英語",
+     "term": "ten thousand",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 10000,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_10000_オランダ語",
+     "senseKey": "number_10000",
+     "sense": "10,000",
+     "order": 11000,
+     "lang": "オランダ語",
+     "term": "tienduizend",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 10000,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_10000_ベトナム語",
+     "senseKey": "number_10000",
+     "sense": "10,000",
+     "order": 11000,
+     "lang": "ベトナム語",
+     "term": "mười nghìn",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "numeric": 10000,
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_number_10000_中国語",
+     "senseKey": "number_10000",
+     "sense": "10,000",
+     "order": 11000,
+     "lang": "中国語",
+     "term": "一万",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "numeric": 10000,
+     "reading": "yíwàn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_number_10000_アラビア語",
+     "senseKey": "number_10000",
+     "sense": "10,000",
+     "order": 11000,
+     "lang": "アラビア語",
+     "term": "عشرة آلاف",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "numeric": 10000,
+     "reading": "3asharat ālāf",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    }
+   ]
+  },
+  {
+   "source": {
+    "id": "supplement-atlas5",
+    "kind": "supplement",
+    "title": "補い（Atlasの5言語。本は無い）",
+    "note": "Prismに『旅の指さし会話帳』が無い5言語（英語・アラビア語・中国語・ベトナム語・オランダ語）を、Atlasの◇と行き来する3テーマ（数・曜日・月）にだけ足したもの。書籍の転記ではない。読みはAtlasの記法に合わせたが校閲前。"
+   },
+   "bookTheme": {
+    "name": "曜日（補い・5言語）",
+    "page": "",
+    "themes": [
+     "曜日",
+     "月日と年月"
+    ],
+    "note": "本の見開きではない。Atlasにあってこちらに無い5言語を、閉じた集合にだけ足した枠。"
+   },
+   "items": [
+    {
+     "srcId": "sup5_monday_英語",
+     "senseKey": "monday",
+     "sense": "月曜日",
+     "order": 101,
+     "lang": "英語",
+     "term": "Monday",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_monday_オランダ語",
+     "senseKey": "monday",
+     "sense": "月曜日",
+     "order": 101,
+     "lang": "オランダ語",
+     "term": "maandag",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_monday_ベトナム語",
+     "senseKey": "monday",
+     "sense": "月曜日",
+     "order": 101,
+     "lang": "ベトナム語",
+     "term": "thứ hai",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_monday_中国語",
+     "senseKey": "monday",
+     "sense": "月曜日",
+     "order": 101,
+     "lang": "中国語",
+     "term": "星期一",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "xīngqīyī",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_monday_アラビア語",
+     "senseKey": "monday",
+     "sense": "月曜日",
+     "order": 101,
+     "lang": "アラビア語",
+     "term": "الاثنين",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "(a)l-ithnayn",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_tuesday_英語",
+     "senseKey": "tuesday",
+     "sense": "火曜日",
+     "order": 102,
+     "lang": "英語",
+     "term": "Tuesday",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_tuesday_オランダ語",
+     "senseKey": "tuesday",
+     "sense": "火曜日",
+     "order": 102,
+     "lang": "オランダ語",
+     "term": "dinsdag",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_tuesday_ベトナム語",
+     "senseKey": "tuesday",
+     "sense": "火曜日",
+     "order": 102,
+     "lang": "ベトナム語",
+     "term": "thứ ba",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_tuesday_中国語",
+     "senseKey": "tuesday",
+     "sense": "火曜日",
+     "order": 102,
+     "lang": "中国語",
+     "term": "星期二",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "xīngqī'èr",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_tuesday_アラビア語",
+     "senseKey": "tuesday",
+     "sense": "火曜日",
+     "order": 102,
+     "lang": "アラビア語",
+     "term": "الثلاثاء",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "(a)th-thulāthā'",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_wednesday_英語",
+     "senseKey": "wednesday",
+     "sense": "水曜日",
+     "order": 103,
+     "lang": "英語",
+     "term": "Wednesday",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_wednesday_オランダ語",
+     "senseKey": "wednesday",
+     "sense": "水曜日",
+     "order": 103,
+     "lang": "オランダ語",
+     "term": "woensdag",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_wednesday_ベトナム語",
+     "senseKey": "wednesday",
+     "sense": "水曜日",
+     "order": 103,
+     "lang": "ベトナム語",
+     "term": "thứ tư",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_wednesday_中国語",
+     "senseKey": "wednesday",
+     "sense": "水曜日",
+     "order": 103,
+     "lang": "中国語",
+     "term": "星期三",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "xīngqīsān",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_wednesday_アラビア語",
+     "senseKey": "wednesday",
+     "sense": "水曜日",
+     "order": 103,
+     "lang": "アラビア語",
+     "term": "الأربعاء",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "(a)l-arbi3ā'",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_thursday_英語",
+     "senseKey": "thursday",
+     "sense": "木曜日",
+     "order": 104,
+     "lang": "英語",
+     "term": "Thursday",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_thursday_オランダ語",
+     "senseKey": "thursday",
+     "sense": "木曜日",
+     "order": 104,
+     "lang": "オランダ語",
+     "term": "donderdag",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_thursday_ベトナム語",
+     "senseKey": "thursday",
+     "sense": "木曜日",
+     "order": 104,
+     "lang": "ベトナム語",
+     "term": "thứ năm",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_thursday_中国語",
+     "senseKey": "thursday",
+     "sense": "木曜日",
+     "order": 104,
+     "lang": "中国語",
+     "term": "星期四",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。 Atlasの辞書には 周四 zhōusì もある。ここは星期の系列でそろえた。",
+     "reading": "xīngqīsì",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_thursday_アラビア語",
+     "senseKey": "thursday",
+     "sense": "木曜日",
+     "order": 104,
+     "lang": "アラビア語",
+     "term": "الخميس",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "(a)l-khamīs",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_friday_英語",
+     "senseKey": "friday",
+     "sense": "金曜日",
+     "order": 105,
+     "lang": "英語",
+     "term": "Friday",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_friday_オランダ語",
+     "senseKey": "friday",
+     "sense": "金曜日",
+     "order": 105,
+     "lang": "オランダ語",
+     "term": "vrijdag",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_friday_ベトナム語",
+     "senseKey": "friday",
+     "sense": "金曜日",
+     "order": 105,
+     "lang": "ベトナム語",
+     "term": "thứ sáu",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_friday_中国語",
+     "senseKey": "friday",
+     "sense": "金曜日",
+     "order": 105,
+     "lang": "中国語",
+     "term": "星期五",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "xīngqīwǔ",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_friday_アラビア語",
+     "senseKey": "friday",
+     "sense": "金曜日",
+     "order": 105,
+     "lang": "アラビア語",
+     "term": "الجمعة",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "(a)l-jum3a",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_saturday_英語",
+     "senseKey": "saturday",
+     "sense": "土曜日",
+     "order": 106,
+     "lang": "英語",
+     "term": "Saturday",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_saturday_オランダ語",
+     "senseKey": "saturday",
+     "sense": "土曜日",
+     "order": 106,
+     "lang": "オランダ語",
+     "term": "zaterdag",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_saturday_ベトナム語",
+     "senseKey": "saturday",
+     "sense": "土曜日",
+     "order": 106,
+     "lang": "ベトナム語",
+     "term": "thứ bảy",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_saturday_中国語",
+     "senseKey": "saturday",
+     "sense": "土曜日",
+     "order": 106,
+     "lang": "中国語",
+     "term": "星期六",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "xīngqīliù",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_saturday_アラビア語",
+     "senseKey": "saturday",
+     "sense": "土曜日",
+     "order": 106,
+     "lang": "アラビア語",
+     "term": "السبت",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "(a)s-sabt",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_sunday_英語",
+     "senseKey": "sunday",
+     "sense": "日曜日",
+     "order": 107,
+     "lang": "英語",
+     "term": "Sunday",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_sunday_オランダ語",
+     "senseKey": "sunday",
+     "sense": "日曜日",
+     "order": 107,
+     "lang": "オランダ語",
+     "term": "zondag",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_sunday_ベトナム語",
+     "senseKey": "sunday",
+     "sense": "日曜日",
+     "order": 107,
+     "lang": "ベトナム語",
+     "term": "chủ nhật",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_sunday_中国語",
+     "senseKey": "sunday",
+     "sense": "日曜日",
+     "order": 107,
+     "lang": "中国語",
+     "term": "星期天",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。 星期日 とも書く。Atlasの辞書にある 星期天 に合わせた。",
+     "reading": "xīngqītiān",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_sunday_アラビア語",
+     "senseKey": "sunday",
+     "sense": "日曜日",
+     "order": 107,
+     "lang": "アラビア語",
+     "term": "الأحد",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "(a)l-aHad",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    }
+   ]
+  },
+  {
+   "source": {
+    "id": "supplement-atlas5",
+    "kind": "supplement",
+    "title": "補い（Atlasの5言語。本は無い）",
+    "note": "Prismに『旅の指さし会話帳』が無い5言語（英語・アラビア語・中国語・ベトナム語・オランダ語）を、Atlasの◇と行き来する3テーマ（数・曜日・月）にだけ足したもの。書籍の転記ではない。読みはAtlasの記法に合わせたが校閲前。"
+   },
+   "bookTheme": {
+    "name": "月（補い・5言語）",
+    "page": "",
+    "themes": [
+     "月",
+     "月日と年月"
+    ],
+    "note": "本の見開きではない。Atlasにあってこちらに無い5言語を、閉じた集合にだけ足した枠。"
+   },
+   "items": [
+    {
+     "srcId": "sup5_month_01_英語",
+     "senseKey": "month_01",
+     "sense": "1月",
+     "order": 201,
+     "lang": "英語",
+     "term": "January",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_01_オランダ語",
+     "senseKey": "month_01",
+     "sense": "1月",
+     "order": 201,
+     "lang": "オランダ語",
+     "term": "januari",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_01_ベトナム語",
+     "senseKey": "month_01",
+     "sense": "1月",
+     "order": 201,
+     "lang": "ベトナム語",
+     "term": "tháng một",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_01_中国語",
+     "senseKey": "month_01",
+     "sense": "1月",
+     "order": 201,
+     "lang": "中国語",
+     "term": "一月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "yīyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_01_アラビア語",
+     "senseKey": "month_01",
+     "sense": "1月",
+     "order": 201,
+     "lang": "アラビア語",
+     "term": "يناير",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。 この系列（يناير…）のほかに كانون الثاني… の系列もある。要確認。",
+     "reading": "yanāyir",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_02_英語",
+     "senseKey": "month_02",
+     "sense": "2月",
+     "order": 202,
+     "lang": "英語",
+     "term": "February",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_02_オランダ語",
+     "senseKey": "month_02",
+     "sense": "2月",
+     "order": 202,
+     "lang": "オランダ語",
+     "term": "februari",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_02_ベトナム語",
+     "senseKey": "month_02",
+     "sense": "2月",
+     "order": 202,
+     "lang": "ベトナム語",
+     "term": "tháng hai",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_02_中国語",
+     "senseKey": "month_02",
+     "sense": "2月",
+     "order": 202,
+     "lang": "中国語",
+     "term": "二月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "èryuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_02_アラビア語",
+     "senseKey": "month_02",
+     "sense": "2月",
+     "order": 202,
+     "lang": "アラビア語",
+     "term": "فبراير",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "fibrāyir",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_03_英語",
+     "senseKey": "month_03",
+     "sense": "3月",
+     "order": 203,
+     "lang": "英語",
+     "term": "March",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_03_オランダ語",
+     "senseKey": "month_03",
+     "sense": "3月",
+     "order": 203,
+     "lang": "オランダ語",
+     "term": "maart",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。 Atlasの辞書には Maart（大文字）がある。オランダ語の月名は小文字が普通。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_03_ベトナム語",
+     "senseKey": "month_03",
+     "sense": "3月",
+     "order": 203,
+     "lang": "ベトナム語",
+     "term": "tháng ba",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_03_中国語",
+     "senseKey": "month_03",
+     "sense": "3月",
+     "order": 203,
+     "lang": "中国語",
+     "term": "三月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "sānyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_03_アラビア語",
+     "senseKey": "month_03",
+     "sense": "3月",
+     "order": 203,
+     "lang": "アラビア語",
+     "term": "مارس",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "māris",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_04_英語",
+     "senseKey": "month_04",
+     "sense": "4月",
+     "order": 204,
+     "lang": "英語",
+     "term": "April",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_04_オランダ語",
+     "senseKey": "month_04",
+     "sense": "4月",
+     "order": 204,
+     "lang": "オランダ語",
+     "term": "april",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_04_ベトナム語",
+     "senseKey": "month_04",
+     "sense": "4月",
+     "order": 204,
+     "lang": "ベトナム語",
+     "term": "tháng tư",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_04_中国語",
+     "senseKey": "month_04",
+     "sense": "4月",
+     "order": 204,
+     "lang": "中国語",
+     "term": "四月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "sìyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_04_アラビア語",
+     "senseKey": "month_04",
+     "sense": "4月",
+     "order": 204,
+     "lang": "アラビア語",
+     "term": "أبريل",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "abrīl",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_05_英語",
+     "senseKey": "month_05",
+     "sense": "5月",
+     "order": 205,
+     "lang": "英語",
+     "term": "May",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_05_オランダ語",
+     "senseKey": "month_05",
+     "sense": "5月",
+     "order": 205,
+     "lang": "オランダ語",
+     "term": "mei",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_05_ベトナム語",
+     "senseKey": "month_05",
+     "sense": "5月",
+     "order": 205,
+     "lang": "ベトナム語",
+     "term": "tháng năm",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_05_中国語",
+     "senseKey": "month_05",
+     "sense": "5月",
+     "order": 205,
+     "lang": "中国語",
+     "term": "五月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "wǔyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_05_アラビア語",
+     "senseKey": "month_05",
+     "sense": "5月",
+     "order": 205,
+     "lang": "アラビア語",
+     "term": "مايو",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "māyū",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_06_英語",
+     "senseKey": "month_06",
+     "sense": "6月",
+     "order": 206,
+     "lang": "英語",
+     "term": "June",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_06_オランダ語",
+     "senseKey": "month_06",
+     "sense": "6月",
+     "order": 206,
+     "lang": "オランダ語",
+     "term": "juni",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_06_ベトナム語",
+     "senseKey": "month_06",
+     "sense": "6月",
+     "order": 206,
+     "lang": "ベトナム語",
+     "term": "tháng sáu",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_06_中国語",
+     "senseKey": "month_06",
+     "sense": "6月",
+     "order": 206,
+     "lang": "中国語",
+     "term": "六月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "liùyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_06_アラビア語",
+     "senseKey": "month_06",
+     "sense": "6月",
+     "order": 206,
+     "lang": "アラビア語",
+     "term": "يونيو",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "yūniyū",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_07_英語",
+     "senseKey": "month_07",
+     "sense": "7月",
+     "order": 207,
+     "lang": "英語",
+     "term": "July",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_07_オランダ語",
+     "senseKey": "month_07",
+     "sense": "7月",
+     "order": 207,
+     "lang": "オランダ語",
+     "term": "juli",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_07_ベトナム語",
+     "senseKey": "month_07",
+     "sense": "7月",
+     "order": 207,
+     "lang": "ベトナム語",
+     "term": "tháng bảy",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_07_中国語",
+     "senseKey": "month_07",
+     "sense": "7月",
+     "order": 207,
+     "lang": "中国語",
+     "term": "七月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "qīyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_07_アラビア語",
+     "senseKey": "month_07",
+     "sense": "7月",
+     "order": 207,
+     "lang": "アラビア語",
+     "term": "يوليو",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "yūliyū",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_08_英語",
+     "senseKey": "month_08",
+     "sense": "8月",
+     "order": 208,
+     "lang": "英語",
+     "term": "August",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_08_オランダ語",
+     "senseKey": "month_08",
+     "sense": "8月",
+     "order": 208,
+     "lang": "オランダ語",
+     "term": "augustus",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_08_ベトナム語",
+     "senseKey": "month_08",
+     "sense": "8月",
+     "order": 208,
+     "lang": "ベトナム語",
+     "term": "tháng tám",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_08_中国語",
+     "senseKey": "month_08",
+     "sense": "8月",
+     "order": 208,
+     "lang": "中国語",
+     "term": "八月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "bāyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_08_アラビア語",
+     "senseKey": "month_08",
+     "sense": "8月",
+     "order": 208,
+     "lang": "アラビア語",
+     "term": "أغسطس",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "aghusTus",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_09_英語",
+     "senseKey": "month_09",
+     "sense": "9月",
+     "order": 209,
+     "lang": "英語",
+     "term": "September",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_09_オランダ語",
+     "senseKey": "month_09",
+     "sense": "9月",
+     "order": 209,
+     "lang": "オランダ語",
+     "term": "september",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_09_ベトナム語",
+     "senseKey": "month_09",
+     "sense": "9月",
+     "order": 209,
+     "lang": "ベトナム語",
+     "term": "tháng chín",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_09_中国語",
+     "senseKey": "month_09",
+     "sense": "9月",
+     "order": 209,
+     "lang": "中国語",
+     "term": "九月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "jiǔyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_09_アラビア語",
+     "senseKey": "month_09",
+     "sense": "9月",
+     "order": 209,
+     "lang": "アラビア語",
+     "term": "سبتمبر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "sibtambir",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_10_英語",
+     "senseKey": "month_10",
+     "sense": "10月",
+     "order": 210,
+     "lang": "英語",
+     "term": "October",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_10_オランダ語",
+     "senseKey": "month_10",
+     "sense": "10月",
+     "order": 210,
+     "lang": "オランダ語",
+     "term": "oktober",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_10_ベトナム語",
+     "senseKey": "month_10",
+     "sense": "10月",
+     "order": 210,
+     "lang": "ベトナム語",
+     "term": "tháng mười",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_10_中国語",
+     "senseKey": "month_10",
+     "sense": "10月",
+     "order": 210,
+     "lang": "中国語",
+     "term": "十月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "shíyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_10_アラビア語",
+     "senseKey": "month_10",
+     "sense": "10月",
+     "order": 210,
+     "lang": "アラビア語",
+     "term": "أكتوبر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "uktūbir",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_11_英語",
+     "senseKey": "month_11",
+     "sense": "11月",
+     "order": 211,
+     "lang": "英語",
+     "term": "November",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_11_オランダ語",
+     "senseKey": "month_11",
+     "sense": "11月",
+     "order": 211,
+     "lang": "オランダ語",
+     "term": "november",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_11_ベトナム語",
+     "senseKey": "month_11",
+     "sense": "11月",
+     "order": 211,
+     "lang": "ベトナム語",
+     "term": "tháng mười một",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_11_中国語",
+     "senseKey": "month_11",
+     "sense": "11月",
+     "order": 211,
+     "lang": "中国語",
+     "term": "十一月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "shíyīyuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_11_アラビア語",
+     "senseKey": "month_11",
+     "sense": "11月",
+     "order": 211,
+     "lang": "アラビア語",
+     "term": "نوفمبر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "nūfambir",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_12_英語",
+     "senseKey": "month_12",
+     "sense": "12月",
+     "order": 212,
+     "lang": "英語",
+     "term": "December",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_12_オランダ語",
+     "senseKey": "month_12",
+     "sense": "12月",
+     "order": 212,
+     "lang": "オランダ語",
+     "term": "december",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_12_ベトナム語",
+     "senseKey": "month_12",
+     "sense": "12月",
+     "order": 212,
+     "lang": "ベトナム語",
+     "term": "tháng mười hai",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの方針で不要。",
+     "readingStatus": "not_required"
+    },
+    {
+     "srcId": "sup5_month_12_中国語",
+     "senseKey": "month_12",
+     "sense": "12月",
+     "order": 212,
+     "lang": "中国語",
+     "term": "十二月",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みは声調符号つきピンイン（Atlasの記法）。",
+     "reading": "shí'èryuè",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    },
+    {
+     "srcId": "sup5_month_12_アラビア語",
+     "senseKey": "month_12",
+     "sense": "12月",
+     "order": 212,
+     "lang": "アラビア語",
+     "term": "ديسمبر",
+     "flags": [
+      "supplement"
+     ],
+     "note": "本には無い。比較のために足した。読みはAtlasの記法（ع→3、強勢音は大文字、長母音はマクロン、定冠詞は(a)l-）。",
+     "reading": "dīsambir",
+     "readingSrc": "added",
+     "readingLevel": "draft"
+    }
+   ]
+  },
+  {
+   "source": {
     "id": "supplement",
     "title": "補い（本には無い。Claudeが足した）",
     "kind": "supplement",
