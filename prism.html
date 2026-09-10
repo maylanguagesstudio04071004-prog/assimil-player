@@ -100,6 +100,11 @@ img.page{max-width:100%; border:1px solid var(--line); border-radius:8px}
 .ghead{font-size:12px; color:var(--sub); letter-spacing:.04em; font-weight:600;
   margin:16px 2px 7px; padding-bottom:4px; border-bottom:1px solid var(--line)}
 #themeList .ghead:first-child{margin-top:2px}
+/* 語タブの段。畳んだ見出しは押せるので、少し大きく取る */
+details.sect{border:0; background:none; padding:0; margin:0 0 4px}
+details.sect > summary.ghead{margin:10px 2px 0; padding:10px 2px; font-size:14px;
+  color:var(--ink); cursor:pointer}
+details.sect[open] > summary.ghead{color:var(--accent)}
 hr{border:0; border-top:1px solid var(--line); margin:16px 0}
 </style>
 </head>
@@ -218,7 +223,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-10b";
+const BUILD = "2026-09-11a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -753,12 +758,24 @@ function sectionedList(list){
     if(!s.solo){ axis.push(s); return; }
     (labelGroupLangs(s.id).size >= 2 ? label : only).push(s);
   });
+  /* 3つの段を畳む(2026-09-11にMayの依頼)。
+     動詞・疑問詞は177枚、自己紹介は156枚あって、開いた瞬間から延々スクロールしていた。
+     テーマを開くと3行だけ出て、読みたい段をタップして開く。
+     戻すなら fold() を「見出し＋中身をそのまま返す」に変える。 */
+  /* 小さいテーマまで畳むと、無駄に1タップ増える。
+     段が1つしかないとき（曜日7・月12など）と、比較軸が20枚以下のときは開いておく。 */
+  const nSect = (axis.length?1:0) + (label.length?1:0) + (only.length?1:0);
+  const fold = (name, n, note, body, open) =>
+    '<details class="sect"'+((nSect===1 || open) ? ' open' : '')
+    + '><summary class="ghead">'+esc(name)+' '+n+'</summary>'
+    + (note ? '<div class="sub" style="margin:6px 2px 7px">'+note+'</div>' : '')
+    + body + '</details>';
+
   let h = "";
   if(axis.length)
-    h += '<div class="ghead">比較軸 '+axis.length+'</div>'
-      + '<div class="sub" style="margin:-4px 2px 7px">素材が同じ比較キーを付けた語。'
-      + '言語をまたいで並ぶ。</div>'
-      + axis.map(s=>senseCard(s,"axis")).join("");
+    h += fold("比較軸", axis.length,
+      '素材が同じ比較キーを付けた語。言語をまたいで並ぶ。',
+      axis.map(s=>senseCard(s,"axis")).join(""), axis.length <= 20);
   if(label.length){
     /* ラベルが同じものは1枚にまとめて出す。代表は最初の1件。 */
     const seen = new Set(); const cards = [];
@@ -767,10 +784,9 @@ function sectionedList(list){
       [s].concat(sameLabel(s.id)).forEach(x => x && seen.add(x.id));
       cards.push(senseCard(s,"label"));
     });
-    h += '<div class="ghead">同じ日本語ラベルで並ぶ語 '+cards.length+'</div>'
-      + '<div class="sub" style="margin:-4px 2px 7px">比較キーは付いていない。'
-      + '<b>紙面の日本語ラベルが同じというだけ</b>で、同義とは限らない。</div>'
-      + cards.join("");
+    h += fold("同じ日本語ラベルで並ぶ語", cards.length,
+      '比較キーは付いていない。<b>紙面の日本語ラベルが同じというだけ</b>で、同義とは限らない。',
+      cards.join(""));
   }
   if(only.length){
     const byBook = new Map();
@@ -780,17 +796,17 @@ function sectionedList(list){
       if(!byBook.has(k)) byBook.set(k, []);
       byBook.get(k).push(s);
     });
-    h += '<div class="ghead">この本だけの語 '+only.length+'</div>'
-      + '<div class="sub" style="margin:-4px 2px 7px">他の本に同じラベルの語が無いもの。'
-      + '本ごとにたたんである。</div>';
+    let inner = "";
     [...byBook.entries()]
       .sort((a,b)=> b[1].length - a[1].length)
       .forEach(([sid_, ss])=>{
         const src = source(sid_) || {title:"?"};
-        h += '<details><summary>'+esc(src.title)+' <span class="sub">'+ss.length+'</span></summary>'
+        inner += '<details><summary>'+esc(src.title)+' <span class="sub">'+ss.length+'</span></summary>'
           + '<div style="margin-top:8px">' + ss.map(s=>senseCard(s,"axis")).join("") + '</div>'
           + '</details>';
       });
+    h += fold("この本だけの語", only.length,
+      '他の本に同じラベルの語が無いもの。本ごとにたたんである。', inner);
   }
   return h || '<div class="empty">該当なし。</div>';
 }
