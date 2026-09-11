@@ -223,7 +223,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-11b";
+const BUILD = "2026-09-11c";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1164,8 +1164,10 @@ function importData(text){
   labelIndex = null; entryIndex = null;   // 意味も語も増減するので索引を作り直させる
   const raw = JSON.parse(text);
   const blocks = Array.isArray(raw) ? raw : (Array.isArray(raw.imports) ? raw.imports : [raw]);
-  const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, themeNote:0};
+  const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, memoSame:0, themeNote:0};
   const errors = [];
+  // メモは全ブロックを読み終えてから入れる。宛先の意味は後ろのブロックの語で作られることがあるため(2026-09-11)
+  const pendingMemos = [];
 
   blocks.forEach((b, bi)=>{
     const where = "ブロック" + (bi+1);
@@ -1197,15 +1199,7 @@ function importData(text){
       c.themeNote++;
     });
 
-    (b.memos||[]).forEach(mm=>{
-      const t = String(mm.target||"");
-      const i = t.indexOf(":");
-      const kind = t.slice(0,i), name = t.slice(i+1);
-      const tId = kind==="sense" ? sid(name) : kind==="theme" ? tid(name) : null;
-      if(!tId){ errors.push(where+": メモの対象 '"+t+"' が読めません（sense:名前 / theme:名前）"); return; }
-      db.memos.unshift({id:uid(), tType:kind, tId, text:String(mm.text||""), at:Date.now()});
-      c.memo++;
-    });
+    (b.memos||[]).forEach(mm => pendingMemos.push({mm, where}));
 
     if(!b.source && !b.items) return;
     if(!b.source || !b.source.id || !b.source.title){
@@ -1320,11 +1314,29 @@ function importData(text){
     });
   });
 
+  pendingMemos.forEach(({mm, where})=>{
+    const t = String(mm.target||"");
+    const i = t.indexOf(":");
+    const kind = t.slice(0,i), name = t.slice(i+1);
+    const tId = kind==="sense" ? sid(name) : kind==="theme" ? tid(name) : null;
+    if(!tId){ errors.push(where+": メモの対象 '"+t+"' が読めません（sense:比較キー / theme:名前）"); return; }
+    // 宛先が無いメモは入れない。入れると、どの画面にも出ない孤児になる(2026-09-11)
+    const target = kind==="sense" ? byId(db.senses, tId) : byId(db.themes, tId);
+    if(!target){ errors.push(where+": メモの宛先 '"+t+"' が見つかりません（意味は比較キーで指す: sense:比較キー）"); return; }
+    const text = String(mm.text||"");
+    if(!text.trim()){ errors.push(where+": メモの本文が空です（"+t+"）"); return; }
+    // 同じ宛先に同じ文面があれば二重に入れない。同梱データを読み込み直しても増えない(2026-09-11)
+    if(db.memos.some(x => x.tType===kind && x.tId===tId && x.text===text)){ c.memoSame++; return; }
+    db.memos.unshift({id:uid(), tType:kind, tId, text, at:Date.now()});
+    c.memo++;
+  });
+
   labelIndex = null; entryIndex = null;   // 取り込みで中身が変わったので捨てる
   const summary =
     "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
     + "新規: 本 " + c.src + " / 本のテーマ " + c.bt + " / 共通テーマ " + c.theme
     + " / 意味 " + c.sense + " / メモ " + c.memo
+    + (c.memoSame ? "（同じ文面の " + c.memoSame + "件は入れていない）" : "")
     + (c.themeNote ? " / テーマの在否メモ " + c.themeNote : "");
   return {summary, errors, counts:c};
 }
@@ -1498,6 +1510,8 @@ function renderFmtHelp(){
    + '・<b>bookTheme.image</b> に配信ファイルのパス（例 prism-images/10.jpg）を書くと「元ページを見る」が出ます。\n'
    + '・DKのような多言語の本は、source に lang を書かず item ごとに lang を書きます。\n'
    + '・同じ本の同じ bookTheme を取り込み直すと、その範囲の語だけ差し替わります。メモは消えません。\n'
+   + '・<b>memos</b>: [{target:"sense:比較キー", text:"…"}] で観察メモを足せます（theme:名前 も可）。'
+   + '宛先が無ければエラーになり、同じ宛先・同じ文面のメモは二重に入りません。\n'
    + '\n※ ChatGPTには、この形ではなく素材の形（schema_version 2）で出してもらい、'
    + '「素材をPrism形式にする.py」で変換しています。詳しくは ChatGPTへの依頼文.md。</div>';
 }
