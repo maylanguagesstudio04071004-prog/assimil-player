@@ -102365,16 +102365,16 @@
      "term": "واحد",
      "ja": "1",
      "note": "",
-     "reading": "wāHidin",
+     "reading": "wāHid",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: waahid ／ Atlas辞書の読み wāHidin（文中の形）を休止形にした",
      "themes": [
       "数"
      ],
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Türkçe・Bahasa Indonesia・Русский・हिन्दी・Español・Italiano・Français・Deutsch＝1 ／ Français＝1（女性形）",
-     "readingNote": "紙面の読み（DK）: waahid"
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Türkçe・Bahasa Indonesia・Русский・हिन्दी・Español・Italiano・Français・Deutsch＝1 ／ Français＝1（女性形）"
     },
     {
      "srcId": "ar_numbers_308_003",
@@ -102406,15 +102406,15 @@
      "term": "ثلاثة",
      "ja": "3",
      "note": "",
-     "reading": "thalāthati",
+     "reading": "thalātha",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: thalaatha ／ Atlas辞書の読み thalāthati（文中の形）を休止形にした",
      "themes": [
       "数"
-     ],
-     "readingNote": "紙面の読み（DK）: thalaatha"
+     ]
     },
     {
      "srcId": "ar_numbers_308_005",
@@ -102446,15 +102446,15 @@
      "term": "خمسة",
      "ja": "5",
      "note": "",
-     "reading": "khamsatin",
+     "reading": "khamsa",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: khamsa ／ Atlas辞書の読み khamsatin（文中の形）を休止形にした",
      "themes": [
       "数"
-     ],
-     "readingNote": "紙面の読み（DK）: khamsa"
+     ]
     },
     {
      "srcId": "ar_numbers_308_007",
@@ -102466,15 +102466,15 @@
      "term": "ستة",
      "ja": "6",
      "note": "",
-     "reading": "sittatu",
+     "reading": "sitta",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: sitta ／ Atlas辞書の読み sittatu（文中の形）を休止形にした",
      "themes": [
       "数"
-     ],
-     "readingNote": "紙面の読み（DK）: sitta"
+     ]
     },
     {
      "srcId": "ar_numbers_308_008",
@@ -102546,15 +102546,15 @@
      "term": "عشرة",
      "ja": "10",
      "note": "",
-     "reading": "3asharata",
+     "reading": "3ashara",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: Aashara ／ Atlas辞書の読み 3asharata（文中の形）を休止形にした",
      "themes": [
       "数"
-     ],
-     "readingNote": "紙面の読み（DK）: Aashara"
+     ]
     },
     {
      "srcId": "ar_numbers_308_012",
@@ -102746,15 +102746,15 @@
      "term": "عشرون",
      "ja": "20",
      "note": "",
-     "reading": "3ishrūna",
+     "reading": "3ishrūn",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: Aishroon ／ Atlas辞書の読み 3ishrūna（文中の形）を休止形にした",
      "themes": [
       "数"
-     ],
-     "readingNote": "紙面の読み（DK）: Aishroon"
+     ]
     },
     {
      "srcId": "ar_numbers_308_022",
@@ -102906,15 +102906,15 @@
      "term": "ثمانون",
      "ja": "80",
      "note": "",
-     "reading": "thamānūna",
+     "reading": "thamānūn",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: thamaanoon ／ Atlas辞書の読み thamānūna（文中の形）を休止形にした",
      "themes": [
       "数"
-     ],
-     "readingNote": "紙面の読み（DK）: thamaanoon"
+     ]
     },
     {
      "srcId": "ar_numbers_308_030",
@@ -104479,12 +104479,12 @@
      "term": "مساء",
      "ja": "夕方",
      "note": "",
-     "reading": "masā'an",
+     "reading": "masā'",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
-     "readingNote": "紙面の読み（DK）: masaa'"
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: masaa' ／ Atlas辞書の読み masā'an（文中の形）を休止形にした"
     },
     {
      "srcId": "ar_time_305_009",
@@ -105959,12 +105959,12 @@
      "term": "ابن",
      "ja": "息子",
      "note": "",
-     "reading": "ibnu",
+     "reading": "ibn",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
-     "readingNote": "紙面の読み（DK）: ibn"
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: ibn ／ Atlas辞書の読み ibnu（文中の形）を休止形にした"
     },
     {
      "srcId": "ar_relations_22_23_013",
@@ -107175,13 +107175,13 @@
      "term": "رمادي",
      "ja": "灰色",
      "note": "",
-     "reading": "ramādiyyun",
+     "reading": "ramādī",
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Türkçe・Italiano＝グレー ／ Русский＝灰色の ／ Español＝灰 ／ Français＝グレー（男性） ／ Français＝グレー（女性） ／ Deutsch＝灰色",
-     "readingNote": "紙面の読み（DK）: ramaadee"
+     "readingLevel": "rules",
+     "readingNote": "紙面の読み（DK）: ramaadee ／ Atlas辞書の読み ramādiyyun（文中の形）を休止形にした",
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Türkçe・Italiano＝グレー ／ Русский＝灰色の ／ Español＝灰 ／ Français＝グレー（男性） ／ Français＝グレー（女性） ／ Deutsch＝灰色"
     },
     {
      "srcId": "ar_colors_274_024",
