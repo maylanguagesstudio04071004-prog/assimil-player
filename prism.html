@@ -106,6 +106,14 @@ details.sect > summary.ghead{margin:10px 2px 0; padding:10px 2px; font-size:14px
   color:var(--ink); cursor:pointer}
 details.sect[open] > summary.ghead{color:var(--accent)}
 hr{border:0; border-top:1px solid var(--line); margin:16px 0}
+/* ズレの候補(2026-09-11) */
+.sameterm{font-size:12.5px; color:var(--sub); margin-top:4px}
+.sameterm .tag{font-size:12.5px; padding:3px 8px}
+.chip{display:inline-block; font:inherit; font-size:13px; padding:5px 10px; border-radius:14px;
+  border:1px solid var(--line); background:var(--card); color:var(--ink); margin:0 5px 6px 0; cursor:pointer}
+.chip.on{background:var(--accent); border-color:var(--accent); color:var(--card)}
+.riftrow{display:flex; gap:8px; align-items:baseline; padding:8px 2px; border-top:1px solid var(--line); cursor:pointer}
+.riftrow:first-of-type{border-top:0}
 </style>
 </head>
 <body>
@@ -207,6 +215,11 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
   <div id="btBody"></div>
 </section>
 
+<section id="pageRift">
+  <button class="back" onclick="goBack()">‹ 戻る</button>
+  <div id="riftBody"></div>
+</section>
+
 <section id="pageImage">
   <button class="back" onclick="goBack()">‹ 戻る</button>
   <div id="imgBody"></div>
@@ -223,7 +236,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-11c";
+const BUILD = "2026-09-11d";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -388,7 +401,7 @@ async function bootStorage(){
   const pick = (a,b) => (b && (b.savedAt||0) >= ((a&&a.savedAt)||0)) ? b : a;
   const d = pick(here, there);
   db = normalizeDb(d || emptyDb());
-  labelIndex = null; entryIndex = null;
+  labelIndex = null; entryIndex = null; termIndex = null;
   try{ STORE.bytes = JSON.stringify(db).length; }catch(e){}
   if(STORE.mode !== "IndexedDB")
     warnBar("IndexedDBが使えません。localStorageは約5MBで一杯になります。設定→書き出しでこまめに控えを取ってください。");
@@ -402,7 +415,7 @@ function normalizeDb(d){
 
 /* ---------- 画面切替 ---------- */
 const TABS = ["Themes","Words","Books","Memos","Settings"];
-const SUBS = ["pageSense","pageBookTheme","pageImage"];
+const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift"];
 let curTab = "Themes";
 let backStack = [];
 
@@ -447,6 +460,15 @@ function _openBt(id){
   SUBS.forEach(p => $(p).classList.toggle("on", p==="pageBookTheme"));
   $("tab"+curTab).classList.add("on");
   renderBt(id); window.scrollTo(0,0);
+}
+function openRift(){ riftScroll = 0; subHist.push(()=>_openRift()); _openRift(); }
+function _openRift(){
+  TABS.forEach(t => $("page"+t).classList.remove("on"));
+  SUBS.forEach(p => $(p).classList.toggle("on", p==="pageRift"));
+  $("tab"+curTab).classList.add("on");
+  renderRift();
+  /* 意味を見て戻ってきたとき、元の位置に戻す。goBack() が先頭へ飛ばすので1コマ遅らせる */
+  const y = riftScroll; requestAnimationFrame(()=>window.scrollTo(0, y));
 }
 function openImage(id){ subHist.push(()=>_openImg(id)); _openImg(id); }
 function _openImg(id){
@@ -511,6 +533,83 @@ function entryMap(){
 function entriesOf(senseId, lang){
   const es = entryMap().get(senseId) || [];
   return lang ? es.filter(e => e.lang === lang) : es;
+}
+/* 同じ言語の同じ綴りが、日本語の別々の見出しに出てくるかの索引(2026-09-11)。
+   Multilingual Observations の記事のために「一語で複数の意味」を見つける。
+   **同じ綴り＝同じ語とは限らない**（同音異義もある）。候補として見せるだけで、何も統合しない。
+   構文枠と「〜」「□」を含む枠は語ではないので数えない。
+   索引は entryIndex と同じく、取り込み・undo・全消去・起動で null に戻す。 */
+let termIndex = null;
+function normTerm(t){
+  return String(t||"").normalize("NFC").trim().toLowerCase().replace(/\s+/g," ")
+    .replace(/^[¿¡"“「]+|[?？!！。.,、"”」]+$/g,"").trim();
+}
+function termKey(e){
+  if(e.status !== "present" || e.kind === "pattern" || /[〜~□…]/.test(e.term||"")) return "";
+  const t = normTerm(e.term);
+  return t ? e.lang + "\u0001" + t : "";
+}
+function termMap(){
+  if(termIndex) return termIndex;
+  termIndex = new Map();
+  db.entries.forEach(e=>{
+    const k = termKey(e); if(!k) return;
+    if(!termIndex.has(k)) termIndex.set(k, new Set());
+    termIndex.get(k).add(e.senseId);
+  });
+  return termIndex;
+}
+/* その語と同じ綴りが出てくる、別の見出しの意味。同じ見出しの別項目は「同じ日本語ラベルの語」で出ているので除く */
+function sameTermSenses(e){
+  const k = termKey(e); if(!k) return [];
+  const cur = (sense(e.senseId)||{}).name, seen = new Set([cur]);
+  return [...(termMap().get(k)||[])].map(sense)
+    .filter(o => o && !seen.has(o.name) && seen.add(o.name));
+}
+/* 見出しの言い回しが違うだけに見えるか（「寒い」と「寒い・冷たい」、「3」と「時計の3の読み」）。
+   機械的な判定。一覧で下にまとめるのに使うだけで、消さない。
+   1文字の断片（「日・日間」の「日」）では判定しない。「昼」と「日」がつながってしまうため。 */
+function labelBits(n){ return String(n).split(/[・／\/（）()、,\s？?！!]+/).filter(Boolean); }
+function labelsOverlap(a, b){
+  const x = String(a).replace(/[？?！!]+$/,""), y = String(b).replace(/[？?！!]+$/,"");
+  if(x.includes(y) || y.includes(x)) return true;
+  return labelBits(a).some(t => t.length >= 2 && b.includes(t))
+      || labelBits(b).some(t => t.length >= 2 && a.includes(t));
+}
+/* 一語で複数の意味: {lang, key, senses[], weak}。weak＝見出しが重なるものだけでできている */
+function riftMany(){
+  const out = [];
+  termMap().forEach((set, k)=>{
+    if(set.size < 2) return;
+    const ss = [...set].map(sense).filter(Boolean);
+    const names = [...new Set(ss.map(s => s.name))];
+    if(names.length < 2) return;
+    let cl = [];
+    names.forEach(n=>{
+      const hit = cl.filter(c => c.some(m => labelsOverlap(n, m)));
+      cl = cl.filter(c => !hit.includes(c)).concat([[n].concat(...hit)]);
+    });
+    out.push({lang: k.split("\u0001")[0], key: k, senses: ss, weak: cl.length < 2});
+  });
+  return out;
+}
+/* 1つの意味を分けている: 同じ意味・同じ言語に、綴りの違う語が2つ以上ある */
+function splitLangs(senseId){
+  const by = new Map();
+  entriesOf(senseId).forEach(e=>{
+    if(e.status !== "present" || !e.term) return;
+    const t = normTerm(e.term);
+    if(!by.has(e.lang)) by.set(e.lang, new Map());
+    const m = by.get(e.lang); if(!m.has(t)) m.set(t, e);
+  });
+  const out = [];
+  by.forEach((m, l)=>{ if(m.size >= 2) out.push({lang: l, es: [...m.values()]}); });
+  return out;
+}
+function riftSplit(){
+  const out = [];
+  db.senses.forEach(s=>{ const ls = splitLangs(s.id); if(ls.length) out.push({s, langs: ls}); });
+  return out;
 }
 /* 「N言語」の数え方: 語が実際にあった言語だけを数える。
    未掲載・対応語なしは「調べた結果」であって語ではないので数に入れない。 */
@@ -674,8 +773,17 @@ function entryHtml(e){
     + (e.ja && e.ja !== ((sense(e.senseId)||{}).name)
         ? '<div class="ja">'+esc(e.ja)+'</div>' : '')
     + (e.note ? '<div class="sub">'+esc(e.note)+'</div>': '')
+    + sameTermHtml(e)
     + flagsHtml(e)
     + srcLineHtml(e) + '</div>';
+}
+/* 同じ綴りが別の見出しにも出てくるとき(2026-09-11)。押すとそちらへ移る */
+function sameTermHtml(e){
+  const os = sameTermSenses(e);
+  if(!os.length) return "";
+  return '<div class="sameterm">同じ綴りが別の見出しにも：'
+    + os.map(o => '<span class="tag tap" onclick="openSense(\''+esc(o.id)+'\')">'+esc(o.name)+'</span>').join("")
+    + '</div>';
 }
 
 /* ---------- テーマ ---------- */
@@ -819,7 +927,8 @@ function renderWords(){
   if(!themeFilter && !q){
     $("wordList").innerHTML =
       '<div class="empty">' + db.senses.length + ' の意味があります。<br>'
-      + '上の欄で探すか、「テーマ」タブから開いてください。</div>';
+      + '上の欄で探すか、「テーマ」タブから開いてください。</div>'
+      + riftCardHtml();
     return;
   }
 
@@ -927,7 +1036,10 @@ function renderSense(id){
   h += '<div class="card">';
   langsForSense(id).forEach(l=>{
     const es = entriesOf(id,l);
-    h += '<div class="langblock"><div class="langname">'+esc(l)+'</div>';
+    /* この言語が、この意味を2つ以上の語で言い分けているとき(2026-09-11) */
+    const nSplit = new Set(es.filter(e => e.status==="present" && e.term).map(e => normTerm(e.term))).size;
+    h += '<div class="langblock"><div class="langname">'+esc(l)
+      + (nSplit >= 2 ? ' <span class="tag plain">'+nSplit+'通りに言い分け</span>' : '') + '</div>';
     if(es.length){ h += es.map(entryHtml).join(""); }
     else {
       const na = themeNoteFor(id, l);
@@ -941,6 +1053,95 @@ function renderSense(id){
   h += '</div>';
   h += memoBox("sense", id);
   $("senseBody").innerHTML = h;
+}
+
+/* ---------- ズレの候補(2026-09-11) ----------
+   Multilingual Observations の記事のため、言語の分け方の違いをデータから拾う。
+   どちらも機械的に拾った「候補」。ズレかどうかはMayが見て決める。何も統合・削除しない。 */
+let riftMode = "many", riftLang = "", riftScroll = 0;
+function riftCardHtml(){
+  if(!db.entries.length) return "";
+  const nm = riftMany().filter(x => !x.weak).length, ns = riftSplit().length;
+  return '<div class="card tap" onclick="openRift()"><b>ズレの候補</b>'
+    + '<div class="sub">一語で複数の意味 '+nm+' ／ 1つの意味を言い分けている '+ns+'</div></div>';
+}
+function riftSet(mode, lang){ riftMode = mode; riftLang = lang; riftScroll = 0; renderRift(); window.scrollTo(0,0); }
+function riftGo(id){ riftScroll = window.scrollY; openSense(id); }
+function riftManyCard(x){
+  const first = x.senses.map(s => entriesOf(s.id, x.lang).find(e => termKey(e) === x.key)).find(Boolean);
+  const seen = new Set(), rows = [];
+  x.senses.forEach(s=>{
+    if(seen.has(s.name)) return; seen.add(s.name);
+    const e = entriesOf(s.id, x.lang).find(v => termKey(v) === x.key);
+    const tn = (s.themeIds||[]).map(i => (theme(i)||{}).name).filter(Boolean).join("・");
+    rows.push('<div class="riftrow" onclick="riftGo(\''+esc(s.id)+'\')">'
+      + '<div class="grow"><b>'+esc(s.name)+'</b>'
+      + (e && e.ja && e.ja !== s.name ? ' <span class="sub">'+esc(e.ja)+'</span>' : '')
+      + (tn ? '<div class="sub">'+esc(tn)+'</div>' : '') + '</div><span class="sub">›</span></div>');
+  });
+  return '<div class="card"><div class="row"><span class="term grow">'+esc(first ? first.term : "")+'</span>'
+    + '<span class="sub">'+esc(x.lang)+'</span></div>'
+    + (first ? readingHtml(first) : '') + rows.join("") + '</div>';
+}
+function riftSplitCard(x){
+  const ls = riftLang ? x.langs.filter(v => v.lang === riftLang) : x.langs;
+  return '<div class="card"><div class="row tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
+    + '<b class="grow">'+esc(x.s.name)+'</b><span class="sub">'+x.langs.length+'言語が言い分け ›</span></div>'
+    + ls.map(v => '<div class="langblock"><div class="langname">'+esc(v.lang)+'</div>'
+        + v.es.map(e => '<div><span style="font-size:16px">'+esc(e.term)+'</span>'
+            + (e.ja && e.ja !== x.s.name ? ' <span class="sub">'+esc(e.ja)+'</span>' : '') + '</div>').join("")
+        + '</div>').join("")
+    + '</div>';
+}
+function renderRift(){
+  const many = riftMany(), split = riftSplit();
+  const cand = many.filter(x => !x.weak), weak = many.filter(x => x.weak);
+  const order = l => { const i = db.langs.indexOf(l); return i < 0 ? 999 : i; };
+  let h = '<h2 style="margin:0 0 6px">ズレの候補</h2>'
+    + '<div class="sub" style="margin-bottom:10px">データから機械的に拾ったもの。'
+    + '<b>ズレかどうかは見て判断する。</b>何も統合・削除していない。</div>'
+    + '<div class="row" style="margin-bottom:10px">'
+    + '<button class="btn'+(riftMode==="many"?" pri":"")+'" onclick="riftSet(\'many\',\'\')">一語で複数の意味 '+cand.length+'</button>'
+    + '<button class="btn'+(riftMode==="split"?" pri":"")+'" onclick="riftSet(\'split\',\'\')">1つの意味を言い分け '+split.length+'</button>'
+    + '</div>';
+  const counts = new Map();
+  if(riftMode === "many") cand.forEach(x => counts.set(x.lang, (counts.get(x.lang)||0) + 1));
+  else split.forEach(x => x.langs.forEach(v => counts.set(v.lang, (counts.get(v.lang)||0) + 1)));
+  h += '<div style="margin-bottom:6px">'
+    + '<button class="chip'+(riftLang?"":" on")+'" onclick="riftSet(riftMode,\'\')">すべて</button>'
+    + [...counts.keys()].sort((a,b)=>order(a)-order(b)).map(l =>
+        '<button class="chip'+(riftLang===l?" on":"")+'" onclick="riftSet(riftMode,\''+esc(l)+'\')">'
+        + esc(l)+' '+counts.get(l)+'</button>').join("")
+    + '</div>';
+
+  if(riftMode === "many"){
+    h += '<div class="sub" style="margin-bottom:10px">同じ言語の同じ綴りが、日本語の別々の見出しに出てくるもの。'
+      + '1つの語が日本語の2つの意味にまたがっている候補。<b>同じ綴りの別の語（同音異義）</b>や、'
+      + '本による見出しの付け方の違い（「はじまる」と「始まる」）も混ざる。</div>';
+    const byLang = (a,b) => order(a.lang) - order(b.lang) || a.key.localeCompare(b.key);
+    const pick = arr => arr.filter(x => !riftLang || x.lang === riftLang).sort(byLang);
+    const c = pick(cand), w = pick(weak);
+    let last = "";
+    c.forEach(x=>{
+      if(!riftLang && x.lang !== last){ h += '<div class="ghead">'+esc(x.lang)+'</div>'; last = x.lang; }
+      h += riftManyCard(x);
+    });
+    if(!c.length) h += '<div class="empty">該当なし。</div>';
+    if(w.length)
+      h += '<details style="margin-top:12px"><summary>見出しの言い回しが違うだけに見えるもの <span class="sub">'+w.length+'</span></summary>'
+        + '<div class="sub" style="margin:6px 0 8px">「寒い」と「寒い・冷たい」、「3」と「時計の3の読み」のように、'
+        + '片方の見出しがもう片方を含むもの。機械的な判定なので、ここにも面白いものが紛れうる。</div>'
+        + w.map(riftManyCard).join("") + '</details>';
+  } else {
+    h += '<div class="sub" style="margin-bottom:10px">1つの意味に、同じ言語で綴りの違う語が2つ以上載っているもの。'
+      + '数・性別・丁寧さなどで言い分けている候補。<b>本が別の言い方を並べただけ</b>のものも混ざる。'
+      + '構文枠（「〜」を含む形）も入れている。ロシア語の「3・4」と「5以上」の分け方などがそこに出るため。</div>';
+    const list = split.filter(x => !riftLang || x.langs.some(v => v.lang === riftLang))
+      .sort((a,b) => b.langs.length - a.langs.length
+        || (a.s.order==null?1e9:a.s.order) - (b.s.order==null?1e9:b.s.order));
+    h += list.length ? list.map(riftSplitCard).join("") : '<div class="empty">該当なし。</div>';
+  }
+  $("riftBody").innerHTML = h;
 }
 
 /* ---------- 本 ---------- */
@@ -1138,7 +1339,7 @@ async function doUndo(){
     if(typeof t !== "string"){ m.className="msg err"; m.textContent="戻せる取り込みがありません。"; return; }
     if(!confirm("直前の取り込みを取り消します。よろしいですか。")) return;
     db = normalizeDb(JSON.parse(t));
-    labelIndex = null; entryIndex = null;
+    labelIndex = null; entryIndex = null; termIndex = null;
     await idbDel(ST_DB,"undo");
     save(); showTab("Settings");
     m.className="msg ok"; m.textContent="直前の取り込みを取り消しました。";
@@ -1161,7 +1362,7 @@ async function doImport(){
 }
 
 function importData(text){
-  labelIndex = null; entryIndex = null;   // 意味も語も増減するので索引を作り直させる
+  labelIndex = null; entryIndex = null; termIndex = null;   // 意味も語も増減するので索引を作り直させる
   const raw = JSON.parse(text);
   const blocks = Array.isArray(raw) ? raw : (Array.isArray(raw.imports) ? raw.imports : [raw]);
   const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, memoSame:0, themeNote:0};
@@ -1331,7 +1532,7 @@ function importData(text){
     c.memo++;
   });
 
-  labelIndex = null; entryIndex = null;   // 取り込みで中身が変わったので捨てる
+  labelIndex = null; entryIndex = null; termIndex = null;   // 取り込みで中身が変わったので捨てる
   const summary =
     "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
     + "新規: 本 " + c.src + " / 本のテーマ " + c.bt + " / 共通テーマ " + c.theme
@@ -1490,7 +1691,7 @@ async function delImage(id){
 function wipeAll(){
   if(!confirm("すべてのデータを消します。書き出しは済んでいますか。")) return;
   if(!confirm("本当に消しますか。元に戻せません。")) return;
-  db = emptyDb(); labelIndex = null; entryIndex = null; save(); showTab("Settings");
+  db = emptyDb(); labelIndex = null; entryIndex = null; termIndex = null; save(); showTab("Settings");
 }
 
 function renderFmtHelp(){
