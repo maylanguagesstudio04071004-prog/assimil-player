@@ -236,7 +236,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-12c";
+const BUILD = "2026-09-12d";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -593,17 +593,25 @@ function riftMany(){
   });
   return out;
 }
-/* 1つの意味を分けている: 同じ意味・同じ言語に、綴りの違う語が2つ以上ある */
+/* 1つの意味を分けている: 同じ意味・同じ言語・**同じ本**に、綴りの違う語が2つ以上ある。
+   本をまたぐ違いは数えない(2026-09-12)。仏独西伊は指さし会話帳とDK5言語辞典の2冊に載っていて、
+   「il mese ／ 〜 mesi」のような**本の載せ方の違い**が108件ある。言語が言い分けているのとは別のこと。
+   戻すなら、本ごとに分けずに lang だけで数える。 */
 function splitLangs(senseId){
   const by = new Map();
   entriesOf(senseId).forEach(e=>{
     if(e.status !== "present" || !e.term) return;
+    const k = e.lang + "\u0001" + (e.sourceId || "");
     const t = normTerm(e.term);
-    if(!by.has(e.lang)) by.set(e.lang, new Map());
-    const m = by.get(e.lang); if(!m.has(t)) m.set(t, e);
+    if(!by.has(k)) by.set(k, new Map());
+    const m = by.get(k); if(!m.has(t)) m.set(t, e);
   });
   const out = [];
-  by.forEach((m, l)=>{ if(m.size >= 2) out.push({lang: l, es: [...m.values()]}); });
+  by.forEach((m, k)=>{
+    if(m.size < 2) return;
+    const p = k.split("\u0001");
+    out.push({lang: p[0], srcId: p[1], es: [...m.values()]});
+  });
   return out;
 }
 function riftSplit(){
@@ -1036,8 +1044,13 @@ function renderSense(id){
   h += '<div class="card">';
   langsForSense(id).forEach(l=>{
     const es = entriesOf(id,l);
-    /* この言語が、この意味を2つ以上の語で言い分けているとき(2026-09-11) */
-    const nSplit = new Set(es.filter(e => e.status==="present" && e.term).map(e => normTerm(e.term))).size;
+    /* この言語が、この意味を2つ以上の語で言い分けているとき(2026-09-11)。
+       同じ本の中で数える(2026-09-12。本をまたぐ違いは「本の載せ方の違い」なので別のこと) */
+    const byBook = new Map();
+    es.forEach(e=>{ if(e.status !== "present" || !e.term) return;
+      if(!byBook.has(e.sourceId)) byBook.set(e.sourceId, new Set());
+      byBook.get(e.sourceId).add(normTerm(e.term)); });
+    const nSplit = byBook.size ? Math.max(...[...byBook.values()].map(x => x.size)) : 0;
     h += '<div class="langblock"><div class="langname">'+esc(l)
       + (nSplit >= 2 ? ' <span class="tag plain">'+nSplit+'通りに言い分け</span>' : '') + '</div>';
     if(es.length){ h += es.map(entryHtml).join(""); }
@@ -1087,7 +1100,8 @@ function riftSplitCard(x){
   const ls = riftLang ? x.langs.filter(v => v.lang === riftLang) : x.langs;
   return '<div class="card"><div class="row tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
     + '<b class="grow">'+esc(x.s.name)+'</b><span class="sub">'+x.langs.length+'言語が言い分け ›</span></div>'
-    + ls.map(v => '<div class="langblock"><div class="langname">'+esc(v.lang)+'</div>'
+    + ls.map(v => '<div class="langblock"><div class="langname">'+esc(v.lang)
+        + '<span class="sub"> ／ '+esc((source(v.srcId)||{}).title||"")+'</span></div>'
         + v.es.map(e => '<div><span style="font-size:16px">'+esc(e.term)+'</span>'
             + (e.ja && e.ja !== x.s.name ? ' <span class="sub">'+esc(e.ja)+'</span>' : '') + '</div>').join("")
         + '</div>').join("")
@@ -1134,7 +1148,8 @@ function renderRift(){
         + w.map(riftManyCard).join("") + '</details>';
   } else {
     h += '<div class="sub" style="margin-bottom:10px">1つの意味に、同じ言語で綴りの違う語が2つ以上載っているもの。'
-      + '数・性別・丁寧さなどで言い分けている候補。<b>本が別の言い方を並べただけ</b>のものも混ざる。'
+      + '数・性別・丁寧さなどで言い分けている候補。<b>同じ本の中で</b>数えている（本をまたぐ違いは入れない）。'
+      + '<b>本が別の言い方を並べただけ</b>のものも混ざる。'
       + '構文枠（「〜」を含む形）も入れている。ロシア語の「3・4」と「5以上」の分け方などがそこに出るため。</div>';
     const list = split.filter(x => !riftLang || x.langs.some(v => v.lang === riftLang))
       .sort((a,b) => b.langs.length - a.langs.length
