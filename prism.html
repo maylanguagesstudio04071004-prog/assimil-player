@@ -61,7 +61,7 @@ button.btn{font:inherit; font-size:14px; padding:7px 12px; border-radius:8px; cu
   border:1px solid var(--line); background:var(--card); color:var(--ink)}
 button.btn.pri{background:var(--accent); color:var(--card); border-color:var(--accent)}
 button.btn.warn{color:var(--danger); border-color:var(--danger)}
-input[type=text],input[type=search],textarea,select{
+input[type=text],input[type=search],input[type=date],textarea,select{
   font:inherit; font-size:16px; width:100%; padding:8px 10px; border:1px solid var(--line);
   border-radius:8px; background:var(--card); color:var(--ink)}
 textarea{min-height:90px; line-height:1.5}
@@ -106,6 +106,19 @@ details.sect > summary.ghead{margin:10px 2px 0; padding:10px 2px; font-size:14px
   color:var(--ink); cursor:pointer}
 details.sect[open] > summary.ghead{color:var(--accent)}
 hr{border:0; border-top:1px solid var(--line); margin:16px 0}
+/* コレクション(2026-09-12)。既存のカード・余白・文字サイズをそのまま使う */
+.colitem{display:flex; gap:8px; align-items:center; padding:9px 2px; border-top:1px solid var(--line)}
+.colitem:first-of-type{border-top:0}
+.iconbtn{border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit;
+  font-size:15px; line-height:1.1; border-radius:8px; padding:6px 10px; cursor:pointer}
+.iconbtn[disabled]{opacity:.35; cursor:default}
+.iconbtn.warn{color:var(--danger); border-color:var(--danger)}
+.colgrid{display:block}
+/* 広い画面（iPad・折りたたみ）ではカードを並べる。狭い画面は今までどおり1列 */
+@media(min-width:700px){
+  .colgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:9px}
+  .colgrid > .card{margin-bottom:0}
+}
 /* ズレの候補(2026-09-11) */
 .sameterm{font-size:12.5px; color:var(--sub); margin-top:4px}
 .sameterm .tag{font-size:12.5px; padding:3px 8px}
@@ -148,6 +161,8 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
 </section>
 
 <section id="pageMemos">
+  <div class="row" id="memoSeg" style="margin-bottom:10px"></div>
+  <div id="colList"></div>
   <div id="memoList"></div>
 </section>
 
@@ -220,6 +235,11 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
   <div id="riftBody"></div>
 </section>
 
+<section id="pageCollection">
+  <button class="back" onclick="goBack()">‹ 戻る</button>
+  <div id="colBody"></div>
+</section>
+
 <section id="pageImage">
   <button class="back" onclick="goBack()">‹ 戻る</button>
   <div id="imgBody"></div>
@@ -236,7 +256,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-12e";
+const BUILD = "2026-09-12f";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -286,6 +306,7 @@ db = {
   entries:    [{id,senseId,lang,term,reading,readingSrc,readingStatus,ja,note,
                 sourceId,bookThemeId,page,status,kind,flags[],reviewNote,numeric,srcId}],
   memos:      [{id,tType,tId,text,at}],
+  collections:[{id,title,date,note,items:[senseId],at,updated}],  // 比較項目を束ねるだけ。語は複製しない
   images:     [{id,sourceId,bookThemeId,page,name,at,url}]  // url があれば配信ファイルを見る
 }
 solo: 共通の比較キーが付いていない項目（その資料だけの語）。比較軸と混ぜない。
@@ -303,7 +324,7 @@ status: "present" | "absent_in_source" | "no_expression"
 ------------------------------------- */
 function emptyDb(){
   return {savedAt:0, langs:[], sources:[], themes:[], bookThemes:[],
-          senses:[], entries:[], memos:[], images:[]};
+          senses:[], entries:[], memos:[], images:[], collections:[]};
 }
 let db = emptyDb();
 
@@ -415,7 +436,7 @@ function normalizeDb(d){
 
 /* ---------- 画面切替 ---------- */
 const TABS = ["Themes","Words","Books","Memos","Settings"];
-const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift"];
+const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift","pageCollection"];
 let curTab = "Themes";
 let backStack = [];
 
@@ -460,6 +481,13 @@ function _openBt(id){
   SUBS.forEach(p => $(p).classList.toggle("on", p==="pageBookTheme"));
   $("tab"+curTab).classList.add("on");
   renderBt(id); window.scrollTo(0,0);
+}
+function openCollection(id){ subHist.push(()=>_openCol(id)); _openCol(id); }
+function _openCol(id){
+  TABS.forEach(t => $("page"+t).classList.remove("on"));
+  SUBS.forEach(p => $(p).classList.toggle("on", p==="pageCollection"));
+  $("tab"+curTab).classList.add("on");
+  renderCol(id); window.scrollTo(0,0);
 }
 function openRift(){ riftScroll = 0; subHist.push(()=>_openRift()); _openRift(); }
 function _openRift(){
@@ -1001,6 +1029,7 @@ function renderSense(id){
   let h = '<div class="row" style="margin-bottom:4px"><h2 class="grow" style="margin:0">'+esc(s.name)+'</h2></div>';
   h += '<div style="margin-bottom:8px">' + themeTags(s.themeIds,true)
      + tnames.map(atlasLinkFor).join("") + '</div>';
+  h += colBoxHtml(id);   /* コレクションに入れる(2026-09-12)。閲覧の邪魔にならないよう畳んである */
   if(s.note) h += '<div class="sub" style="margin-bottom:8px">'+esc(s.note)+'</div>';
   /* 対になる語（近い⇄遠い など）。素材が対のキーを持っていて、
      こちらにもその意味があるときだけ出す。すべての用法で反対語という意味ではない。 */
@@ -1254,6 +1283,218 @@ async function renderImage(id){
 }
 
 /* ---------- 観察メモ ---------- */
+/* ---------- コレクション（2026-09-12にMayの依頼） ----------
+   その日の出来事に合わせて、テーマをまたいで比較項目を集める「プレイリスト」。
+   **語を複製しない。** 集めるのは意味(sense)のidだけで、各言語の語は今までどおり比較画面で見る。
+   同じ意味を複数のコレクションに入れてよい。コレクションを消しても語・意味・テーマ・メモは消えない。
+   タブは増やさず、「メモ」タブの中で切り替える（iPhoneの幅で6つ目のタブが入らないため）。 */
+let memoTab = "col";            // "col" = コレクション / "memo" = 気づきメモ
+let colFormOpen = false;        // 一覧で「コレクションを作る」を押したか
+let colEditId = "";             // 詳細で編集中のコレクション
+let colPickFor = "";            // 比較画面で「入れる先を選ぶ」を開いている意味
+
+const collection = id => byId(db.collections, id);
+function colOf(senseId){ return db.collections.filter(c => (c.items||[]).includes(senseId)); }
+function fmtDate(v){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||""));
+  return m ? (m[1]+"年"+Number(m[2])+"月"+Number(m[3])+"日") : String(v||"");
+}
+function today(){ const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+function colCreate(title, date, note){
+  title = String(title||"").trim();
+  if(!title) return null;
+  const c = {id:"c:"+uid(), title, date: String(date||"") || today(), note:String(note||"").trim(),
+             items:[], at:Date.now(), updated:Date.now()};
+  db.collections.unshift(c); save();
+  return c;
+}
+function colAdd(colId, senseId){
+  const c = collection(colId); if(!c || !sense(senseId)) return false;
+  if(!Array.isArray(c.items)) c.items = [];
+  if(c.items.includes(senseId)) return false;   // 同じ意味は二重に入れない
+  c.items.push(senseId); c.updated = Date.now(); save();
+  return true;
+}
+function colRemove(colId, senseId){
+  const c = collection(colId); if(!c) return;
+  c.items = (c.items||[]).filter(x => x !== senseId); c.updated = Date.now(); save();
+}
+/* 比較画面から。入っていれば外す、入っていなければ入れる */
+function colToggleFromSense(colId, senseId){
+  const c = collection(colId); if(!c) return;
+  if((c.items||[]).includes(senseId)) colRemove(colId, senseId); else colAdd(colId, senseId);
+  renderSense(senseId);
+}
+function colNewFromSense(senseId){
+  const v = ($("colNewTitle")||{}).value || "";
+  if(!String(v).trim()){ return; }
+  const c = colCreate(v, today(), "");
+  if(c) colAdd(c.id, senseId);
+  renderSense(senseId);
+}
+function colMove(colId, i, d){
+  const c = collection(colId); if(!c) return;
+  const a = c.items||[]; const j = i + d;
+  if(j < 0 || j >= a.length) return;
+  const t = a[i]; a[i] = a[j]; a[j] = t; c.updated = Date.now(); save(); renderCol(colId);
+}
+function colRemoveAt(colId, i){
+  const c = collection(colId); if(!c) return;
+  (c.items||[]).splice(i,1); c.updated = Date.now(); save(); renderCol(colId);
+}
+function colSaveMeta(colId){
+  const c = collection(colId); if(!c) return;
+  const t = ($("colTitle").value||"").trim();
+  if(!t){ alert("タイトルを入れてください。"); return; }
+  c.title = t; c.date = $("colDate").value || c.date; c.note = ($("colNote").value||"").trim();
+  c.updated = Date.now(); save(); colEditId = ""; renderCol(colId);
+}
+function colDelete(colId){
+  const c = collection(colId); if(!c) return;
+  if(!confirm("コレクション「"+c.title+"」を消します。集めた語・意味・テーマ・メモは消えません。よろしいですか。")) return;
+  db.collections = db.collections.filter(x => x.id !== colId); save();
+  goBack();
+}
+
+/* 一覧（メモタブの中） */
+function colSort(a,b){
+  const d = String(b.date||"").localeCompare(String(a.date||""));
+  return d || (b.at||0) - (a.at||0);
+}
+function colCardHtml(c){
+  const n = (c.items||[]).length;
+  return '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
+    + '<div class="row"><b class="grow">'+esc(c.title)+'</b><span class="sub">'+n+'項目</span></div>'
+    + '<div class="sub">'+esc(fmtDate(c.date))+'</div>'
+    + (c.note ? '<div class="sub" style="margin-top:3px; white-space:pre-wrap">'+esc(c.note)+'</div>' : '')
+    + '</div>';
+}
+function colFormHtml(){
+  return '<div class="card">'
+    + '<div class="sub" style="margin-bottom:6px">タイトル</div>'
+    + '<input type="text" id="colFTitle" placeholder="例：娘の運動会">'
+    + '<div class="sub" style="margin:8px 0 6px">日付</div>'
+    + '<input type="date" id="colFDate" value="'+esc(today())+'">'
+    + '<div class="sub" style="margin:8px 0 6px">メモ（その日の出来事）</div>'
+    + '<textarea id="colFNote" placeholder="例：一人なら踊れるけれど、みんなと一緒だと恥ずかしいと言っていた日"></textarea>'
+    + '<div class="row" style="margin-top:8px">'
+    + '<button class="btn pri" onclick="colFormSubmit()">作る</button>'
+    + '<button class="btn" onclick="colFormOpen=false;renderCols()">やめる</button></div></div>';
+}
+function colFormSubmit(){
+  const c = colCreate($("colFTitle").value, $("colFDate").value, $("colFNote").value);
+  if(!c){ alert("タイトルを入れてください。"); return; }
+  colFormOpen = false; renderCols(); openCollection(c.id);
+}
+function renderCols(){
+  const el = $("colList");
+  let h = "";
+  if(!db.collections.length && !colFormOpen){
+    h = '<div class="empty">今日気になったことばを集めてみましょう。<br>'
+      + 'テーマをまたいで比較項目を束ねられます。語は複製されません。</div>'
+      + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">コレクションを作る</button>';
+    el.innerHTML = h; return;
+  }
+  h += '<div class="row" style="margin-bottom:9px">'
+    + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">コレクションを作る</button></div>';
+  if(colFormOpen) h += colFormHtml();
+  h += '<div class="colgrid">'
+    + db.collections.slice().sort(colSort).map(colCardHtml).join("") + '</div>';
+  el.innerHTML = h;
+  if(colFormOpen && $("colFTitle")) $("colFTitle").focus();
+}
+
+/* 詳細 */
+function colItemHtml(c, senseId, i, n){
+  const s = sense(senseId);
+  const btns = '<button class="iconbtn" onclick="event.stopPropagation();colMove(\''+esc(c.id)+'\','+i+',-1)"'
+      + (i===0?' disabled':'')+' title="上へ">↑</button>'
+    + '<button class="iconbtn" onclick="event.stopPropagation();colMove(\''+esc(c.id)+'\','+i+',1)"'
+      + (i===n-1?' disabled':'')+' title="下へ">↓</button>'
+    + '<button class="iconbtn warn" onclick="event.stopPropagation();colRemoveAt(\''+esc(c.id)+'\','+i+')" title="外す">✕</button>';
+  if(!s){
+    /* 取り込み直しで比較キーが変わると、指していた意味が無くなることがある。黙って消さずに出す */
+    return '<div class="colitem"><div class="grow"><b>（見つかりません）</b>'
+      + '<div class="sub">'+esc(senseId)+'</div></div>'+btns+'</div>';
+  }
+  const ls = langsOf(s.id);
+  const preview = ls.slice(0,4).map(l=>{
+    const e = entriesOf(s.id,l).filter(x=>x.status==="present")[0];
+    return e ? esc(e.term) : "";
+  }).filter(Boolean).join(" ・ ") + (ls.length>4 ? " …" : "");
+  return '<div class="colitem tap" onclick="openSense(\''+esc(s.id)+'\')">'
+    + '<div class="grow"><b>'+esc(s.name)+'</b> <span class="sub">'+ls.length+'言語</span>'
+    + (preview ? '<div class="sub" style="font-size:13.5px">'+preview+'</div>' : '') + '</div>'
+    + btns + '</div>';
+}
+function renderCol(id){
+  const c = collection(id);
+  if(!c){ $("colBody").innerHTML = '<div class="empty">見つかりません。</div>'; return; }
+  const items = c.items || [];
+  let h = "";
+  if(colEditId === id){
+    h += '<div class="card">'
+      + '<div class="sub" style="margin-bottom:6px">タイトル</div>'
+      + '<input type="text" id="colTitle" value="'+esc(c.title)+'">'
+      + '<div class="sub" style="margin:8px 0 6px">日付</div>'
+      + '<input type="date" id="colDate" value="'+esc(c.date||"")+'">'
+      + '<div class="sub" style="margin:8px 0 6px">メモ</div>'
+      + '<textarea id="colNote">'+esc(c.note||"")+'</textarea>'
+      + '<div class="row" style="margin-top:8px">'
+      + '<button class="btn pri" onclick="colSaveMeta(\''+esc(id)+'\')">保存</button>'
+      + '<button class="btn" onclick="colEditId=\'\';renderCol(\''+esc(id)+'\')">やめる</button></div></div>';
+  }else{
+    h += '<div class="row" style="margin-bottom:4px"><h2 class="grow" style="margin:0">'+esc(c.title)+'</h2>'
+      + '<button class="btn" onclick="colEditId=\''+esc(id)+'\';renderCol(\''+esc(id)+'\')">編集</button></div>'
+      + '<div class="sub">'+esc(fmtDate(c.date))+' ／ '+items.length+'項目</div>'
+      + (c.note ? '<div class="sub" style="margin:6px 0 0; white-space:pre-wrap">'+esc(c.note)+'</div>' : '');
+  }
+  h += '<h2 style="margin:14px 0 6px">集めた比較項目</h2>';
+  h += items.length
+    ? '<div class="card">' + items.map((x,i)=>colItemHtml(c,x,i,items.length)).join("") + '</div>'
+    : '<div class="empty">まだ何も入っていません。<br>'
+      + '語の比較画面を開いて「コレクションに入れる」から足せます。</div>';
+  h += '<div class="row" style="margin-top:14px">'
+    + '<button class="btn warn" onclick="colDelete(\''+esc(id)+'\')">このコレクションを消す</button></div>'
+    + '<div class="sub" style="margin-top:6px">消しても、集めた語・意味・テーマ・メモは残ります。</div>';
+  $("colBody").innerHTML = h;
+}
+
+/* 比較画面に出す「コレクションに入れる」 */
+function colBoxHtml(senseId){
+  const inn = colOf(senseId);
+  let h = '<div style="margin-bottom:8px">';
+  if(inn.length){
+    h += '<div class="sub" style="margin-bottom:4px">入っているコレクション</div>'
+      + inn.map(c => '<span class="tag tap" onclick="openCollection(\''+esc(c.id)+'\')">'
+          + esc(c.title)+'</span>').join("");
+  }
+  const open = colPickFor === senseId;
+  h += '<details class="sect"'+(open?' open':'')
+    + ' ontoggle="colPickFor = this.open ? \''+esc(senseId)+'\' : \'\'">'
+    + '<summary class="ghead" style="font-size:13px; padding:7px 2px">＋ コレクションに入れる</summary>';
+  h += '<div class="card" style="margin-top:6px">';
+  if(db.collections.length){
+    h += db.collections.slice().sort(colSort).map(c=>{
+      const has = (c.items||[]).includes(senseId);
+      return '<div class="colitem"><div class="grow"><b>'+esc(c.title)+'</b>'
+        + '<div class="sub">'+esc(fmtDate(c.date))+' ／ '+((c.items||[]).length)+'項目</div></div>'
+        + '<button class="btn'+(has?"":" pri")+'" onclick="colToggleFromSense(\''+esc(c.id)+'\',\''
+          + esc(senseId)+'\')">'+(has?"外す":"入れる")+'</button></div>';
+    }).join("");
+    h += '<div class="colitem"><div class="grow"><input type="text" id="colNewTitle" placeholder="新しいコレクション名"></div>'
+      + '<button class="btn" onclick="colNewFromSense(\''+esc(senseId)+'\')">作って入れる</button></div>';
+  }else{
+    h += '<div class="sub" style="margin-bottom:6px">まだコレクションがありません。</div>'
+      + '<div class="row"><input type="text" id="colNewTitle" class="grow" placeholder="例：娘の運動会">'
+      + '<button class="btn pri" onclick="colNewFromSense(\''+esc(senseId)+'\')">作って入れる</button></div>';
+  }
+  h += '</div></details></div>';
+  return h;
+}
+
 function memosFor(tType,tId){ return db.memos.filter(m=>m.tType===tType && m.tId===tId); }
 function memoBox(tType,tId){
   const ms = memosFor(tType,tId);
@@ -1281,7 +1522,7 @@ function delMemo(id){
   db.memos = db.memos.filter(x=>x.id!==id); save();
   if(m.tType==="sense") renderSense(m.tId);
   else if(m.tType==="bookTheme") renderBt(m.tId);
-  else renderMemos();
+  else { memoTab = "memo"; renderMemos(); }
 }
 function memoTargetLabel(m){
   if(m.tType==="sense"){ const s=sense(m.tId); return s?("語："+s.name):"（消えた語）"; }
@@ -1290,7 +1531,19 @@ function memoTargetLabel(m){
   if(m.tType==="theme"){ const t=theme(m.tId); return t?("テーマ："+t.name):"（消えたテーマ）"; }
   return m.tType;
 }
+/* メモタブは2つの中身を切り替える(2026-09-12)。タブは増やさない。
+   戻すなら、切り替えを消して renderMemoList() だけを呼ぶ。 */
 function renderMemos(){
+  $("memoSeg").innerHTML =
+    '<button class="btn'+(memoTab==="col"?" pri":"")+'" onclick="memoTab=\'col\';renderMemos()">'
+    + 'コレクション '+db.collections.length+'</button>'
+    + '<button class="btn'+(memoTab==="memo"?" pri":"")+'" onclick="memoTab=\'memo\';renderMemos()">'
+    + '気づきメモ '+db.memos.length+'</button>';
+  $("colList").style.display  = memoTab==="col"  ? "" : "none";
+  $("memoList").style.display = memoTab==="memo" ? "" : "none";
+  if(memoTab==="col") renderCols(); else renderMemoList();
+}
+function renderMemoList(){
   const el = $("memoList");
   if(!db.memos.length){
     el.innerHTML = '<div class="empty">まだメモがありません。語や本のテーマの画面から書けます。</div>';
