@@ -129,6 +129,15 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
 .riftrow{display:flex; gap:8px; align-items:baseline; padding:8px 2px; border-top:1px solid var(--line); cursor:pointer}
 .riftrow:first-of-type{border-top:0}
 /* 言語 × 言い分けの軸 の表(2026-09-12j)。横に長いので、表だけ横スクロールさせる */
+/* 音が似ている一覧(2026-09-12)。1行に流して、語の下に言語名を小さく置く */
+.sndrow{display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px 10px;
+  border-top:1px solid var(--line); padding:8px 0 6px}
+.sndrow.off{opacity:.75}
+.sndhead{flex:0 0 100%; font-size:11.5px; color:var(--sub); letter-spacing:.02em}
+.sndchip{display:inline-block; line-height:1.25; padding:2px 0}
+.sndchip b{font-weight:600; font-size:16px}
+.sndrom{color:var(--sub); font-size:12.5px}
+.sndchip .sndlang{display:block; font-size:10.5px; color:var(--sub)}
 .axwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:10px}
 table.ax{border-collapse:collapse; font-size:13px; white-space:nowrap}
 table.ax th,table.ax td{border:1px solid var(--line); padding:6px 8px; text-align:center}
@@ -268,7 +277,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-12k";
+const BUILD = "2026-09-12l";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1298,21 +1307,26 @@ function soundViewHtml(){
     + '<b>音のつづきが近い</b>ものをまとめたもの。借用語や同じ語源の広がりが見える。'
     + '<b>語源を確かめたわけではない。</b>近いかどうかの判定だけで、'
     + '同じ形になっていない言語も並べて出している。</div>';
-  const line = (x, langs, cls) => langs.map(l =>
-      '<div class="riftrow" style="cursor:default"><div class="grow"><span class="sub">'+esc(l)+'</span> '
-      + esc(x.forms.get(l).e.term)
-      + (x.forms.get(l).e.reading ? ' <span class="sub">'+esc(x.forms.get(l).e.reading)+'</span>' : '')
-      + '</div></div>').join("");
+  /* 1言語1行にすると1枚が14行になって読めなかった(2026-09-12にMayの指摘)。
+     1行に流し込み、語の下に小さく言語名を置く。戻すなら langblock の縦並びに戻す。 */
+  const chip = (x, l) => {
+    const e = x.forms.get(l).e;
+    const form = SOUND_LATIN.includes(l) ? "" : (e.reading || "");
+    return '<span class="sndchip"><b>'+esc(e.term)+'</b>'
+      + (form ? ' <span class="sndrom">'+esc(form)+'</span>' : '')
+      + '<span class="sndlang">'+esc(l)+'</span></span>';
+  };
   h += list.map(x=>{
     const inGroup = new Set(x.groups.flat());
     const rest = [...x.forms.keys()].filter(l => !inGroup.has(l));
     return '<div class="card"><div class="row tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
       + '<b class="grow">'+esc(x.s.name)+'</b>'
-      + '<span class="sub">'+x.groups[0].length+'言語が近い ›</span></div>'
-      + x.groups.map((g,i) => '<div class="langblock"><div class="langname">'
-          + (i===0 ? '音が近い' : '別のまとまり') + ' '+g.length+'言語</div>' + line(x, g)).join("")
-      + (rest.length ? '<div class="langblock"><div class="langname">そうでない '+rest.length+'言語</div>'
-          + line(x, rest) + '</div>' : '')
+      + '<span class="sub">'+x.groups[0].length+'／'+x.forms.size+'言語が近い ›</span></div>'
+      + x.groups.map((g,i) => '<div class="sndrow">'
+          + '<span class="sndhead">音'+("ABCDE".charAt(i) || "")+'（'+g.length+'言語）</span>'
+          + g.map(l => chip(x,l)).join("") + '</div>').join("")
+      + (rest.length ? '<div class="sndrow off"><span class="sndhead">そうでない</span>'
+          + rest.map(l => chip(x,l)).join("") + '</div>' : '')
       + '</div>';
   }).join("") || '<div class="empty">該当なし。</div>';
   return h;
