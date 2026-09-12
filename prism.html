@@ -260,7 +260,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-12g";
+const BUILD = "2026-09-12h";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1460,13 +1460,18 @@ function colItemHtml(c, senseId, i, n){
     return '<div class="colitem"><div class="grow"><b>（見つかりません）</b>'
       + '<div class="sub">'+esc(senseId)+'</div></div>'+btns+'</div>';
   }
-  const ls = langsOf(s.id);
-  const preview = ls.slice(0,4).map(l=>{
-    const e = entriesOf(s.id,l).filter(x=>x.status==="present")[0];
-    return e ? esc(e.term) : "";
-  }).filter(Boolean).join(" ・ ") + (ls.length>4 ? " …" : "");
+  /* 比較キーが無い項目（solo）は、同じ日本語ラベルの一群でまとめて数える(2026-09-12g)。
+     「恥ずかしい」は5冊に1語ずつあって、そのままだと「1言語」に見えてしまう。
+     統合はしない。数え方と見せ方だけ、一覧のカードと同じにそろえる。 */
+  const grp = s.solo ? [s].concat(sameLabel(s.id)) : [s];
+  const ls = s.solo ? [...labelGroupLangs(s.id)] : langsOf(s.id);
+  const terms = [];
+  grp.forEach(x => x && entriesOf(x.id).forEach(e => {
+    if(e.status === "present" && e.term && terms.length < 4) terms.push(e.term); }));
+  const preview = terms.map(esc).join(" ・ ") + (ls.length > 4 ? " …" : "");
   return '<div class="colitem tap" onclick="openSense(\''+esc(s.id)+'\')">'
-    + '<div class="grow"><b>'+esc(s.name)+'</b> <span class="sub">'+ls.length+'言語</span>'
+    + '<div class="grow"><b>'+esc(s.name)+'</b> <span class="sub">'+ls.length+'言語'
+    + (s.solo && ls.length > 1 ? '（ラベル一致）' : '')+'</span>'
     + (preview ? '<div class="sub" style="font-size:13.5px">'+preview+'</div>' : '') + '</div>'
     + btns + '</div>';
 }
