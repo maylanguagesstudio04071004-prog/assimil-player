@@ -268,7 +268,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-12j";
+const BUILD = "2026-09-12k";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -435,7 +435,7 @@ async function bootStorage(){
   const pick = (a,b) => (b && (b.savedAt||0) >= ((a&&a.savedAt)||0)) ? b : a;
   const d = pick(here, there);
   db = normalizeDb(d || emptyDb());
-  labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null;
+  labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
   try{ STORE.bytes = JSON.stringify(db).length; }catch(e){}
   if(STORE.mode !== "IndexedDB")
     warnBar("IndexedDBが使えません。localStorageは約5MBで一杯になります。設定→書き出しでこまめに控えを取ってください。");
@@ -633,6 +633,68 @@ function riftMany(){
     out.push({lang: k.split("\u0001")[0], key: k, senses: ss, weak: cl.length < 2});
   });
   return out;
+}
+/* 音が似ている語(2026-09-12k。§8.0の④)。
+   読み（Atlas式ローマ字）と、読みを付けない言語の原語を、同じ土俵に直して比べる。
+   借用語や同語源の広がりと、**そこに入っていない言語**を見るためのもの。
+   語源を主張するものではない。**音が近いというだけ**で、画面にもそう書く。
+   判定: 発音記号・声調記号・定冠詞を落として a–z だけにし、
+   最長共通部分列の比 2*LCS/(長さの和) が 0.72 以上なら「近い」。
+   この値は、元の試作（Pythonの difflib）の判定と471組中471組で一致する。 */
+const SOUND_LATIN = ["English","Español","Français","Italiano","Deutsch","Türkçe",
+                     "Bahasa Indonesia","Nederlands","Tiếng Việt"];
+function soundForm(e){
+  if(e.status !== "present") return "";
+  let f = SOUND_LATIN.includes(e.lang) ? (e.term||"") : (e.reading||"");
+  f = f.replace(/[（(][^）)]*[）)]/g, "").replace(/^\(a\)l-|^al-/i, "").trim();
+  f = f.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+  return (f.length >= 3 && f.length <= 16) ? f : "";
+}
+function soundNear(a, b){
+  const n = a.length, m = b.length;
+  const row = new Array(m+1).fill(0);
+  for(let i=0;i<n;i++){
+    let prev = 0;
+    for(let j=0;j<m;j++){
+      const cur = row[j+1];
+      row[j+1] = (a[i] === b[j]) ? prev + 1 : Math.max(row[j+1], row[j]);
+      prev = cur;
+    }
+  }
+  return 2 * row[m] / (n + m) >= 0.72;
+}
+/* その意味の中で、音が近い言語どうしをまとめる。戻り値: {forms:Map(lang→{f,e}), groups:[[lang…]]} */
+function soundGroups(senseId){
+  const forms = new Map();
+  entriesOf(senseId).forEach(e=>{
+    const f = soundForm(e);
+    if(f && !forms.has(e.lang)) forms.set(e.lang, {f, e});
+  });
+  const langs = [...forms.keys()];
+  const parent = new Map(langs.map(l => [l, l]));
+  const find = a => { while(parent.get(a) !== a) { parent.set(a, parent.get(parent.get(a))); a = parent.get(a); } return a; };
+  for(let i=0;i<langs.length;i++) for(let j=i+1;j<langs.length;j++){
+    if(soundNear(forms.get(langs[i]).f, forms.get(langs[j]).f)) parent.set(find(langs[i]), find(langs[j]));
+  }
+  const g = new Map();
+  langs.forEach(l=>{ const r = find(l); if(!g.has(r)) g.set(r, []); g.get(r).push(l); });
+  const groups = [...g.values()].filter(v => v.length >= 2)
+    .sort((a,b) => b.length - a.length);
+  return {forms, groups};
+}
+/* 一覧用。3言語以上まとまる意味だけ拾う（2言語の組は意味の画面で印が付く） */
+let soundIndex = null;
+function soundList(){
+  if(soundIndex) return soundIndex;
+  soundIndex = [];
+  db.senses.forEach(s=>{
+    if(s.solo) return;
+    const g = soundGroups(s.id);
+    if(g.groups.length && g.groups[0].length >= 3) soundIndex.push({s, ...g});
+  });
+  soundIndex.sort((a,b) => b.groups[0].length - a.groups[0].length
+    || (a.s.order==null?1e9:a.s.order) - (b.s.order==null?1e9:b.s.order));
+  return soundIndex;
 }
 /* 何によって形が変わるか(2026-09-12j)。
    日本語訳の括弧に「（話者が男性）」「（2〜4）」「（丁寧）」などが927件書かれている。
@@ -1148,9 +1210,17 @@ function renderSense(id){
   }
 
   h += LEGEND;
+  /* 音が近い言語どうしに同じ印を付ける(2026-09-12k)。意味ごとに1回だけ計算する */
+  const sndGroups = soundGroups(id).groups;
+  if(sndGroups.length)
+    h += '<div class="sub" style="margin:-4px 0 8px">音'+(sndGroups.length>1?"A・音B":"A")
+      + ' ＝ 読みのつづきが近い言語どうし。<b>語源を確かめたものではない。</b></div>';
   h += '<div class="card">';
   langsForSense(id).forEach(l=>{
     const es = entriesOf(id,l);
+    /* 音が近い言語のまとまり(2026-09-12k)。同じ印が付いた言語どうしが近い */
+    let mark = "";
+    sndGroups.forEach((g, gi) => { if(g.includes(l)) mark = "音" + ("ABC".charAt(gi) || ""); });
     /* この言語が、この意味を2つ以上の語で言い分けているとき(2026-09-11)。
        同じ本の中で数える(2026-09-12。本をまたぐ違いは「本の載せ方の違い」なので別のこと) */
     const byBook = new Map();
@@ -1159,6 +1229,7 @@ function renderSense(id){
       byBook.get(e.sourceId).add(normTerm(e.term)); });
     const nSplit = byBook.size ? Math.max(...[...byBook.values()].map(x => x.size)) : 0;
     h += '<div class="langblock"><div class="langname">'+esc(l)
+      + (mark ? ' <span class="tag">'+esc(mark)+'</span>' : '')
       + (nSplit >= 2 ? ' <span class="tag plain">'+nSplit+'通りに言い分け'
           + ((()=>{ const ax = [...new Set(es.flatMap(x => axesOf(x).map(o=>o.ax)))]
                       .filter(a => a !== "男女の別（要確認）");
@@ -1219,6 +1290,32 @@ function riftSplitCard(x){
             + (e.ja && e.ja !== x.s.name ? ' <span class="sub">'+esc(e.ja)+'</span>' : '') + '</div>').join("")
         + '</div>').join("")
     + '</div>';
+}
+/* 音が似ている語の一覧(2026-09-12k)。似ている言語と、**そこに入らない言語**を並べて出す。 */
+function soundViewHtml(){
+  const list = soundList().filter(x => !riftLang || x.forms.has(riftLang));
+  let h = '<div class="sub" style="margin-bottom:10px">読み（読みを付けない言語は原語）の'
+    + '<b>音のつづきが近い</b>ものをまとめたもの。借用語や同じ語源の広がりが見える。'
+    + '<b>語源を確かめたわけではない。</b>近いかどうかの判定だけで、'
+    + '同じ形になっていない言語も並べて出している。</div>';
+  const line = (x, langs, cls) => langs.map(l =>
+      '<div class="riftrow" style="cursor:default"><div class="grow"><span class="sub">'+esc(l)+'</span> '
+      + esc(x.forms.get(l).e.term)
+      + (x.forms.get(l).e.reading ? ' <span class="sub">'+esc(x.forms.get(l).e.reading)+'</span>' : '')
+      + '</div></div>').join("");
+  h += list.map(x=>{
+    const inGroup = new Set(x.groups.flat());
+    const rest = [...x.forms.keys()].filter(l => !inGroup.has(l));
+    return '<div class="card"><div class="row tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
+      + '<b class="grow">'+esc(x.s.name)+'</b>'
+      + '<span class="sub">'+x.groups[0].length+'言語が近い ›</span></div>'
+      + x.groups.map((g,i) => '<div class="langblock"><div class="langname">'
+          + (i===0 ? '音が近い' : '別のまとまり') + ' '+g.length+'言語</div>' + line(x, g)).join("")
+      + (rest.length ? '<div class="langblock"><div class="langname">そうでない '+rest.length+'言語</div>'
+          + line(x, rest) + '</div>' : '')
+      + '</div>';
+  }).join("") || '<div class="empty">該当なし。</div>';
+  return h;
 }
 /* 言語 × 言い分けの軸(2026-09-12j)。
    「日本語では言わなくていいのに、この言語では言い分けなければいけないこと」を見るための表。 */
@@ -1290,10 +1387,14 @@ function renderRift(){
     + '<button class="btn'+(riftMode==="many"?" pri":"")+'" onclick="riftSet(\'many\',\'\')">一語で複数の意味 '+cand.length+'</button>'
     + '<button class="btn'+(riftMode==="split"?" pri":"")+'" onclick="riftSet(\'split\',\'\')">1つの意味を言い分け '+split.length+'</button>'
     + '<button class="btn'+(riftMode==="axis"?" pri":"")+'" onclick="riftSet(\'axis\',\'\')">何で形が変わるか</button>'
+    + '<button class="btn'+(riftMode==="sound"?" pri":"")+'" onclick="riftSet(\'sound\',\'\')">音が似ている '+soundList().length+'</button>'
     + '</div>';
   if(riftMode === "axis"){ $("riftBody").innerHTML = h + axisViewHtml(); return; }
+  if(riftMode === "sound"){ $("riftBody").innerHTML = h + soundViewHtml(); return; }
   const counts = new Map();
   if(riftMode === "many") cand.forEach(x => counts.set(x.lang, (counts.get(x.lang)||0) + 1));
+  else if(riftMode === "sound")
+    soundList().forEach(x => x.groups.flat().forEach(l => counts.set(l, (counts.get(l)||0) + 1)));
   else split.forEach(x => x.langs.forEach(v => counts.set(v.lang, (counts.get(v.lang)||0) + 1)));
   h += '<div style="margin-bottom:6px">'
     + '<button class="chip'+(riftLang?"":" on")+'" onclick="riftSet(riftMode,\'\')">すべて</button>'
@@ -1794,7 +1895,7 @@ async function doUndo(){
     if(typeof t !== "string"){ m.className="msg err"; m.textContent="戻せる取り込みがありません。"; return; }
     if(!confirm("直前の取り込みを取り消します。よろしいですか。")) return;
     db = normalizeDb(JSON.parse(t));
-    labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null;
+    labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
     await idbDel(ST_DB,"undo");
     save(); showTab("Settings");
     m.className="msg ok"; m.textContent="直前の取り込みを取り消しました。";
@@ -1817,7 +1918,7 @@ async function doImport(){
 }
 
 function importData(text){
-  labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null;   // 意味も語も増減するので索引を作り直させる
+  labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;   // 意味も語も増減するので索引を作り直させる
   const raw = JSON.parse(text);
   const blocks = Array.isArray(raw) ? raw : (Array.isArray(raw.imports) ? raw.imports : [raw]);
   const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, memoSame:0, themeNote:0,
@@ -2018,7 +2119,7 @@ function importData(text){
     });
   });
 
-  labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null;   // 取り込みで中身が変わったので捨てる
+  labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;   // 取り込みで中身が変わったので捨てる
   const summary =
     "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
     + "新規: 本 " + c.src + " / 本のテーマ " + c.bt + " / 共通テーマ " + c.theme
@@ -2180,7 +2281,7 @@ async function delImage(id){
 function wipeAll(){
   if(!confirm("すべてのデータを消します。書き出しは済んでいますか。")) return;
   if(!confirm("本当に消しますか。元に戻せません。")) return;
-  db = emptyDb(); labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; save(); showTab("Settings");
+  db = emptyDb(); labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null; save(); showTab("Settings");
 }
 
 function renderFmtHelp(){
