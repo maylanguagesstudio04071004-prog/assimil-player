@@ -277,7 +277,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-13d";
+const BUILD = "2026-09-13e";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -306,7 +306,7 @@ const THEME_GROUPS = [
   /* DKの巻末（Useful Phrases）。場面ごとの言い回しで、他のテーマとは粒が違う(2026-09-13) */
   {name:"まとまった言い回し",
    note:"DKの巻末にある、場面ごとの言い方。紙面の欄（あいさつ・案内表示・道案内…）は各語に出る。",
-   themes:["Useful Phrases"]},
+   themes:["Useful Phrases","助詞・位置・反対語"]},
   {name:"Atlasの◇と同じ軸",
    note:"上のテーマの一部を切り出したもの。Atlasの◇へ行き来するための入口。",
    themes:["数","曜日","月"]}
