@@ -260,7 +260,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-12h";
+const BUILD = "2026-09-12i";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1682,10 +1682,12 @@ function importData(text){
   labelIndex = null; entryIndex = null; termIndex = null;   // 意味も語も増減するので索引を作り直させる
   const raw = JSON.parse(text);
   const blocks = Array.isArray(raw) ? raw : (Array.isArray(raw.imports) ? raw.imports : [raw]);
-  const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, memoSame:0, themeNote:0};
+  const c = {src:0, bt:0, theme:0, sense:0, add:0, repl:0, memo:0, memoSame:0, themeNote:0,
+             col:0, colItem:0, colKept:0};
   const errors = [];
   // メモは全ブロックを読み終えてから入れる。宛先の意味は後ろのブロックの語で作られることがあるため(2026-09-11)
   const pendingMemos = [];
+  const pendingCols = [];   // コレクションも同じ理由で後から(2026-09-12)
 
   blocks.forEach((b, bi)=>{
     const where = "ブロック" + (bi+1);
@@ -1718,6 +1720,7 @@ function importData(text){
     });
 
     (b.memos||[]).forEach(mm => pendingMemos.push({mm, where}));
+    (b.collections||[]).forEach(cc => pendingCols.push({cc, where}));
 
     if(!b.source && !b.items) return;
     if(!b.source || !b.source.id || !b.source.title){
@@ -1849,13 +1852,43 @@ function importData(text){
     c.memo++;
   });
 
+  /* 配るコレクション(2026-09-12)。key から id が決まるので、読み込み直しても増えない。
+     **利用者が作ったコレクションには触らない**（idが "c:<ランダム>" で別物）。
+     **すでにある枠には一切触らない。** 項目を入れるのは、その枠を新しく作ったときだけ。
+     外した項目を戻したり、直したタイトル・並び順を上書きしたりしない
+     （2026-09-12。足りない項目を足す作りにしたら、利用者が外した語が戻ってきたのでやめた）。 */
+  pendingCols.forEach(({cc, where})=>{
+    const key = String(cc.key||"").trim();
+    if(!key){ errors.push(where+": コレクションに key が要ります（idの元になります）"); return; }
+    const title = String(cc.title||"").trim();
+    if(!title){ errors.push(where+": コレクション '"+key+"' に title が要ります"); return; }
+    const id = "c:" + key;
+    let col = byId(db.collections, id);
+    if(col){ c.colKept++; return; }   // すでにある枠は触らない
+    col = {id, title, date:String(cc.date||""), note:String(cc.note||""),
+           items:[], at:Date.now(), updated:Date.now()};
+    db.collections.unshift(col); c.col++;
+    (cc.items||[]).forEach(x=>{
+      const senseId = String(x||"").trim();
+      if(!senseId) return;
+      // 無い意味は入れない。入れると「（見つかりません）」だけが並ぶ
+      if(!byId(db.senses, senseId)){
+        errors.push(where+": コレクション '"+title+"' の項目 '"+senseId+"' が見つかりません"); return;
+      }
+      if(col.items.includes(senseId)) return;
+      col.items.push(senseId); c.colItem++;
+    });
+  });
+
   labelIndex = null; entryIndex = null; termIndex = null;   // 取り込みで中身が変わったので捨てる
   const summary =
     "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
     + "新規: 本 " + c.src + " / 本のテーマ " + c.bt + " / 共通テーマ " + c.theme
     + " / 意味 " + c.sense + " / メモ " + c.memo
     + (c.memoSame ? "（同じ文面の " + c.memoSame + "件は入れていない）" : "")
-    + (c.themeNote ? " / テーマの在否メモ " + c.themeNote : "");
+    + (c.themeNote ? " / テーマの在否メモ " + c.themeNote : "")
+    + (c.col || c.colKept ? " / コレクション " + c.col + "（項目 " + c.colItem + "件"
+        + (c.colKept ? "・すでにある " + c.colKept + "件はそのまま" : "") + "）" : "");
   return {summary, errors, counts:c};
 }
 
@@ -2031,6 +2064,9 @@ function renderFmtHelp(){
    + '・同じ本の同じ bookTheme を取り込み直すと、その範囲の語だけ差し替わります。メモは消えません。\n'
    + '・<b>memos</b>: [{target:"sense:比較キー", text:"…"}] で観察メモを足せます（theme:名前 も可）。'
    + '宛先が無ければエラーになり、同じ宛先・同じ文面のメモは二重に入りません。\n'
+   + '・<b>collections</b>: [{key:"…", title:"…", date:"YYYY-MM-DD", note:"…", items:["s:比較キー", …]}] で'
+   + 'コレクションを配れます。idは key から決まるので読み込み直しても増えません。'
+   + '**すでにある枠には触りません**（項目を入れるのは新しく作ったときだけ。外した語は戻りません）。\n'
    + '\n※ ChatGPTには、この形ではなく素材の形（schema_version 2）で出してもらい、'
    + '「素材をPrism形式にする.py」で変換しています。詳しくは ChatGPTへの依頼文.md。</div>';
 }
