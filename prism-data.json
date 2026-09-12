@@ -134818,6 +134818,34 @@
    ]
   },
   {
+   "collections": [
+    {
+     "key": "weather-changes-my-day",
+     "title": "Weather Changes My Day",
+     "date": "2026-09-12",
+     "note": "雨・台風・秋の空気。日記に何度も出てくる、天気で一日が変わる話。『曇り』『空気』『天気予報』はまだ資料に無い。",
+     "items": [
+      "s:rain",
+      "s:sunny",
+      "s:typhoon",
+      "s:autumn",
+      "s:solo:ru_weather_031"
+     ]
+    },
+    {
+     "key": "moving-my-body",
+     "title": "Moving My Body",
+     "date": "2026-09-12",
+     "note": "自転車・運動会・ダンスの練習。『自転車』『運動』『筋肉痛』はまだ資料に無い。",
+     "items": [
+      "s:verb_run",
+      "s:verb_dance",
+      "s:solo:hi_verbs_questions_068"
+     ]
+    }
+   ]
+  },
+  {
    "memos": [
     {
      "target": "sense:self_married",
