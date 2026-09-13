@@ -280,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-14a";
+const BUILD = "2026-09-14b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -334,9 +334,9 @@ db = {
   entries:    [{id,senseId,lang,term,reading,readingSrc,readingStatus,ja,note,
                 sourceId,bookThemeId,page,status,kind,flags[],reviewNote,numeric,srcId}],
   memos:      [{id,tType,tId,text,at}],
-  collections:[{id,title,date,note,kind,question,origin,items:[senseId],at,updated}],
-              // 観察の器。比較項目(senseId)を束ねるだけで、語は複製しない。
-              // kind: "question"（問い）/ "lens"（観察の軸）/ "collection"（集めたもの。既定）
+  collections:[{id,title,date,note,kind,question,origin,items:[senseId|entryId],at,updated}],
+              // 観察の器。比較項目(s:…)と語(e:…)を束ねるだけで、語は複製しない。
+              // kind: "question"（問い）/ "lens"（観察の軸。既定）
               // origin: "candidate" ならズレの候補から作ったもの（機械が拾った候補。断定ではない）
   activeCol:  "",  // いま集めているコレクションのid。一覧に＋が出るだけで、他には効かない
   images:     [{id,sourceId,bookThemeId,page,name,at,url}]  // url があれば配信ファイルを見る
@@ -1654,13 +1654,14 @@ let colPickFor = "";            // 比較画面で「入れる先を選ぶ」を
 
 const collection = id => byId(db.collections, id);
 /* 観察の器の種類(2026-09-13f)。本のテーマとは別に、Prism側で立てる観察の軸。
-   欄が無い古いデータは「集めたもの」として扱う（移行処理は要らない）。 */
+/* 種類は「問い」と「観察の軸」の2つ(2026-09-14b。Mayが「集めたものは使いにくい」と言って外した)。
+   **古いデータは消さない。** kind が無いもの・"collection" のものは観察の軸として出す。
+   戻すなら collection を足し、colKind の既定を "collection" に戻す。 */
 const COL_KIND = {
-  question:   {label:"問い",       note:"言語をまたいで確かめたいこと。答えは語の並びの中にある。"},
-  lens:       {label:"観察の軸",   note:"同じ語彙群を、別の角度から何度でも眺めるためのタグ。"},
-  collection: {label:"集めたもの", note:"その日の出来事や関心で集めた語。"}
+  question: {label:"問い",     note:"言語をまたいで確かめたいこと。答えは語の並びの中にある。"},
+  lens:     {label:"観察の軸", note:"同じ語彙群を、別の角度から何度でも眺めるためのタグ。"}
 };
-const colKind = c => (c && COL_KIND[c.kind]) ? c.kind : "collection";
+const colKind = c => (c && COL_KIND[c.kind]) ? c.kind : "lens";
 const colKindLabel = c => COL_KIND[colKind(c)].label;
 /* 「いま集めているコレクション」(2026-09-12g)。選んでおくと、語の一覧と比較画面に＋が出て
    1タップで入れられる。選んでいなくても、今までどおり比較画面の「＋ コレクションに入れる」から入れられる。 */
@@ -1795,7 +1796,7 @@ function colCardHtml(c){
     + (c.origin === "candidate" ? '<div class="sub">ズレの候補から作った（機械が拾ったもの）</div>' : '')
     + '</div>';
 }
-let colFormKind = "question";
+let colFormKind = "question";   // 作るときの既定は「問い」
 function colFormHtml(){
   return '<div class="card">'
     + '<div class="sub" style="margin-bottom:6px">種類</div>'
@@ -2300,7 +2301,7 @@ function importData(text){
     let col = byId(db.collections, id);
     if(col){ c.colKept++; return; }   // すでにある枠は触らない
     col = {id, title, date:String(cc.date||""), note:String(cc.note||""),
-           kind: COL_KIND[cc.kind] ? cc.kind : "collection",
+           kind: COL_KIND[cc.kind] ? cc.kind : "lens",
            question: String(cc.question||""), origin: String(cc.origin||"may"),
            items:[], at:Date.now(), updated:Date.now()};
     db.collections.unshift(col); c.col++;
