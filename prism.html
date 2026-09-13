@@ -158,7 +158,7 @@ table.ax td.off{color:var(--line)}
 <nav>
   <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
   <button id="tabWords"    onclick="showTab('Words')">語</button>
-  <button id="tabCollections" onclick="showTab('Collections')">集める</button>
+  <button id="tabCollections" onclick="showTab('Collections')">観察</button>
   <button id="tabMemos"    onclick="showTab('Memos')">メモ</button>
   <button id="tabSettings" onclick="showTab('Settings')">設定</button>
 </nav>
@@ -277,7 +277,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-13e";
+const BUILD = "2026-09-13f";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -331,7 +331,10 @@ db = {
   entries:    [{id,senseId,lang,term,reading,readingSrc,readingStatus,ja,note,
                 sourceId,bookThemeId,page,status,kind,flags[],reviewNote,numeric,srcId}],
   memos:      [{id,tType,tId,text,at}],
-  collections:[{id,title,date,note,items:[senseId],at,updated}],  // 比較項目を束ねるだけ。語は複製しない
+  collections:[{id,title,date,note,kind,question,origin,items:[senseId],at,updated}],
+              // 観察の器。比較項目(senseId)を束ねるだけで、語は複製しない。
+              // kind: "question"（問い）/ "lens"（観察の軸）/ "collection"（集めたもの。既定）
+              // origin: "candidate" ならズレの候補から作ったもの（機械が拾った候補。断定ではない）
   activeCol:  "",  // いま集めているコレクションのid。一覧に＋が出るだけで、他には効かない
   images:     [{id,sourceId,bookThemeId,page,name,at,url}]  // url があれば配信ファイルを見る
 }
@@ -1308,7 +1311,7 @@ function riftSplitCard(x){
 /* 音が似ている語の一覧(2026-09-12k)。似ている言語と、**そこに入らない言語**を並べて出す。 */
 function soundViewHtml(){
   const list = soundList().filter(x => !riftLang || x.forms.has(riftLang));
-  let h = '<div class="sub" style="margin-bottom:10px">読み（読みを付けない言語は原語）の'
+  let h = riftLensBtn() + '<div class="sub" style="margin-bottom:10px">読み（読みを付けない言語は原語）の'
     + '<b>音のつづきが近い</b>ものをまとめたもの。借用語や同じ語源の広がりが見える。'
     + '<b>語源を確かめたわけではない。</b>近いかどうかの判定だけで、'
     + '同じ形になっていない言語も並べて出している。</div>';
@@ -1375,6 +1378,7 @@ function axisViewHtml(){
       + '</details>';
   }
   if(riftAx){
+    h += riftLensBtn();
     const arr = ((m.get(riftAx[0])||new Map()).get(riftAx[1])||[]);
     const seen = new Set();
     h += '<h2 style="margin:14px 0 6px">'+esc(riftAx[0])+' ／ '+esc(riftAx[1])+' <span class="sub">'+arr.length+'</span></h2>'
@@ -1393,6 +1397,46 @@ function axisViewHtml(){
   return h;
 }
 let riftAx = null;
+/* いま画面に出ている候補の意味id（上から n 件） */
+function riftNowSenses(n){
+  n = n || 60;
+  const out = [];
+  if(riftMode === "many"){
+    riftMany().filter(x => !x.weak && (!riftLang || x.lang === riftLang))
+      .forEach(x => x.senses.forEach(s => { if(out.length<n && !out.includes(s.id)) out.push(s.id); }));
+  }else if(riftMode === "split"){
+    riftSplit().filter(x => !riftLang || x.langs.some(v => v.lang === riftLang))
+      .forEach(x => { if(out.length<n && !out.includes(x.s.id)) out.push(x.s.id); });
+  }else if(riftMode === "sound"){
+    soundList().filter(x => !riftLang || x.forms.has(riftLang))
+      .forEach(x => { if(out.length<n && !out.includes(x.s.id)) out.push(x.s.id); });
+  }else if(riftMode === "axis" && riftAx){
+    ((axisMap().get(riftAx[0])||new Map()).get(riftAx[1])||[])
+      .forEach(x => { if(out.length<n && !out.includes(x.e.senseId)) out.push(x.e.senseId); });
+  }
+  return out;
+}
+function riftLensTitle(){
+  const lang = riftLang ? "（"+riftLang+"）" : "";
+  if(riftMode === "many")  return "一語で複数の意味"+lang;
+  if(riftMode === "split") return "1つの意味を言い分け"+lang;
+  if(riftMode === "sound") return "音が似ている"+lang;
+  if(riftMode === "axis" && riftAx) return riftAx[0]+"（"+riftAx[1]+"）";
+  return "ズレの候補";
+}
+function riftMakeLens(){
+  const ids = riftNowSenses(60);
+  if(!ids.length){ alert("いま出ている候補がありません。"); return; }
+  const src = riftMode === "axis" && riftAx ? riftAx[0]+" ／ "+riftAx[1] : riftLensTitle();
+  colFromCandidates(riftLensTitle(), ids,
+    "Prismの「ズレの候補 → "+src+"」から作った観察の軸。"
+    + "機械が拾った候補なので、面白いかどうかは見て決める。上から"+ids.length+"件。");
+}
+function riftLensBtn(){
+  return '<div class="row" style="margin:0 0 10px">'
+    + '<button class="btn" onclick="riftMakeLens()">この候補から観察の軸を作る</button>'
+    + '<span class="sub">いま出ているものを束ねます</span></div>';
+}
 function riftAxis(ax, lang){ riftAx = [ax, lang]; renderRift();
   const el = document.querySelector("#riftBody h2"); if(el) el.scrollIntoView({block:"start"}); }
 function renderRift(){
@@ -1410,6 +1454,8 @@ function renderRift(){
     + '</div>';
   if(riftMode === "axis"){ $("riftBody").innerHTML = h + axisViewHtml(); return; }
   if(riftMode === "sound"){ $("riftBody").innerHTML = h + soundViewHtml(); return; }
+  /* いま出ている候補から、そのまま観察の軸を作る(2026-09-13f)。
+     **機械が拾った候補**なので、origin に残して画面にも断る。 */
   const counts = new Map();
   if(riftMode === "many") cand.forEach(x => counts.set(x.lang, (counts.get(x.lang)||0) + 1));
   else if(riftMode === "sound")
@@ -1423,6 +1469,7 @@ function renderRift(){
     + '</div>';
 
   if(riftMode === "many"){
+    h += riftLensBtn();
     h += '<div class="sub" style="margin-bottom:10px">同じ言語の同じ綴りが、日本語の別々の見出しに出てくるもの。'
       + '1つの語が日本語の2つの意味にまたがっている候補。<b>同じ綴りの別の語（同音異義）</b>や、'
       + '本による見出しの付け方の違い（「はじまる」と「始まる」）も混ざる。</div>';
@@ -1441,6 +1488,7 @@ function renderRift(){
         + '片方の見出しがもう片方を含むもの。機械的な判定なので、ここにも面白いものが紛れうる。</div>'
         + w.map(riftManyCard).join("") + '</details>';
   } else {
+    h += riftLensBtn();
     h += '<div class="sub" style="margin-bottom:10px">1つの意味に、同じ言語で綴りの違う語が2つ以上載っているもの。'
       + '数・性別・丁寧さなどで言い分けている候補。<b>同じ本の中で</b>数えている（本をまたぐ違いは入れない）。'
       + '<b>本が別の言い方を並べただけ</b>のものも混ざる。'
@@ -1553,11 +1601,21 @@ async function renderImage(id){
    **語を複製しない。** 集めるのは意味(sense)のidだけで、各言語の語は今までどおり比較画面で見る。
    同じ意味を複数のコレクションに入れてよい。コレクションを消しても語・意味・テーマ・メモは消えない。
    タブは増やさず、「メモ」タブの中で切り替える（iPhoneの幅で6つ目のタブが入らないため）。 */
-let colFormOpen = false;        // 一覧で「コレクションを作る」を押したか
+let colFormOpen = false;        // 一覧で「観察を作る」を押したか
+let colFilter = "";             // 一覧の種類の絞り込み
 let colEditId = "";             // 詳細で編集中のコレクション
 let colPickFor = "";            // 比較画面で「入れる先を選ぶ」を開いている意味
 
 const collection = id => byId(db.collections, id);
+/* 観察の器の種類(2026-09-13f)。本のテーマとは別に、Prism側で立てる観察の軸。
+   欄が無い古いデータは「集めたもの」として扱う（移行処理は要らない）。 */
+const COL_KIND = {
+  question:   {label:"問い",       note:"言語をまたいで確かめたいこと。答えは語の並びの中にある。"},
+  lens:       {label:"観察の軸",   note:"同じ語彙群を、別の角度から何度でも眺めるためのタグ。"},
+  collection: {label:"集めたもの", note:"その日の出来事や関心で集めた語。"}
+};
+const colKind = c => (c && COL_KIND[c.kind]) ? c.kind : "collection";
+const colKindLabel = c => COL_KIND[colKind(c)].label;
 /* 「いま集めているコレクション」(2026-09-12g)。選んでおくと、語の一覧と比較画面に＋が出て
    1タップで入れられる。選んでいなくても、今までどおり比較画面の「＋ コレクションに入れる」から入れられる。 */
 function activeCol(){ return collection(db.activeCol || ""); }
@@ -1599,12 +1657,25 @@ function fmtDate(v){
 function today(){ const d = new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 
-function colCreate(title, date, note){
+function colCreate(title, date, note, kind, question, opt){
   title = String(title||"").trim();
   if(!title) return null;
-  const c = {id:"c:"+uid(), title, date: String(date||"") || today(), note:String(note||"").trim(),
+  opt = opt || {};
+  const c = {id: opt.id || ("c:"+uid()), title, date: String(date||"") || today(),
+             note:String(note||"").trim(), kind: COL_KIND[kind] ? kind : "collection",
+             question: String(question||"").trim(), origin: opt.origin || "may",
              items:[], at:Date.now(), updated:Date.now()};
   db.collections.unshift(c); save();
+  return c;
+}
+/* ズレの候補から観察の軸を作る(2026-09-13f)。
+   **機械が拾った候補**であることを origin と note に残す。断定にしない。 */
+function colFromCandidates(title, senseIds, note){
+  const c = colCreate(title, today(), note, "lens", "", {origin:"candidate"});
+  if(!c) return null;
+  senseIds.forEach(x => { if(sense(x) && !c.items.includes(x)) c.items.push(x); });
+  c.updated = Date.now(); save();
+  openCollection(c.id);
   return c;
 }
 function colAdd(colId, senseId){
@@ -1646,11 +1717,12 @@ function colSaveMeta(colId){
   const t = ($("colTitle").value||"").trim();
   if(!t){ alert("タイトルを入れてください。"); return; }
   c.title = t; c.date = $("colDate").value || c.date; c.note = ($("colNote").value||"").trim();
+  if($("colQuestion")) c.question = ($("colQuestion").value||"").trim();
   c.updated = Date.now(); save(); colEditId = ""; renderCol(colId);
 }
 function colDelete(colId){
   const c = collection(colId); if(!c) return;
-  if(!confirm("コレクション「"+c.title+"」を消します。集めた語・意味・テーマ・メモは消えません。よろしいですか。")) return;
+  if(!confirm("観察「"+c.title+"」を消します。集めた語・意味・テーマ・メモは消えません。よろしいですか。")) return;
   db.collections = db.collections.filter(x => x.id !== colId); save();
   goBack();
 }
@@ -1665,15 +1737,28 @@ function colCardHtml(c){
   return '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
     + '<div class="row"><b class="grow">'+esc(c.title)+'</b>'
     + (db.activeCol===c.id ? '<span class="tag">集め先</span>' : '')
+    + '<span class="tag plain">'+esc(colKindLabel(c))+'</span>'
     + '<span class="sub">'+n+'項目</span></div>'
+    + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
     + '<div class="sub">'+esc(fmtDate(c.date))+'</div>'
     + (c.note ? '<div class="sub" style="margin-top:3px; white-space:pre-wrap">'+esc(c.note)+'</div>' : '')
+    + (c.origin === "candidate" ? '<div class="sub">ズレの候補から作った（機械が拾ったもの）</div>' : '')
     + '</div>';
 }
+let colFormKind = "question";
 function colFormHtml(){
   return '<div class="card">'
-    + '<div class="sub" style="margin-bottom:6px">タイトル</div>'
-    + '<input type="text" id="colFTitle" placeholder="例：娘の運動会">'
+    + '<div class="sub" style="margin-bottom:6px">種類</div>'
+    + '<div class="row" style="margin-bottom:8px">'
+    + Object.keys(COL_KIND).map(k => '<button class="btn'+(colFormKind===k?" pri":"")
+        + '" onclick="colFormKind=\''+k+'\';renderCols()">'+esc(COL_KIND[k].label)+'</button>').join("")
+    + '</div>'
+    + '<div class="sub" style="margin-bottom:6px">'+esc(COL_KIND[colFormKind].note)+'</div>'
+    + (colFormKind==="question"
+        ? '<div class="sub" style="margin:8px 0 6px">問い</div>'
+          + '<input type="text" id="colFQuestion" placeholder="例：父方と母方を区別する？">' : '')
+    + '<div class="sub" style="margin:8px 0 6px">タイトル</div>'
+    + '<input type="text" id="colFTitle" placeholder="例：親族の区別">'
     + '<div class="sub" style="margin:8px 0 6px">日付</div>'
     + '<input type="date" id="colFDate" value="'+esc(today())+'">'
     + '<div class="sub" style="margin:8px 0 6px">メモ（その日の出来事）</div>'
@@ -1683,7 +1768,8 @@ function colFormHtml(){
     + '<button class="btn" onclick="colFormOpen=false;renderCols()">やめる</button></div></div>';
 }
 function colFormSubmit(){
-  const c = colCreate($("colFTitle").value, $("colFDate").value, $("colFNote").value);
+  const c = colCreate($("colFTitle").value, $("colFDate").value, $("colFNote").value,
+                      colFormKind, ($("colFQuestion")||{}).value || "");
   if(!c){ alert("タイトルを入れてください。"); return; }
   colFormOpen = false; renderCols(); openCollection(c.id);
 }
@@ -1691,16 +1777,25 @@ function renderCols(){
   const el = $("colList");
   let h = "";
   if(!db.collections.length && !colFormOpen){
-    h = '<div class="empty">今日気になったことばを集めてみましょう。<br>'
-      + 'テーマをまたいで比較項目を束ねられます。語は複製されません。</div>'
-      + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">コレクションを作る</button>';
+    h = '<div class="empty">気になったことばを集めてみましょう。<br>'
+      + '本のテーマをまたいで、<b>問い</b>や<b>観察の軸</b>で束ねられます。語は複製されません。</div>'
+      + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">観察を作る</button>';
     el.innerHTML = h; return;
   }
   h += '<div class="row" style="margin-bottom:9px">'
-    + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">コレクションを作る</button></div>';
+    + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">観察を作る</button></div>';
   if(colFormOpen) h += colFormHtml();
+  const cnt = k => db.collections.filter(c => colKind(c)===k).length;
+  h += '<div style="margin-bottom:6px">'
+    + '<button class="chip'+(colFilter?"":" on")+'" onclick="colFilter=\'\';renderCols()">すべて '
+      + db.collections.length + '</button>'
+    + Object.keys(COL_KIND).filter(k => cnt(k)).map(k =>
+        '<button class="chip'+(colFilter===k?" on":"")+'" onclick="colFilter=\''+k+'\';renderCols()">'
+        + esc(COL_KIND[k].label)+' '+cnt(k)+'</button>').join("")
+    + '</div>';
   h += '<div class="colgrid">'
-    + db.collections.slice().sort(colSort).map(colCardHtml).join("") + '</div>';
+    + db.collections.slice().filter(c => !colFilter || colKind(c)===colFilter)
+        .sort(colSort).map(colCardHtml).join("") + '</div>';
   el.innerHTML = h;
   if(colFormOpen && $("colFTitle")) $("colFTitle").focus();
 }
@@ -1740,7 +1835,15 @@ function renderCol(id){
   let h = "";
   if(colEditId === id){
     h += '<div class="card">'
-      + '<div class="sub" style="margin-bottom:6px">タイトル</div>'
+      + '<div class="sub" style="margin-bottom:6px">種類</div>'
+      + '<div class="row" style="margin-bottom:8px">'
+      + Object.keys(COL_KIND).map(k => '<button class="btn'+(colKind(c)===k?" pri":"")
+          + '" onclick="collection(\''+esc(id)+'\').kind=\''+k+'\';save();renderCol(\''+esc(id)+'\')">'
+          + esc(COL_KIND[k].label)+'</button>').join("")
+      + '</div>'
+      + '<div class="sub" style="margin-bottom:6px">問い（種類が「問い」のとき、上に大きく出る）</div>'
+      + '<input type="text" id="colQuestion" value="'+esc(c.question||"")+'">'
+      + '<div class="sub" style="margin:8px 0 6px">タイトル</div>'
       + '<input type="text" id="colTitle" value="'+esc(c.title)+'">'
       + '<div class="sub" style="margin:8px 0 6px">日付</div>'
       + '<input type="date" id="colDate" value="'+esc(c.date||"")+'">'
@@ -1752,21 +1855,26 @@ function renderCol(id){
   }else{
     h += '<div class="row" style="margin-bottom:4px"><h2 class="grow" style="margin:0">'+esc(c.title)+'</h2>'
       + '<button class="btn" onclick="colEditId=\''+esc(id)+'\';renderCol(\''+esc(id)+'\')">編集</button></div>'
-      + '<div class="sub">'+esc(fmtDate(c.date))+' ／ '+items.length+'項目</div>'
+      + (c.question ? '<div class="card" style="border-style:dashed"><b>'+esc(c.question)+'</b>'
+          + '<div class="sub">答えは下の語の並びの中にある。<b>言語ごとにどこで切り分けているか</b>を見る。</div></div>' : '')
+      + '<div class="sub"><span class="tag plain">'+esc(colKindLabel(c))+'</span> '
+      + esc(fmtDate(c.date))+' ／ '+items.length+'項目</div>'
+      + (c.origin === "candidate" ? '<div class="sub" style="margin-top:4px">'
+          + 'ズレの候補から作ったもの。<b>機械が拾った候補で、断定ではない。</b></div>' : '')
       + (c.note ? '<div class="sub" style="margin:6px 0 0; white-space:pre-wrap">'+esc(c.note)+'</div>' : '')
       /* 集め先にしておくと、語の一覧に＋が出て1タップで入れられる(2026-09-12g) */
       + '<div class="row" style="margin-top:8px">'
       + '<button class="btn'+(db.activeCol===id?"":" pri")+'" onclick="colSetActive(\''+esc(id)+'\')">'
-      + (db.activeCol===id ? "集めるのをやめる" : "このコレクションに集める")+'</button>'
+      + (db.activeCol===id ? "集めるのをやめる" : "この観察に集める")+'</button>'
       + (db.activeCol===id ? '<span class="sub">語の一覧に＋が出ます</span>' : '')+'</div>';
   }
   h += '<h2 style="margin:14px 0 6px">集めた比較項目</h2>';
   h += items.length
     ? '<div class="card">' + items.map((x,i)=>colItemHtml(c,x,i,items.length)).join("") + '</div>'
     : '<div class="empty">まだ何も入っていません。<br>'
-      + '語の比較画面を開いて「コレクションに入れる」から足せます。</div>';
+      + '語の比較画面を開いて「観察に入れる」から足せます。</div>';
   h += '<div class="row" style="margin-top:14px">'
-    + '<button class="btn warn" onclick="colDelete(\''+esc(id)+'\')">このコレクションを消す</button></div>'
+    + '<button class="btn warn" onclick="colDelete(\''+esc(id)+'\')">この観察を消す</button></div>'
     + '<div class="sub" style="margin-top:6px">消しても、集めた語・意味・テーマ・メモは残ります。</div>';
   $("colBody").innerHTML = h;
 }
@@ -2124,6 +2232,8 @@ function importData(text){
     let col = byId(db.collections, id);
     if(col){ c.colKept++; return; }   // すでにある枠は触らない
     col = {id, title, date:String(cc.date||""), note:String(cc.note||""),
+           kind: COL_KIND[cc.kind] ? cc.kind : "collection",
+           question: String(cc.question||""), origin: String(cc.origin||"may"),
            items:[], at:Date.now(), updated:Date.now()};
     db.collections.unshift(col); c.col++;
     (cc.items||[]).forEach(x=>{
@@ -2322,7 +2432,7 @@ function renderFmtHelp(){
    + '・同じ本の同じ bookTheme を取り込み直すと、その範囲の語だけ差し替わります。メモは消えません。\n'
    + '・<b>memos</b>: [{target:"sense:比較キー", text:"…"}] で観察メモを足せます（theme:名前 も可）。'
    + '宛先が無ければエラーになり、同じ宛先・同じ文面のメモは二重に入りません。\n'
-   + '・<b>collections</b>: [{key:"…", title:"…", date:"YYYY-MM-DD", note:"…", items:["s:比較キー", …]}] で'
+   + '・<b>collections</b>: [{key, title, date, note, kind:"question"|"lens"|"collection", question, items:["s:比較キー", …]}] で'
    + 'コレクションを配れます。idは key から決まるので読み込み直しても増えません。'
    + '**すでにある枠には触りません**（項目を入れるのは新しく作ったときだけ。外した語は戻りません）。\n'
    + '\n※ ChatGPTには、この形ではなく素材の形（schema_version 2）で出してもらい、'
