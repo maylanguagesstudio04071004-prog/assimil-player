@@ -162974,6 +162974,103 @@
    ]
   },
   {
+   "collections": [
+    {
+     "key": "q-kinship-granularity",
+     "kind": "question",
+     "title": "親族の細かさ",
+     "date": "2026-09-13",
+     "question": "家族関係をどこまで細かく区別する？",
+     "note": "父方と母方、年上と年下、男と女。どこに線を引くかが言語で違う。アラビア語は عم（父方のおじ）と خال（母方のおじ）を分ける。イタリア語の nipote は孫と姪に使う。",
+     "items": [
+      "s:relation_father",
+      "s:relation_mother",
+      "s:relation_daughter",
+      "s:relation_son",
+      "s:relation_husband",
+      "s:relation_wife",
+      "s:relation_relative",
+      "s:relation_family",
+      "s:relation_younger_brother",
+      "s:relation_younger_sister",
+      "s:relation_cousin",
+      "s:relation_aunt",
+      "s:relation_parents",
+      "s:relation_grandchild",
+      "s:relation_older_brother",
+      "s:relation_older_sister",
+      "s:relation_child",
+      "s:relation_uncle",
+      "s:relation_grandfather",
+      "s:relation_grandmother",
+      "s:relation_nephew",
+      "s:relation_niece"
+     ]
+    },
+    {
+     "key": "q-color-boundary",
+     "kind": "question",
+     "title": "色の境界",
+     "date": "2026-09-13",
+     "question": "色の境界はどこにある？",
+     "note": "同じ色名でも指す範囲は言語で違う。紙面の色見本は一例で、意味の範囲全体ではない。",
+     "items": [
+      "s:color_brown",
+      "s:color_white",
+      "s:color_black",
+      "s:color_red",
+      "s:color_blue",
+      "s:color_pink",
+      "s:color_yellow",
+      "s:color_green",
+      "s:color_purple",
+      "s:color_gold",
+      "s:color_orange",
+      "s:color_gray",
+      "s:color_silver",
+      "s:color_indigo",
+      "s:color_sky_blue"
+     ]
+    },
+    {
+     "key": "q-go-come-here",
+     "kind": "question",
+     "title": "行く・来る・ここそこ",
+     "date": "2026-09-13",
+     "question": "「行く／来る」「ここ／そこ／あそこ」は何を基準に分ける？",
+     "note": "話し手の位置か、聞き手の位置か、それとも別の基準か。",
+     "items": [
+      "s:verb_come",
+      "s:question_where",
+      "s:location_here",
+      "s:verb_go",
+      "s:location_over_there",
+      "s:location_there",
+      "s:verb_return"
+     ]
+    },
+    {
+     "key": "lens-speaker-gender",
+     "kind": "lens",
+     "title": "話し手の性別が語に出る",
+     "date": "2026-09-13",
+     "note": "日本語では言わなくていいのに、語形や終助詞に話し手の性別が出るもの。「ズレの候補 → 何で形が変わるか」の『話者の性別』から。",
+     "items": [
+      "s:try_on_question",
+      "s:permission_take_photo",
+      "s:greeting_how_are_you",
+      "s:greeting_im_fine",
+      "s:greeting_thanks",
+      "s:self_married",
+      "s:self_not_married",
+      "s:self_age",
+      "s:self_origin",
+      "s:self_name"
+     ]
+    }
+   ]
+  },
+  {
    "memos": [
     {
      "target": "sense:self_married",
