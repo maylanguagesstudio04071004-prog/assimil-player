@@ -225,7 +225,10 @@ table.ax td.off{color:var(--line)}
   <div class="row">
     <button class="btn" onclick="doExport()">全データをJSONで保存</button>
     <button class="btn" onclick="doExportAtlas()">Atlas用の下書きを作る</button>
+    <button class="btn" onclick="doExportAI()">AIに渡す書き出し</button>
   </div>
+  <div class="sub" style="margin-top:6px">「AIに渡す書き出し」は、比較軸ごとに各言語の語をまとめたJSONです。
+    空欄の意味・出典・補いの印もファイルの中に書いてあります。観察テーマの候補を探してもらうときに渡します。</div>
   <div id="expMsg" class="msg"></div>
 
   <hr>
@@ -277,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-13f";
+const BUILD = "2026-09-14a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -964,9 +967,30 @@ function entryHtml(e){
     + (e.ja && e.ja !== ((sense(e.senseId)||{}).name)
         ? '<div class="ja">'+esc(e.ja)+'</div>' : '')
     + (e.note ? '<div class="sub">'+esc(e.note)+'</div>': '')
+    + colEntryPlusHtml(e)
     + sameTermHtml(e)
     + flagsHtml(e)
     + srcLineHtml(e) + '</div>';
+}
+/* 集め先があるとき、語そのものを入れる＋(2026-09-14)。
+   意味ごと入れるのとは別で、「この言語のこの語だけ」を観察の軸に置きたいときに使う。 */
+function colEntryPlusHtml(e){
+  const c = activeCol();
+  if(!c || !e.id) return "";
+  const has = (c.items||[]).includes(e.id);
+  return '<div class="sameterm"><button class="iconbtn'+(has?" on":"")+'" style="font-size:12.5px; padding:3px 8px"'
+    + ' onclick="event.stopPropagation();colQuickEntry(this,\''+esc(e.id)+'\')">'
+    + (has ? '✓ この語だけ入れている' : '＋ この語だけ「'+esc(c.title)+'」へ')+'</button></div>';
+}
+function colQuickEntry(btn, entryId){
+  const c = activeCol(); if(!c) return;
+  const has = (c.items||[]).includes(entryId);
+  if(has) c.items = c.items.filter(x => x !== entryId);
+  else c.items.push(entryId);
+  c.updated = Date.now(); save();
+  const now = (collection(c.id).items||[]).includes(entryId);
+  btn.textContent = now ? "✓ この語だけ入れている" : "＋ この語だけ「"+c.title+"」へ";
+  btn.className = "iconbtn" + (now ? " on" : "");
 }
 /* 同じ綴りが別の見出しにも出てくるとき(2026-09-11)。押すとそちらへ移る */
 function sameTermHtml(e){
@@ -998,7 +1022,29 @@ function renderThemes(){
   }
   const byName = new Map(db.themes.map(t => [t.name, t]));
   const used = new Set();
+  /* Prism自身の観察軸を先に出す(2026-09-14)。
+     下の「本から来たテーマ」は**出典側の編集者が決めた分類**で、Prismの構造ではない。
+     戻すなら、この節を消せば今までどおりテーマだけが並ぶ。 */
   let h = "";
+  const obs = db.collections.filter(c => colKind(c) !== "collection");
+  h += '<div class="ghead">Prismの観察軸</div>'
+    + '<div class="sub" style="margin:-4px 2px 7px">本の分類とは別に、こちらで立てた問いと軸。'
+    + '1つの語をいくつの軸に入れてもよい。</div>';
+  h += obs.length
+    ? obs.slice().sort(colSort).map(c =>
+        '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
+        + '<div class="row"><b class="grow">'+esc(c.title)+'</b>'
+        + '<span class="tag plain">'+esc(colKindLabel(c))+'</span>'
+        + '<span class="sub">'+((c.items||[]).length)+'項目</span></div>'
+        + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
+        + '</div>').join("")
+    : '<div class="empty">まだありません。「観察」タブから作れます。</div>';
+  h += '<div class="row" style="margin:0 0 14px">'
+    + '<button class="btn" onclick="showTab(\'Collections\')">観察タブへ</button></div>';
+  h += '<div class="ghead">本から来たテーマ</div>'
+    + '<div class="sub" style="margin:-4px 2px 7px">'
+    + '<b>元の本の編集者が決めた分類</b>。Prismの構造ではなく、語がどこに載っていたかという出典の情報。'
+    + '同じ語が複数のテーマに入ることもある。</div>';
   THEME_GROUPS.forEach(g=>{
     const ts = g.themes.map(n => byName.get(n)).filter(Boolean);
     if(!ts.length) return;
@@ -1650,6 +1696,10 @@ function colPlusHtml(senseId){
     + '" onclick="event.stopPropagation();colQuick(this,\''+esc(senseId)+'\')">'+(has?"✓":"＋")+'</button>';
 }
 function colOf(senseId){ return db.collections.filter(c => (c.items||[]).includes(senseId)); }
+/* 観察には「意味(s:…)」だけでなく「語(e:…)」も入れられる(2026-09-14)。
+   意味＝概念そのもの、語＝その言語の1語。「この言語だけ粒度が違う」を見るときは語で入れる。 */
+const colItemIsEntry = x => String(x||"").startsWith("e:");
+function colOfEntry(entryId){ return db.collections.filter(c => (c.items||[]).includes(entryId)); }
 function fmtDate(v){
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||""));
   return m ? (m[1]+"年"+Number(m[2])+"月"+Number(m[3])+"日") : String(v||"");
@@ -1802,6 +1852,7 @@ function renderCols(){
 
 /* 詳細 */
 function colItemHtml(c, senseId, i, n){
+  if(colItemIsEntry(senseId)) return colEntryItemHtml(c, senseId, i, n);
   const s = sense(senseId);
   const btns = '<button class="iconbtn" onclick="event.stopPropagation();colMove(\''+esc(c.id)+'\','+i+',-1)"'
       + (i===0?' disabled':'')+' title="上へ">↑</button>'
@@ -1826,6 +1877,23 @@ function colItemHtml(c, senseId, i, n){
     + '<div class="grow"><b>'+esc(s.name)+'</b> <span class="sub">'+ls.length+'言語'
     + (s.solo && ls.length > 1 ? '（ラベル一致）' : '')+'</span>'
     + (preview ? '<div class="sub" style="font-size:13.5px">'+preview+'</div>' : '') + '</div>'
+    + btns + '</div>';
+}
+/* 観察に入れた「語」1つぶんの行(2026-09-14)。押すとその意味の比較画面へ移る。 */
+function colEntryItemHtml(c, entryId, i, n){
+  const e = byId(db.entries, entryId);
+  const btns = '<button class="iconbtn" onclick="event.stopPropagation();colMove(\''+esc(c.id)+'\','+i+',-1)"'
+      + (i===0?' disabled':'')+' title="上へ">↑</button>'
+    + '<button class="iconbtn" onclick="event.stopPropagation();colMove(\''+esc(c.id)+'\','+i+',1)"'
+      + (i===n-1?' disabled':'')+' title="下へ">↓</button>'
+    + '<button class="iconbtn warn" onclick="event.stopPropagation();colRemoveAt(\''+esc(c.id)+'\','+i+')" title="外す">✕</button>';
+  if(!e) return '<div class="colitem"><div class="grow"><b>（見つかりません）</b>'
+    + '<div class="sub">'+esc(entryId)+'</div></div>'+btns+'</div>';
+  const sn = sense(e.senseId) || {};
+  return '<div class="colitem tap" onclick="openSense(\''+esc(e.senseId)+'\')">'
+    + '<div class="grow"><span class="sub">'+esc(e.lang)+'の語</span> <b>'+esc(e.term)+'</b>'
+    + (e.reading ? ' <span class="sub">'+esc(e.reading)+'</span>' : '')
+    + '<div class="sub">'+esc(sn.name||"")+(e.ja && e.ja!==sn.name ? ' ／ '+esc(e.ja) : '')+'</div></div>'
     + btns + '</div>';
 }
 function renderCol(id){
@@ -2239,8 +2307,8 @@ function importData(text){
     (cc.items||[]).forEach(x=>{
       const senseId = String(x||"").trim();
       if(!senseId) return;
-      // 無い意味は入れない。入れると「（見つかりません）」だけが並ぶ
-      if(!byId(db.senses, senseId)){
+      // 無い意味・語は入れない。入れると「（見つかりません）」だけが並ぶ
+      if(!(colItemIsEntry(senseId) ? byId(db.entries, senseId) : byId(db.senses, senseId))){
         errors.push(where+": コレクション '"+title+"' の項目 '"+senseId+"' が見つかりません"); return;
       }
       if(col.items.includes(senseId)) return;
@@ -2306,6 +2374,65 @@ function doExport(){
 }
 /* Atlas の「取込」タブに貼れる ◇概念 の下書きを作る。
    中身は自動生成せず、こちらで見つけた語を並べるだけ。文章はMayが書く。 */
+/* AIに横断して見せるための書き出し(2026-09-14)。
+   **推測のもとになる材料であって、答えではない。** 空欄の意味と出典の区別をファイルの中に書いておく。
+   語は複製せず、比較軸ごとに言語→語の形でまとめる。既にある観察も入れて、同じ提案の重複を避ける。 */
+function doExportAI(){
+  const m = $("expMsg");
+  try{
+    const langs = db.langs.slice();
+    const axes = db.senses.filter(s => !s.solo).map(s=>{
+      const by = {};
+      entriesOf(s.id).forEach(e=>{
+        if(e.status !== "present" || !e.term) return;
+        (by[e.lang] = by[e.lang] || []).push({
+          term: e.term,
+          reading: e.reading || undefined,
+          ja: (e.ja && e.ja !== s.name) ? e.ja : undefined,
+          section: e.section || undefined,
+          source: (source(e.sourceId)||{}).title || e.sourceId,
+          page: e.page || undefined,
+          note: e.note || undefined,
+          flags: (e.flags||[]).length ? e.flags : undefined
+        });
+      });
+      const themes = (s.themeIds||[]).map(i => (theme(i)||{}).name).filter(Boolean);
+      return {key: s.key || s.name, label: s.name, themes, languages: by,
+              language_count: Object.keys(by).length};
+    }).filter(a => a.language_count >= 2)
+      .sort((a,b) => b.language_count - a.language_count);
+    const obs = db.collections.map(c => ({
+      kind: colKind(c), title: c.title, question: c.question || undefined,
+      note: c.note || undefined, origin: c.origin || "may",
+      items: (c.items||[]).map(x => colItemIsEntry(x)
+        ? {entry: x, label: (sense((byId(db.entries,x)||{}).senseId)||{}).name,
+           term: (byId(db.entries,x)||{}).term}
+        : {sense: x, label: (sense(x)||{}).name})
+    }));
+    const out = {
+      これは何か: "Prismの語彙コーパス。多言語の語を比較軸（概念）ごとに並べたもの。",
+      使い方: "言語による意味の切り分け方の違いを探す材料。候補を出したら、人が見て採用する。",
+      読むときの約束: [
+        "比較軸は**編集上のグルーピング**で、同義や文法的互換性の保証ではない。",
+        "ある言語に語が無いのは『その資料に載っていなかった』という意味。その言語に表現が無いという意味ではない。",
+        "flags に supplement があれば本の転記ではなくClaudeが足した語、from_atlas ならAtlas（Assimilの課）の辞書から。",
+        "読みは原語から付けたAtlas式のローマ字。紙面のカナ読みではない。",
+        "父方/母方・年上/年下・性・数・体・丁寧さなどの区別は、**わざと潰していない**。"
+      ],
+      作った日: new Date().toISOString().slice(0,10),
+      版: BUILD,
+      言語: langs,
+      本: db.sources.map(x => ({id:x.id, title:x.title, kind:x.kind, lang:x.lang || undefined})),
+      すでにある観察: obs,
+      比較軸: axes
+    };
+    const t = JSON.stringify(out);
+    download("prism-ai-" + stamp() + ".json", t, "application/json");
+    m.className = "msg ok";
+    m.textContent = "AI用に書き出しました: 比較軸 " + axes.length + " / 観察 " + obs.length
+      + " / " + Math.round(t.length/1024) + " KB";
+  }catch(e){ m.className="msg err"; m.textContent = "書き出せません: " + e.message; }
+}
 function doExportAtlas(){
   const out = {grammar:[]};
   db.themes.forEach(t=>{
