@@ -280,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-14d";
+const BUILD = "2026-09-15a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -2132,6 +2132,7 @@ function importData(text){
   const pendingMemos = [];
   const pendingCols = [];   // コレクションも同じ理由で後から(2026-09-12)
   const emptied = new Set(); // 語を差し替えた意味。最後に中身が無くなっていたら片付ける(2026-09-14)
+  const colRemove = [];      // 同梱で配った観察を端末から消す id(2026-09-15)。配るのをやめただけでは端末に残るため
 
   blocks.forEach((b, bi)=>{
     const where = "ブロック" + (bi+1);
@@ -2165,6 +2166,7 @@ function importData(text){
 
     (b.memos||[]).forEach(mm => pendingMemos.push({mm, where}));
     (b.collections||[]).forEach(cc => pendingCols.push({cc, where}));
+    (b.removeCollections||[]).forEach(id => colRemove.push(String(id||"").trim()));
 
     if(!b.source && !b.items) return;
     if(!b.source || !b.source.id || !b.source.title){
@@ -2327,6 +2329,19 @@ function importData(text){
     });
   });
 
+  /* 同梱で配っていた観察を消す(2026-09-15。Mayが「観察軸も問いも削除して」)。
+     取り込みの collections は「すでにある枠には触らない」ので、配るのをやめても端末に残る。
+     消すのは removeCollections に書かれた id だけ。利用者が作った観察（c:<ランダム>）は名指ししないかぎり残る。
+     語・意味・テーマ・メモは消えない（観察は項目のidを持つだけ）。 */
+  colRemove.filter(Boolean).forEach(id => {
+    const before = db.collections.length;
+    db.collections = db.collections.filter(col => col.id !== id);
+    if(db.collections.length < before){
+      c.colGone = (c.colGone||0) + 1;
+      if(db.activeCol === id) db.activeCol = "";
+    }
+  });
+
   /* 取り込みで語が別の意味へ移ると、元の意味が空のカードとして残る(2026-09-14)。
      「知る」を分けたとき、個別項目だった wissen・bilmek が比較軸へ上がって起きた。
      片付けるのは、この取り込みで語を差し替えた意味のうち、語が1つも残らず、メモも観察も指していないものだけ。
@@ -2349,7 +2364,8 @@ function importData(text){
     + (c.themeNote ? " / テーマの在否メモ " + c.themeNote : "")
     + (c.col || c.colKept ? " / コレクション " + c.col + "（項目 " + c.colItem + "件"
         + (c.colKept ? "・すでにある " + c.colKept + "件はそのまま" : "") + "）" : "")
-    + (c.senseGone ? "\n語が別の意味へ移って空になった意味 " + c.senseGone + "件を片付けた" : "");
+    + (c.senseGone ? "\n語が別の意味へ移って空になった意味 " + c.senseGone + "件を片付けた" : "")
+    + (c.colGone ? "\n同梱で配っていた観察 " + c.colGone + "件を消した（自分で作った観察は残っている）" : "");
   return {summary, errors, counts:c};
 }
 
