@@ -138332,25 +138332,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/ไทย/question_which_kind",
-     "senseKey": "question_which_kind",
-     "sense": "どんな",
-     "solo": false,
-     "order": 504904,
-     "lang": "ไทย",
-     "term": "บ้าง",
-     "ja": "いくらか・どんな",
-     "note": "",
-     "reading": "bâang",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/ไทย/verb_say",
      "senseKey": "verb_say",
      "sense": "言う",
@@ -138997,25 +138978,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/Türkçe/adj_slow",
-     "senseKey": "adj_slow",
-     "sense": "遅い",
-     "solo": false,
-     "order": 502925,
-     "lang": "Türkçe",
-     "term": "geç",
-     "ja": "遅い",
-     "note": "",
-     "reading": "gech",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/Türkçe/adj_easy",
      "senseKey": "adj_easy",
      "sense": "簡単な",
@@ -139273,6 +139235,25 @@
      "ja": "バスで",
      "note": "",
      "reading": "otobüsle",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/Türkçe/adj_late",
+     "senseKey": "adj_late",
+     "sense": "遅い（形容詞）",
+     "solo": false,
+     "order": 503688,
+     "lang": "Türkçe",
+     "term": "geç",
+     "ja": "遅い",
+     "note": "Atlasの辞書で「遅い」に入れていたが、意味が違ったので移した（2026-09-14）: 時刻が遅い（速度ではない）",
+     "reading": "gech",
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
@@ -139719,25 +139700,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/Türkçe/verb_love",
-     "senseKey": "verb_love",
-     "sense": "愛する",
-     "solo": false,
-     "order": 504637,
-     "lang": "Türkçe",
-     "term": "sevgili",
-     "ja": "愛する",
-     "note": "",
-     "reading": "sevgili",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/Türkçe/question_where_from",
      "senseKey": "question_where_from",
      "sense": "どこから",
@@ -139770,25 +139732,6 @@
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/Türkçe/question_which_kind",
-     "senseKey": "question_which_kind",
-     "sense": "どんな",
-     "solo": false,
-     "order": 504904,
-     "lang": "Türkçe",
-     "term": "herhangi",
-     "ja": "どんな",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_transcribed",
-     "readingLevel": "",
      "kind": "term",
      "flags": [
       "from_atlas"
@@ -141334,25 +141277,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/हिन्दी/relation_nephew",
-     "senseKey": "relation_nephew",
-     "sense": "おい",
-     "solo": false,
-     "order": 505147,
-     "lang": "हिन्दी",
-     "term": "ऐ",
-     "ja": "おい",
-     "note": "",
-     "reading": "ai",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/हिन्दी/relation_sister",
      "senseKey": "relation_sister",
      "sense": "姉妹",
@@ -141971,25 +141895,6 @@
      "ja": "あそこ",
      "note": "",
      "reading": "tam",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/Русский/adj_high",
-     "senseKey": "adj_high",
-     "sense": "高い",
-     "solo": false,
-     "order": 502968,
-     "lang": "Русский",
-     "term": "дорогой",
-     "ja": "親愛なる・高い",
-     "note": "",
-     "reading": "dorogoy",
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
@@ -142862,25 +142767,6 @@
      "lang": "Italiano",
      "term": "gonna",
      "ja": "スカート",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/Italiano/adj_high",
-     "senseKey": "adj_high",
-     "sense": "高い",
-     "solo": false,
-     "order": 502968,
-     "lang": "Italiano",
-     "term": "caro",
-     "ja": "高い・親愛な",
      "note": "",
      "reading": "",
      "readingSrc": "added",
@@ -143956,25 +143842,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/Español/adj_slow",
-     "senseKey": "adj_slow",
-     "sense": "遅い",
-     "solo": false,
-     "order": 502925,
-     "lang": "Español",
-     "term": "tarde",
-     "ja": "午後・遅い",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/Español/adj_easy",
      "senseKey": "adj_easy",
      "sense": "簡単な",
@@ -144002,25 +143869,6 @@
      "lang": "Español",
      "term": "oscuro",
      "ja": "暗い",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/Español/adj_high",
-     "senseKey": "adj_high",
-     "sense": "高い",
-     "solo": false,
-     "order": 502968,
-     "lang": "Español",
-     "term": "cara",
-     "ja": "顔・高い",
      "note": "",
      "reading": "",
      "readingSrc": "added",
@@ -147946,25 +147794,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/English/currency_yen",
-     "senseKey": "currency_yen",
-     "sense": "円",
-     "solo": false,
-     "order": 500423,
-     "lang": "English",
-     "term": "circle",
-     "ja": "円",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/English/currency_dollar",
      "senseKey": "currency_dollar",
      "sense": "ドル",
@@ -148611,25 +148440,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/English/adj_slow",
-     "senseKey": "adj_slow",
-     "sense": "遅い",
-     "solo": false,
-     "order": 502925,
-     "lang": "English",
-     "term": "late",
-     "ja": "遅い",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/English/adj_easy",
      "senseKey": "adj_easy",
      "sense": "簡単な",
@@ -148809,25 +148619,6 @@
      "lang": "English",
      "term": "solid",
      "ja": "固い",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/English/adj_uncomfortable",
-     "senseKey": "adj_uncomfortable",
-     "sense": "不快な",
-     "solo": false,
-     "order": 503139,
-     "lang": "English",
-     "term": "vile",
-     "ja": "不快な",
      "note": "",
      "reading": "",
      "readingSrc": "added",
@@ -149873,25 +149664,6 @@
      "lang": "English",
      "term": "learn",
      "ja": "学ぶ",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/English/verb_return_back",
-     "senseKey": "verb_return_back",
-     "sense": "戻る",
-     "solo": false,
-     "order": 505117,
-     "lang": "English",
-     "term": "back",
-     "ja": "後ろ・戻る",
      "note": "",
      "reading": "",
      "readingSrc": "added",
@@ -153038,25 +152810,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/Nederlands/verb_wake",
-     "senseKey": "verb_wake",
-     "sense": "起きる",
-     "solo": false,
-     "order": 504621,
-     "lang": "Nederlands",
-     "term": "gebeuren",
-     "ja": "起きる",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/Nederlands/verb_make",
      "senseKey": "verb_make",
      "sense": "作る",
@@ -153939,25 +153692,6 @@
      "lang": "Tiếng Việt",
      "term": "hồng",
      "ja": "ピンク・薔薇",
-     "note": "",
-     "reading": "",
-     "readingSrc": "added",
-     "readingStatus": "not_required",
-     "readingLevel": "",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/Tiếng Việt/color_brown",
-     "senseKey": "color_brown",
-     "sense": "茶",
-     "solo": false,
-     "order": 300455,
-     "lang": "Tiếng Việt",
-     "term": "chè",
-     "ja": "チェー(甘い汁物)・茶",
      "note": "",
      "reading": "",
      "readingSrc": "added",
@@ -156344,25 +156078,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/中文/color_brown",
-     "senseKey": "color_brown",
-     "sense": "茶",
-     "solo": false,
-     "order": 300455,
-     "lang": "中文",
-     "term": "茶",
-     "ja": "茶",
-     "note": "",
-     "reading": "chá",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/中文/color_gold",
      "senseKey": "color_gold",
      "sense": "金",
@@ -156952,6 +156667,25 @@
      ]
     },
     {
+     "srcId": "atlasdict/中文/expensive",
+     "senseKey": "expensive",
+     "sense": "高い（値段）",
+     "solo": false,
+     "order": 500535,
+     "lang": "中文",
+     "term": "贵",
+     "ja": "高い",
+     "note": "Atlasの辞書で「高い」に入れていたが、意味が違ったので移した（2026-09-14）: 値段が高い",
+     "reading": "guì",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
      "srcId": "atlasdict/中文/cheap",
      "senseKey": "cheap",
      "sense": "安い",
@@ -157503,25 +157237,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/中文/adj_slow",
-     "senseKey": "adj_slow",
-     "sense": "遅い",
-     "solo": false,
-     "order": 502925,
-     "lang": "中文",
-     "term": "晚",
-     "ja": "遅い",
-     "note": "",
-     "reading": "wǎn",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/中文/adj_busy",
      "senseKey": "adj_busy",
      "sense": "忙しい",
@@ -157532,25 +157247,6 @@
      "ja": "忙しい",
      "note": "",
      "reading": "máng",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/中文/adj_high",
-     "senseKey": "adj_high",
-     "sense": "高い",
-     "solo": false,
-     "order": 502968,
-     "lang": "中文",
-     "term": "贵",
-     "ja": "高い",
-     "note": "",
-     "reading": "guì",
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
@@ -157722,6 +157418,25 @@
      "ja": "幸せ",
      "note": "",
      "reading": "xìngfú",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/中文/adj_late",
+     "senseKey": "adj_late",
+     "sense": "遅い（形容詞）",
+     "solo": false,
+     "order": 503688,
+     "lang": "中文",
+     "term": "晚",
+     "ja": "遅い",
+     "note": "Atlasの辞書で「遅い」に入れていたが、意味が違ったので移した（2026-09-14）: 時刻が遅い",
+     "reading": "wǎn",
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
@@ -159650,6 +159365,25 @@
      ]
     },
     {
+     "srcId": "atlasdict/العربية/expensive",
+     "senseKey": "expensive",
+     "sense": "高い（値段）",
+     "solo": false,
+     "order": 500535,
+     "lang": "العربية",
+     "term": "مُكْلِفٌ",
+     "ja": "高い",
+     "note": "Atlasの辞書で「高い」に入れていたが、意味が違ったので移した（2026-09-14）: 値段が高い（費用がかかる）",
+     "reading": "muklifun",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
      "srcId": "atlasdict/العربية/cheap",
      "senseKey": "cheap",
      "sense": "安い",
@@ -160087,25 +159821,6 @@
      ]
     },
     {
-     "srcId": "atlasdict/العربية/adj_high",
-     "senseKey": "adj_high",
-     "sense": "高い",
-     "solo": false,
-     "order": 502968,
-     "lang": "العربية",
-     "term": "مُكْلِفٌ",
-     "ja": "高い",
-     "note": "",
-     "reading": "muklifun",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
      "srcId": "atlasdict/العربية/adj_same",
      "senseKey": "adj_same",
      "sense": "同じ",
@@ -160211,25 +159926,6 @@
      "ja": "深い",
      "note": "",
      "reading": "3amīqin",
-     "readingSrc": "added",
-     "readingStatus": "",
-     "readingLevel": "reused",
-     "kind": "term",
-     "flags": [
-      "from_atlas"
-     ]
-    },
-    {
-     "srcId": "atlasdict/العربية/adj_tired",
-     "senseKey": "adj_tired",
-     "sense": "疲れた",
-     "solo": false,
-     "order": 503478,
-     "lang": "العربية",
-     "term": "مُتْعِبًا",
-     "ja": "疲れた",
-     "note": "",
-     "reading": "mut3iban",
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
