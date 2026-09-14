@@ -280,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-14b";
+const BUILD = "2026-09-14c";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -2068,7 +2068,10 @@ function upsertSense(name, themeIds, note, opt){
     s = {id:sid(key), key, name:name||key, solo:!!opt.solo, order:null, note:note||"", themeIds:[]};
     db.senses.push(s);
   }
-  if(name && !s.name) s.name = name;
+  /* 比較キーのある意味は、取り込みの名前に合わせる(2026-09-14)。
+     以前は空のときだけ入れていたので、「知る」を「知る（事実も人も同じ語）」に変えても端末では古い名前のままだった。
+     意味の名前を画面で書き換える操作は無いので、上書きしても利用者の編集は消えない。 */
+  if(name && (opt.key || !s.name)) s.name = name;
   if(opt.solo) s.solo = true;
   if(opt.order != null && s.order == null) s.order = Number(opt.order);
   (themeIds||[]).forEach(t => { if(!s.themeIds.includes(t)) s.themeIds.push(t); });
@@ -2123,6 +2126,7 @@ function importData(text){
   // メモは全ブロックを読み終えてから入れる。宛先の意味は後ろのブロックの語で作られることがあるため(2026-09-11)
   const pendingMemos = [];
   const pendingCols = [];   // コレクションも同じ理由で後から(2026-09-12)
+  const emptied = new Set(); // 語を差し替えた意味。最後に中身が無くなっていたら片付ける(2026-09-14)
 
   blocks.forEach((b, bi)=>{
     const where = "ブロック" + (bi+1);
@@ -2210,6 +2214,7 @@ function importData(text){
        メモは意味・テーマ・本のテーマに付いているので、ここでは消えない。 */
     const old = db.entries.filter(e => e.bookThemeId === btIdV);
     c.repl += old.length;
+    old.forEach(e => emptied.add(e.senseId));
     db.entries = db.entries.filter(e => e.bookThemeId !== btIdV);
 
     (b.items||[]).forEach((it, ii)=>{
@@ -2317,6 +2322,19 @@ function importData(text){
     });
   });
 
+  /* 取り込みで語が別の意味へ移ると、元の意味が空のカードとして残る(2026-09-14)。
+     「知る」を分けたとき、個別項目だった wissen・bilmek が比較軸へ上がって起きた。
+     片付けるのは、この取り込みで語を差し替えた意味のうち、語が1つも残らず、メモも観察も指していないものだけ。
+     指しているものは残す（黙って消さない。観察の中で「見つかりません」にもならない）。 */
+  const inUse = id => db.memos.some(m => m.tType==="sense" && m.tId===id)
+                   || db.collections.some(col => (col.items||[]).includes(id));
+  emptied.forEach(id => {
+    if(db.entries.some(e => e.senseId===id) || inUse(id)) return;
+    const before = db.senses.length;
+    db.senses = db.senses.filter(s => s.id !== id);
+    if(db.senses.length < before) c.senseGone = (c.senseGone||0) + 1;
+  });
+
   labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;   // 取り込みで中身が変わったので捨てる
   const summary =
     "取り込み完了: 語 " + c.add + "件（同じ本の同じテーマから " + c.repl + "件を差し替え）\n"
@@ -2325,7 +2343,8 @@ function importData(text){
     + (c.memoSame ? "（同じ文面の " + c.memoSame + "件は入れていない）" : "")
     + (c.themeNote ? " / テーマの在否メモ " + c.themeNote : "")
     + (c.col || c.colKept ? " / コレクション " + c.col + "（項目 " + c.colItem + "件"
-        + (c.colKept ? "・すでにある " + c.colKept + "件はそのまま" : "") + "）" : "");
+        + (c.colKept ? "・すでにある " + c.colKept + "件はそのまま" : "") + "）" : "")
+    + (c.senseGone ? "\n語が別の意味へ移って空になった意味 " + c.senseGone + "件を片付けた" : "");
   return {summary, errors, counts:c};
 }
 
