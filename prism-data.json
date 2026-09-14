@@ -74544,10 +74544,10 @@
     },
     {
      "srcId": "tr_adjectives_051",
-     "senseKey": "solo:tr_adjectives_051",
-     "sense": "知る",
-     "solo": true,
-     "order": 900050,
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
+     "solo": false,
+     "order": 504388,
      "lang": "Türkçe",
      "term": "bilmek",
      "ja": "知る",
@@ -74557,7 +74557,8 @@
      "readingStatus": "",
      "kind": "term",
      "readingLevel": "draft",
-     "section": "動詞"
+     "section": "動詞",
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Türkçe・ไทย＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝聞いて知っている"
     },
     {
      "srcId": "tr_adjectives_052",
@@ -78221,10 +78222,10 @@
     },
     {
      "srcId": "id_verbs_questions_059",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
      "solo": false,
-     "order": 504617,
+     "order": 504388,
      "lang": "Bahasa Indonesia",
      "term": "tahu",
      "ja": "知る・知っている",
@@ -78233,7 +78234,7 @@
      "readingSrc": "added",
      "readingStatus": "not_required",
      "kind": "term",
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Русский・हिन्दी・Italiano＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝知っている"
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Türkçe・ไทย＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝聞いて知っている"
     },
     {
      "srcId": "id_verbs_questions_060",
@@ -81089,10 +81090,10 @@
     },
     {
      "srcId": "th_verbs_questions_068",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
      "solo": false,
-     "order": 504617,
+     "order": 504388,
      "lang": "ไทย",
      "term": "รู้",
      "ja": "知る",
@@ -81102,7 +81103,7 @@
      "readingStatus": "",
      "kind": "term",
      "readingLevel": "reused",
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Русский・हिन्दी・Italiano＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝知っている"
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Türkçe・ไทย＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝聞いて知っている"
     },
     {
      "srcId": "th_verbs_questions_069",
@@ -83747,9 +83748,9 @@
     {
      "srcId": "ru_verbs_questions_062",
      "senseKey": "verb_know",
-     "sense": "知る",
+     "sense": "知る（事実も人も同じ語）",
      "solo": false,
-     "order": 504617,
+     "order": 504953,
      "lang": "Русский",
      "term": "знать",
      "ja": "知る",
@@ -83758,8 +83759,7 @@
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused",
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Русский・हिन्दी・Italiano＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝知っている"
+     "readingLevel": "reused"
     },
     {
      "srcId": "ru_verbs_questions_063",
@@ -86282,9 +86282,9 @@
     {
      "srcId": "hi_verbs_questions_048",
      "senseKey": "verb_know",
-     "sense": "知る",
+     "sense": "知る（事実も人も同じ語）",
      "solo": false,
-     "order": 504617,
+     "order": 504953,
      "lang": "हिन्दी",
      "term": "जानना",
      "ja": "知る",
@@ -86293,8 +86293,7 @@
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "draft",
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Русский・हिन्दी・Italiano＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝知っている"
+     "readingLevel": "draft"
     },
     {
      "srcId": "hi_verbs_questions_049",
@@ -90422,10 +90421,10 @@
     },
     {
      "srcId": "de_verbs_questions_044",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
      "solo": false,
-     "order": 504617,
+     "order": 505354,
      "lang": "Deutsch",
      "term": "kennen",
      "ja": "知っている",
@@ -90435,14 +90434,14 @@
      "readingStatus": "",
      "kind": "term",
      "readingLevel": "draft",
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Русский・हिन्दी・Italiano＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝知っている"
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Deutsch＝知っている ／ Italiano＝知る"
     },
     {
      "srcId": "de_verbs_questions_045",
-     "senseKey": "solo:de_verbs_questions_045",
-     "sense": "聞いて知っている",
-     "solo": true,
-     "order": 900044,
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
+     "solo": false,
+     "order": 504388,
      "lang": "Deutsch",
      "term": "wissen",
      "ja": "聞いて知っている",
@@ -90451,7 +90450,8 @@
      "readingSrc": "added",
      "readingStatus": "",
      "kind": "term",
-     "readingLevel": "reused"
+     "readingLevel": "reused",
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Türkçe・ไทย＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝聞いて知っている"
     },
     {
      "srcId": "de_verbs_questions_046",
@@ -92926,10 +92926,10 @@
     },
     {
      "srcId": "it_verbs_questions_058",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
      "solo": false,
-     "order": 504617,
+     "order": 505354,
      "lang": "Italiano",
      "term": "conoscere",
      "ja": "知る",
@@ -92938,7 +92938,7 @@
      "readingSrc": "added",
      "readingStatus": "not_required",
      "kind": "term",
-     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: ไทย・Русский・हिन्दी・Italiano＝知る ／ Bahasa Indonesia＝知る・知っている ／ Deutsch＝知っている"
+     "senseNote": "紙面のラベルが言語で割れている（そろえていない）: Deutsch＝知っている ／ Italiano＝知る"
     },
     {
      "srcId": "it_verbs_questions_059",
@@ -138294,6 +138294,25 @@
      ]
     },
     {
+     "srcId": "atlasdict/ไทย/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "ไทย",
+     "term": "รู้จัก",
+     "ja": "知っている",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
+     "reading": "róudjàk",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
      "srcId": "atlasdict/ไทย/verb_become",
      "senseKey": "verb_become",
      "sense": "〜になる",
@@ -139567,6 +139586,25 @@
      ]
     },
     {
+     "srcId": "atlasdict/Türkçe/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "Türkçe",
+     "term": "tanımak",
+     "ja": "知ること",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "readingLevel": "",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
      "srcId": "atlasdict/Türkçe/verb_sleep",
      "senseKey": "verb_sleep",
      "sense": "眠る",
@@ -140393,6 +140431,25 @@
      "term": "menantu",
      "ja": "婿・嫁",
      "note": "",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "readingLevel": "",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/Bahasa Indonesia/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "Bahasa Indonesia",
+     "term": "kenal",
+     "ja": "知っている",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
      "reading": "",
      "readingSrc": "added",
      "readingStatus": "not_required",
@@ -143025,6 +143082,25 @@
      ]
     },
     {
+     "srcId": "atlasdict/Italiano/verb_know_fact",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "Italiano",
+     "term": "sapere",
+     "ja": "知る",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "readingLevel": "",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
      "srcId": "atlasdict/Italiano/verb_make",
      "senseKey": "verb_make",
      "sense": "作る",
@@ -144583,15 +144659,34 @@
      ]
     },
     {
-     "srcId": "atlasdict/Español/verb_know",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "srcId": "atlasdict/Español/verb_know_fact",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
      "solo": false,
      "order": 504617,
      "lang": "Español",
      "term": "saber",
      "ja": "知る",
-     "note": "",
+     "note": "Atlasの辞書で「知る」に入れていたが、事実を知る／人を知るに分けたので移した（2026-09-14）",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "readingLevel": "",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/Español/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "Español",
+     "term": "conozco",
+     "ja": "私は知っている",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
      "reading": "",
      "readingSrc": "added",
      "readingStatus": "not_required",
@@ -146103,16 +146198,35 @@
      ]
     },
     {
-     "srcId": "atlasdict/Français/verb_know",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "srcId": "atlasdict/Français/verb_know_fact",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
      "solo": false,
      "order": 504617,
      "lang": "Français",
      "term": "savoir",
      "ja": "知る",
-     "note": "",
+     "note": "Atlasの辞書で「知る」に入れていたが、事実を知る／人を知るに分けたので移した（2026-09-14）",
      "reading": "savwar",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/Français/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "Français",
+     "term": "connaître",
+     "ja": "知る",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
+     "reading": "konetr",
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
@@ -149354,7 +149468,7 @@
     {
      "srcId": "atlasdict/English/verb_know",
      "senseKey": "verb_know",
-     "sense": "知る",
+     "sense": "知る（事実も人も同じ語）",
      "solo": false,
      "order": 504617,
      "lang": "English",
@@ -152772,15 +152886,34 @@
      ]
     },
     {
-     "srcId": "atlasdict/Nederlands/verb_know",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "srcId": "atlasdict/Nederlands/verb_know_fact",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
      "solo": false,
      "order": 504617,
      "lang": "Nederlands",
      "term": "weten",
      "ja": "知る",
-     "note": "",
+     "note": "Atlasの辞書で「知る」に入れていたが、事実を知る／人を知るに分けたので移した（2026-09-14）",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "readingLevel": "",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/Nederlands/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "Nederlands",
+     "term": "kennen",
+     "ja": "知っている",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
      "reading": "",
      "readingSrc": "added",
      "readingStatus": "not_required",
@@ -155394,15 +155527,34 @@
      ]
     },
     {
-     "srcId": "atlasdict/Tiếng Việt/verb_know",
-     "senseKey": "verb_know",
-     "sense": "知る",
+     "srcId": "atlasdict/Tiếng Việt/verb_know_fact",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
      "solo": false,
      "order": 504617,
      "lang": "Tiếng Việt",
      "term": "biết",
      "ja": "知る・〜できる",
-     "note": "",
+     "note": "Atlasの辞書で「知る」に入れていたが、事実を知る／人を知るに分けたので移した（2026-09-14）",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "readingLevel": "",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/Tiếng Việt/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "Tiếng Việt",
+     "term": "quen",
+     "ja": "慣れる・知り合いである(người quen 知人)",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
      "reading": "",
      "readingSrc": "added",
      "readingStatus": "not_required",
@@ -158244,6 +158396,44 @@
      ]
     },
     {
+     "srcId": "atlasdict/中文/verb_know_fact",
+     "senseKey": "verb_know_fact",
+     "sense": "知る（事実・情報を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "中文",
+     "term": "知道",
+     "ja": "知っている",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
+     "reading": "zhīdào",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/中文/verb_know_person",
+     "senseKey": "verb_know_person",
+     "sense": "知る（人・場所を）",
+     "solo": false,
+     "order": 504617,
+     "lang": "中文",
+     "term": "认识",
+     "ja": "知り合う",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
+     "reading": "rènshi",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
      "srcId": "atlasdict/中文/verb_think",
      "senseKey": "verb_think",
      "sense": "思う",
@@ -160268,6 +160458,25 @@
      "ja": "話す",
      "note": "",
      "reading": "yataHaddathu",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "readingLevel": "reused",
+     "kind": "term",
+     "flags": [
+      "from_atlas"
+     ]
+    },
+    {
+     "srcId": "atlasdict/العربية/verb_know",
+     "senseKey": "verb_know",
+     "sense": "知る（事実も人も同じ語）",
+     "solo": false,
+     "order": 504617,
+     "lang": "العربية",
+     "term": "يعرف",
+     "ja": "知っている",
+     "note": "「知る」を事実を知る／人を知るに分けたとき、Atlasの辞書から足した（2026-09-14）",
+     "reading": "ya3rifu",
      "readingSrc": "added",
      "readingStatus": "",
      "readingLevel": "reused",
@@ -162734,6 +162943,23 @@
       "s:self_age",
       "s:self_origin",
       "s:self_name"
+     ]
+    }
+   ]
+  },
+  {
+   "collections": [
+    {
+     "key": "q-know-what",
+     "kind": "question",
+     "title": "何を知っているか",
+     "date": "2026-09-14",
+     "question": "「知っている」は、知っている相手が事実か人かで言葉が分かれる？",
+     "note": "ドイツ語は wissen（事実）と kennen（人・場所）、タイ語は รู้ と รู้จัก、インドネシア語は tahu と kenal。ロシア語 знать・ヒンディー語 जानना・英語 know は、本やAtlasでは一語で両方に使われている。語の多くはAtlasの辞書から補ったもので、本の転記ではない。",
+     "items": [
+      "s:verb_know_fact",
+      "s:verb_know_person",
+      "s:verb_know"
      ]
     }
    ]
