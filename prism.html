@@ -280,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-14c";
+const BUILD = "2026-09-14d";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1792,8 +1792,10 @@ function colCardHtml(c){
     + '<span class="sub">'+n+'項目</span></div>'
     + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
     + '<div class="sub">'+esc(fmtDate(c.date))+'</div>'
-    + (c.note ? '<div class="sub" style="margin-top:3px; white-space:pre-wrap">'+esc(c.note)+'</div>' : '')
+    /* 一覧では注を3行までにする(2026-09-14)。ChatGPTの観察候補は注が10行ほどあり、14件並ぶと一覧が長くなりすぎる。全文は詳細に出る */
+    + (c.note ? '<div class="sub" style="margin-top:3px; white-space:pre-wrap; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden">'+esc(c.note)+'</div>' : '')
     + (c.origin === "candidate" ? '<div class="sub">ズレの候補から作った（機械が拾ったもの）</div>' : '')
+    + (c.origin === "chatgpt" ? '<div class="sub">ChatGPTの観察候補（Mayが確かめる前のもの）</div>' : '')
     + '</div>';
 }
 let colFormKind = "question";   // 作るときの既定は「問い」
@@ -1930,6 +1932,9 @@ function renderCol(id){
       + esc(fmtDate(c.date))+' ／ '+items.length+'項目</div>'
       + (c.origin === "candidate" ? '<div class="sub" style="margin-top:4px">'
           + 'ズレの候補から作ったもの。<b>機械が拾った候補で、断定ではない。</b></div>' : '')
+      /* ChatGPTが記事と書き出しを読んで出した候補(2026-09-14)。Mayが立てた問いと見分ける */
+      + (c.origin === "chatgpt" ? '<div class="sub" style="margin-top:4px">'
+          + 'ChatGPTの観察候補。<b>Mayが確かめる前のもので、断定ではない。</b>要らなければ下の「この観察を消す」で消せる。</div>' : '')
       + (c.note ? '<div class="sub" style="margin:6px 0 0; white-space:pre-wrap">'+esc(c.note)+'</div>' : '')
       /* 集め先にしておくと、語の一覧に＋が出て1タップで入れられる(2026-09-12g) */
       + '<div class="row" style="margin-top:8px">'
