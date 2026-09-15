@@ -280,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-16a";
+const BUILD = "2026-09-16b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -334,7 +334,7 @@ db = {
   entries:    [{id,senseId,lang,term,reading,readingSrc,readingStatus,ja,note,
                 sourceId,bookThemeId,page,status,kind,flags[],reviewNote,numeric,srcId}],
   memos:      [{id,tType,tId,text,at}],
-  collections:[{id,title,date,note,kind,question,origin,checked,items:[senseId|entryId],at,updated}],
+  collections:[{id,title,date,note,kind,question,origin,checked,starred,items:[senseId|entryId],at,updated}],
               // 観察の器。比較項目(s:…)と語(e:…)を束ねるだけで、語は複製しない。
               // kind: "question"（問い）/ "lens"（観察の軸。既定）
               // origin: "candidate" ならズレの候補から作ったもの（機械が拾った候補。断定ではない）
@@ -1787,7 +1787,10 @@ function colSort(a,b){
 function colCardHtml(c){
   const n = (c.items||[]).length;
   return '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
-    + '<div class="row"><b class="grow">'+esc(c.title)+'</b>'
+    /* ⭐（2026-09-16。Mayが「一覧ですぐわかるよう⭐を付けたい」）。カードを開かずに1タップで付け外しする */
+    + '<div class="row"><button class="iconbtn" title="⭐を付ける／外す" style="font-size:18px; line-height:1"'
+    + ' onclick="event.stopPropagation();colToggleStar(\''+esc(c.id)+'\',this)">'+(c.starred ? "⭐" : "☆")+'</button>'
+    + '<b class="grow">'+esc(c.title)+'</b>'
     + (db.activeCol===c.id ? '<span class="tag">集め先</span>' : '')
     /* チェック済みかどうか(2026-09-16。Mayが「量が多いので、チェック済みと未チェックを分けたい」)。欄が無ければ未チェック */
     + (c.checked ? '<span class="tag">✓ チェック済み</span>' : '<span class="tag plain">未チェック</span>')
@@ -1850,10 +1853,13 @@ function renderCols(){
         + esc(COL_KIND[k].label)+' '+cnt(k)+'</button>').join("")
     + '</div>';
   /* チェックの絞り込み(2026-09-16)。種類の絞り込みと重ねて効く */
-  const chk = c => colCheckFilter==="checked" ? !!c.checked : colCheckFilter==="unchecked" ? !c.checked : true;
+  const chk = c => colCheckFilter==="checked" ? !!c.checked : colCheckFilter==="unchecked" ? !c.checked
+                 : colCheckFilter==="starred" ? !!c.starred : true;
   const nUn = db.collections.filter(c => !c.checked).length;
+  const nStar = db.collections.filter(c => c.starred).length;
   h += '<div style="margin-bottom:9px">'
-    + [["", "チェックすべて"], ["unchecked", "未チェック " + nUn], ["checked", "チェック済み " + (db.collections.length - nUn)]]
+    + [["", "チェックすべて"], ["unchecked", "未チェック " + nUn], ["checked", "チェック済み " + (db.collections.length - nUn)],
+       ["starred", "⭐ " + nStar]]
         .map(([k, lab]) => '<button class="chip'+(colCheckFilter===k?" on":"")+'" onclick="colCheckFilter=\''+k+'\';renderCols()">'
           + esc(lab)+'</button>').join("")
     + '</div>';
@@ -1873,6 +1879,24 @@ function colToggleChecked(id){
   c.updated = Date.now();
   save();
   renderCol(id);
+}
+
+/* ⭐を付け外しする(2026-09-16)。一覧から押したときは、そのボタンと絞り込みの件数だけ書き替える
+   （一覧を作り直すとスクロールが飛ぶ。集め先の＋と同じ理由） */
+function colToggleStar(id, btn){
+  const c = collection(id);
+  if(!c) return;
+  c.starred = !c.starred;
+  c.updated = Date.now();
+  save();
+  if(btn){
+    btn.textContent = c.starred ? "⭐" : "☆";
+    document.querySelectorAll('#colList .chip').forEach(ch => {
+      if(ch.textContent.startsWith("⭐")) ch.textContent = "⭐ " + db.collections.filter(x => x.starred).length;
+    });
+  }else{
+    renderCol(id);
+  }
 }
 
 /* 詳細 */
@@ -1964,6 +1988,7 @@ function renderCol(id){
       + (db.activeCol===id ? "集めるのをやめる" : "この観察に集める")+'</button>'
       + '<button class="btn'+(c.checked?"":" pri")+'" onclick="colToggleChecked(\''+esc(id)+'\')">'
       + (c.checked ? "未チェックに戻す" : "✓ チェック済みにする")+'</button>'
+      + '<button class="btn" onclick="colToggleStar(\''+esc(id)+'\')">'+(c.starred ? "⭐ を外す" : "☆ ⭐を付ける")+'</button>'
       + (db.activeCol===id ? '<span class="sub">語の一覧に＋が出ます</span>' : '')+'</div>'
       + '<div class="sub" style="margin-top:4px">'
       + (c.checked ? "✓ チェック済み（残すと決めたもの）" : "未チェック。残さないなら下の「この観察を消す」で消せる。")+'</div>';
