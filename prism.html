@@ -280,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-15a";
+const BUILD = "2026-09-16a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -334,7 +334,7 @@ db = {
   entries:    [{id,senseId,lang,term,reading,readingSrc,readingStatus,ja,note,
                 sourceId,bookThemeId,page,status,kind,flags[],reviewNote,numeric,srcId}],
   memos:      [{id,tType,tId,text,at}],
-  collections:[{id,title,date,note,kind,question,origin,items:[senseId|entryId],at,updated}],
+  collections:[{id,title,date,note,kind,question,origin,checked,items:[senseId|entryId],at,updated}],
               // 観察の器。比較項目(s:…)と語(e:…)を束ねるだけで、語は複製しない。
               // kind: "question"（問い）/ "lens"（観察の軸。既定）
               // origin: "candidate" ならズレの候補から作ったもの（機械が拾った候補。断定ではない）
@@ -1649,6 +1649,7 @@ async function renderImage(id){
    タブは増やさず、「メモ」タブの中で切り替える（iPhoneの幅で6つ目のタブが入らないため）。 */
 let colFormOpen = false;        // 一覧で「観察を作る」を押したか
 let colFilter = "";             // 一覧の種類の絞り込み
+let colCheckFilter = "";        // 一覧のチェックの絞り込み "" | "unchecked" | "checked"(2026-09-16)
 let colEditId = "";             // 詳細で編集中のコレクション
 let colPickFor = "";            // 比較画面で「入れる先を選ぶ」を開いている意味
 
@@ -1788,6 +1789,8 @@ function colCardHtml(c){
   return '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
     + '<div class="row"><b class="grow">'+esc(c.title)+'</b>'
     + (db.activeCol===c.id ? '<span class="tag">集め先</span>' : '')
+    /* チェック済みかどうか(2026-09-16。Mayが「量が多いので、チェック済みと未チェックを分けたい」)。欄が無ければ未チェック */
+    + (c.checked ? '<span class="tag">✓ チェック済み</span>' : '<span class="tag plain">未チェック</span>')
     + '<span class="tag plain">'+esc(colKindLabel(c))+'</span>'
     + '<span class="sub">'+n+'項目</span></div>'
     + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
@@ -1846,11 +1849,30 @@ function renderCols(){
         '<button class="chip'+(colFilter===k?" on":"")+'" onclick="colFilter=\''+k+'\';renderCols()">'
         + esc(COL_KIND[k].label)+' '+cnt(k)+'</button>').join("")
     + '</div>';
-  h += '<div class="colgrid">'
-    + db.collections.slice().filter(c => !colFilter || colKind(c)===colFilter)
-        .sort(colSort).map(colCardHtml).join("") + '</div>';
+  /* チェックの絞り込み(2026-09-16)。種類の絞り込みと重ねて効く */
+  const chk = c => colCheckFilter==="checked" ? !!c.checked : colCheckFilter==="unchecked" ? !c.checked : true;
+  const nUn = db.collections.filter(c => !c.checked).length;
+  h += '<div style="margin-bottom:9px">'
+    + [["", "チェックすべて"], ["unchecked", "未チェック " + nUn], ["checked", "チェック済み " + (db.collections.length - nUn)]]
+        .map(([k, lab]) => '<button class="chip'+(colCheckFilter===k?" on":"")+'" onclick="colCheckFilter=\''+k+'\';renderCols()">'
+          + esc(lab)+'</button>').join("")
+    + '</div>';
+  const shown = db.collections.slice().filter(c => (!colFilter || colKind(c)===colFilter) && chk(c));
+  h += shown.length
+    ? '<div class="colgrid">' + shown.sort(colSort).map(colCardHtml).join("") + '</div>'
+    : '<div class="empty">この絞り込みに当てはまる観察はありません。</div>';
   el.innerHTML = h;
   if(colFormOpen && $("colFTitle")) $("colFTitle").focus();
+}
+
+/* チェック済み／未チェックを切り替える(2026-09-16)。残さないものは今までどおり「この観察を消す」で消す */
+function colToggleChecked(id){
+  const c = collection(id);
+  if(!c) return;
+  c.checked = !c.checked;
+  c.updated = Date.now();
+  save();
+  renderCol(id);
 }
 
 /* 詳細 */
@@ -1940,7 +1962,11 @@ function renderCol(id){
       + '<div class="row" style="margin-top:8px">'
       + '<button class="btn'+(db.activeCol===id?"":" pri")+'" onclick="colSetActive(\''+esc(id)+'\')">'
       + (db.activeCol===id ? "集めるのをやめる" : "この観察に集める")+'</button>'
-      + (db.activeCol===id ? '<span class="sub">語の一覧に＋が出ます</span>' : '')+'</div>';
+      + '<button class="btn'+(c.checked?"":" pri")+'" onclick="colToggleChecked(\''+esc(id)+'\')">'
+      + (c.checked ? "未チェックに戻す" : "✓ チェック済みにする")+'</button>'
+      + (db.activeCol===id ? '<span class="sub">語の一覧に＋が出ます</span>' : '')+'</div>'
+      + '<div class="sub" style="margin-top:4px">'
+      + (c.checked ? "✓ チェック済み（残すと決めたもの）" : "未チェック。残さないなら下の「この観察を消す」で消せる。")+'</div>';
   }
   h += '<h2 style="margin:14px 0 6px">集めた比較項目</h2>';
   h += items.length
