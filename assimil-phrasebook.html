@@ -531,6 +531,13 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="netProbeOut" class="small-note" style="margin-top:0"></div>
     <div class="small-note">GitHubに上げても、スマホ側が古いファイルを持ったままのことがあります。上の「版」が渡したものと違うときに押してください。保存したデータは消えません。</div>
   </div>
+  <!-- ベトナム語の読み(2026-09-16。Mayの依頼)。読みが空の辞書の語だけに、規則(viRoman)で読みを入れる -->
+  <div class="card">
+    <h2>ベトナム語の読み</h2>
+    <button class="btn soft full" id="viRomanBtn" style="margin-top:0">辞書のベトナム語に読みを付ける</button>
+    <div id="viRomanMsg" class="small-note" style="margin-top:0"></div>
+    <div class="small-note">読みが空の語だけに、北部の発音の規則で入れます。すでに読みがある語と、訳には触りません。何度押しても同じ結果です。</div>
+  </div>
   <div class="card">
     <h2>バックアップ</h2>
     <button class="btn full" id="exportBtn">JSONを書き出す(お気に入り含む)</button>
@@ -571,7 +578,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-06b";
+const BUILD = "2026-09-16a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3535,6 +3542,37 @@ function errText(e){
   const sw = (navigator.serviceWorker && navigator.serviceWorker.controller) ? " / SW有" : " / SW無";
   return (m.length > 130 ? m.slice(0, 130) : m) + sw;
 }
+/* ベトナム語の読み(2026-09-16。Mayが選んだ: 北部(ハノイ)の発音／綴りと音がずれる子音だけ書き換え、
+   母音の字(ơ ư â ă ô ê)と声調記号はそのまま残す)。通信しない。規則は atlas-roman-rules §13。
+   例: gia đình→za dình  rất→zất  trường→chường  nhà hàng→nyà hàng  phở→fở  sách→sák  cảm ơn→kảm ơn  quê→kwê */
+const VI_I = "iíìỉĩị";
+const VI_VOWEL = /[aăâeêioôơuưyáàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/;
+function viRomanSyl(tok){
+  const m = String(tok).normalize("NFC").match(/^([^\p{L}]*)(\p{L}+)([^\p{L}]*)$/u);
+  if(!m) return String(tok).toLowerCase();
+  const lead = m[1], trail = m[3];
+  let rest = m[2].toLowerCase(), init = "";
+  const take = (p, r)=>{ if(rest.startsWith(p)){ init = r; rest = rest.slice(p.length); return true; } return false; };
+  if(rest[0] === "g" && VI_I.includes(rest[1] || "")){
+    const after = rest.slice(2);
+    if(after && VI_VOWEL.test(after[0])){
+      init = "z";
+      rest = /^[êếềểễệ]/.test(after) ? "i" + after : after;   // giếng→ziếng（iê の i が gi に吸われている）
+    }else{
+      init = "z"; rest = rest.slice(1);                         // gì→zì  gìn→zìn
+    }
+  }else{
+    take("ngh","ng") || take("ng","ng") || take("nh","ny") || take("gh","g") || take("kh","kh")
+      || take("ph","f") || take("th","th") || take("tr","ch") || take("ch","ch") || take("qu","kw")
+      || take("c","k") || take("k","k") || take("dz","z") || take("d","z") || take("đ","d") || take("r","z") || take("x","s");
+  }
+  // 語末の -nh は綴りのまま（Mayが選んだ見本 gia đình→za dình のとおり）。-ch と -c だけ k にする
+  rest = rest.replace(/ch$/, "k").replace(/c$/, "k");
+  return lead + init + rest + trail;
+}
+function viRoman(text){
+  return String(text || "").trim().split(/\s+/).filter(Boolean).map(viRomanSyl).join(" ");
+}
 async function fetchRoman(text, lang){
   const sl = LANGCODE[lang] || "auto";
   const data = await trFetchJson("/translate_a/single?client=gtx&sl="
@@ -3785,6 +3823,23 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
           };
         }
         jaTa.parentNode.appendChild(hint);
+      }
+    }
+  }
+  /* ベトナム語の単語は、読みの欄がまだ空なら規則で入れる(2026-09-16。Mayの依頼)。
+     辞書・他の課の単語登録から読みが入っていれば、そちらのまま（上の lookupWordNote が先に入れる）。
+     近い語の候補の「入れる」は、読みが空のときしか読みを入れないので、ここで入れた読みは上書きされない。 */
+  if(lang === "Tiếng Việt" && type === "word"){
+    const rmTa = trPop.querySelector('[data-field="roman"]');
+    if(rmTa && !rmTa.value.trim()){
+      const rm = viRoman(text);
+      if(rm){
+        rmTa.value = rm;
+        fitTextareas(trPop);
+        const hint = document.createElement("div");
+        hint.className = "tr-hint";
+        hint.textContent = "読みは北部の発音の規則で入れました。違っていれば直してください";
+        rmTa.parentNode.appendChild(hint);
       }
     }
   }
@@ -4048,6 +4103,21 @@ $("wordsBtn").onclick = openWordsPage;
   };
 });
 $("storeCheckBtn").onclick = renderStoreInfo;
+/* ベトナム語の辞書に読みを付ける(2026-09-16)。端末にある今のデータに直接当てる。
+   書き出しからJSONを作ると、書き出した後にMayが直した訳を上書きしてしまうため、この形にした。
+   読みが空の語だけ。すでに読みがある語・訳(ja)には触らない。 */
+$("viRomanBtn").onclick = ()=>{
+  let filled = 0, kept = 0, total = 0;
+  db.dict.forEach(x=>{
+    if(x.lang !== "Tiếng Việt") return;
+    total++;
+    if(String(x.roman || "").trim()){ kept++; return; }
+    const rm = viRoman(x.text);
+    if(rm){ x.roman = rm; filled++; }
+  });
+  if(filled) save();
+  $("viRomanMsg").textContent = "ベトナム語 " + total + "語: 読みを入れた " + filled + "語 / すでに読みがあった " + kept + "語";
+};
 // Service Worker と HTTP キャッシュを捨てて読み直す。db は IndexedDB にあるので消えない
 $("freshBtn").onclick = async ()=>{
   const b = $("freshBtn");
