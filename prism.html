@@ -280,7 +280,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-16c";
+const BUILD = "2026-09-18a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1022,28 +1022,33 @@ function renderThemes(){
   }
   const byName = new Map(db.themes.map(t => [t.name, t]));
   const used = new Set();
-  /* Prism自身の観察軸を先に出す(2026-09-14)。
-     下の「本から来たテーマ」は**出典側の編集者が決めた分類**で、Prismの構造ではない。
-     戻すなら、この節を消せば今までどおりテーマだけが並ぶ。 */
   let h = "";
-  const obs = db.collections.filter(c => colKind(c) !== "collection");
-  h += '<div class="ghead">Prismの観察軸</div>'
-    + '<div class="sub" style="margin:-4px 2px 7px">本の分類とは別に、こちらで立てた問いと軸。'
-    + '1つの語をいくつの軸に入れてもよい。</div>';
-  h += obs.length
-    ? obs.slice().sort(colSort).map(c =>
-        '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
-        /* テーマタブの一覧でも⭐を付け外しできる(2026-09-16b。Mayがこの一覧のスクリーンショットで依頼) */
-        + '<div class="row"><button class="iconbtn" title="⭐を付ける／外す" style="font-size:18px; line-height:1"'
-        + ' onclick="event.stopPropagation();colToggleStar(\''+esc(c.id)+'\',this)">'+(c.starred ? "⭐" : "☆")+'</button>'
-        + '<b class="grow">'+esc(c.title)+'</b>'
-        + '<span class="tag plain">'+esc(colKindLabel(c))+'</span>'
-        + '<span class="sub">'+((c.items||[]).length)+'項目</span></div>'
-        + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
-        + '</div>').join("")
-    : '<div class="empty">まだありません。「観察」タブから作れます。</div>';
-  h += '<div class="row" style="margin:0 0 14px">'
-    + '<button class="btn" onclick="showTab(\'Collections\')">観察タブへ</button></div>';
+  /* テーマタブの「Prismの観察軸」の節は撤去した(2026-09-18。Mayが「テーマと観察がほぼ被っている」と言った)。
+     観察タブと同じ観察を並べていて、⭐や絞り込みが付いた今は観察タブの簡易版になっていた。
+     テーマタブは「本から来たテーマ」＝出典側の分類だけに戻した。観察は観察タブに一本化。
+     戻すなら、下のコメントを元に戻して let h = ""; の重複を消す。 */
+  // /* Prism自身の観察軸を先に出す(2026-09-14)。
+  // 下の「本から来たテーマ」は**出典側の編集者が決めた分類**で、Prismの構造ではない。
+  // 戻すなら、この節を消せば今までどおりテーマだけが並ぶ。 */
+  // let h = "";
+  // const obs = db.collections.filter(c => colKind(c) !== "collection");
+  // h += '<div class="ghead">Prismの観察軸</div>'
+  // + '<div class="sub" style="margin:-4px 2px 7px">本の分類とは別に、こちらで立てた問いと軸。'
+  // + '1つの語をいくつの軸に入れてもよい。</div>';
+  // h += obs.length
+  // ? obs.slice().sort(colSort).map(c =>
+  // '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
+  // /* テーマタブの一覧でも⭐を付け外しできる(2026-09-16b。Mayがこの一覧のスクリーンショットで依頼) */
+  // + '<div class="row"><button class="iconbtn" title="⭐を付ける／外す" style="font-size:18px; line-height:1"'
+  // + ' onclick="event.stopPropagation();colToggleStar(\''+esc(c.id)+'\',this)">'+(c.starred ? "⭐" : "☆")+'</button>'
+  // + '<b class="grow">'+esc(c.title)+'</b>'
+  // + '<span class="tag plain">'+esc(colKindLabel(c))+'</span>'
+  // + '<span class="sub">'+((c.items||[]).length)+'項目</span></div>'
+  // + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
+  // + '</div>').join("")
+  // : '<div class="empty">まだありません。「観察」タブから作れます。</div>';
+  // h += '<div class="row" style="margin:0 0 14px">'
+  // + '<button class="btn" onclick="showTab(\'Collections\')">観察タブへ</button></div>';
   h += '<div class="ghead">本から来たテーマ</div>'
     + '<div class="sub" style="margin:-4px 2px 7px">'
     + '<b>元の本の編集者が決めた分類</b>。Prismの構造ではなく、語がどこに載っていたかという出典の情報。'
