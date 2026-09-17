@@ -156,10 +156,11 @@ table.ax td.off{color:var(--line)}
 </header>
 
 <nav>
-  <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
-  <button id="tabWords"    onclick="showTab('Words')">語</button>
+  <!-- 並びは 観察・語・メモ・テーマ・設定(2026-09-18。Mayの指定)。観察が主役で、テーマは出典の情報なので後ろ -->
   <button id="tabCollections" onclick="showTab('Collections')">観察</button>
+  <button id="tabWords"    onclick="showTab('Words')">語</button>
   <button id="tabMemos"    onclick="showTab('Memos')">メモ</button>
+  <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
   <button id="tabSettings" onclick="showTab('Settings')">設定</button>
 </nav>
 
@@ -280,7 +281,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-18a";
+const BUILD = "2026-09-18b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -467,9 +468,9 @@ function normalizeDb(d){
 }
 
 /* ---------- 画面切替 ---------- */
-const TABS = ["Themes","Words","Collections","Memos","Settings"];
+const TABS = ["Collections","Words","Memos","Themes","Settings"];   // 画面の並びと同じ順(2026-09-18)
 const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift","pageCollection"];
-let curTab = "Themes";
+let curTab = "Collections";   // 起動時はいちばん左の観察(2026-09-18。Mayがタブの並びを変えた)
 let backStack = [];
 
 function showTab(name, keepStack){
@@ -2728,7 +2729,7 @@ window.addEventListener("hashchange", openFromHash);
 (async function boot(){
   try{ await bootStorage(); }
   catch(e){ db = emptyDb(); warnBar("読み込みに失敗しました: " + (e && e.message)); }
-  showTab("Themes");
+  showTab("Collections");   // 起動時はいちばん左の観察(2026-09-18)。#theme= で来たときは openFromHash がテーマへ移す
   openFromHash();
 })();
 window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
