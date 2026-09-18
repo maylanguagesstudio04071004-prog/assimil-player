@@ -281,7 +281,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-18b";
+const BUILD = "2026-09-19a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -357,7 +357,10 @@ status: "present" | "absent_in_source" | "no_expression"
 ------------------------------------- */
 function emptyDb(){
   return {savedAt:0, langs:[], sources:[], themes:[], bookThemes:[],
-          senses:[], entries:[], memos:[], images:[], collections:[], activeCol:""};
+          senses:[], entries:[], memos:[], images:[], collections:[], activeCol:"",
+          /* ズレの候補に付けた印(2026-09-19)。候補は毎回データから計算するので、印だけを持つ。
+             star: {候補キー:true}  hide: {候補キー:true}（消したもの。戻せる） */
+          riftMarks:{star:{}, hide:{}}};
 }
 let db = emptyDb();
 
@@ -1326,6 +1329,63 @@ function renderSense(id){
    Multilingual Observations の記事のため、言語の分け方の違いをデータから拾う。
    どちらも機械的に拾った「候補」。ズレかどうかはMayが見て決める。何も統合・削除しない。 */
 let riftMode = "many", riftLang = "", riftScroll = 0;
+/* ズレの候補の⭐と「消した」(2026-09-19。Mayの依頼)。
+   候補はデータから毎回作り直すので、候補そのものは消せない。**印だけを保存して、一覧から外す。**
+   キー: 一語で複数の意味 m:<言語>:<綴り> ／ 言い分け s:<意味id> ／ 音が似ている n:<意味id> */
+let riftStarOnly = false, riftShowHidden = false;
+function riftMarks(){
+  if(!db.riftMarks) db.riftMarks = {star:{}, hide:{}};
+  if(!db.riftMarks.star) db.riftMarks.star = {};
+  if(!db.riftMarks.hide) db.riftMarks.hide = {};
+  return db.riftMarks;
+}
+const riftStarred = k => !!riftMarks().star[k];
+const riftHidden  = k => !!riftMarks().hide[k];
+function riftToggleStar(k, btn){
+  const m = riftMarks();
+  if(m.star[k]) delete m.star[k]; else m.star[k] = true;
+  save();
+  /* 一覧は作り直さない（押したボタンだけ書き替える。作り直すとスクロールが飛ぶ）。
+     ⭐だけを見ているときは、外したら消えるので作り直す */
+  if(btn && !riftStarOnly){ btn.textContent = m.star[k] ? "⭐" : "☆"; riftChipRefresh(); }
+  else renderRiftKeepScroll();
+}
+function riftToggleHide(k){
+  const m = riftMarks();
+  if(m.hide[k]) delete m.hide[k]; else m.hide[k] = true;
+  save(); renderRiftKeepScroll();
+}
+function renderRiftKeepScroll(){
+  const y = window.scrollY; renderRift(); requestAnimationFrame(()=>window.scrollTo(0, y));
+}
+function riftChipRefresh(){
+  const el = document.getElementById("riftMarkChips");
+  if(el) el.innerHTML = riftMarkChipsHtml(true);
+}
+/* 候補1枚の右肩に出す ⭐ と ✕（消したものを見ているときは「戻す」） */
+function riftMarkBtns(k){
+  return '<button class="iconbtn" title="⭐を付ける／外す" style="font-size:18px; line-height:1"'
+    + ' onclick="event.stopPropagation();riftToggleStar(\''+esc(k)+'\',this)">'+(riftStarred(k) ? "⭐" : "☆")+'</button>'
+    + '<button class="iconbtn" title="'+(riftHidden(k) ? "一覧に戻す" : "この候補を消す")+'"'
+    + ' onclick="event.stopPropagation();riftToggleHide(\''+esc(k)+'\')">'+(riftHidden(k) ? "戻す" : "✕")+'</button>';
+}
+/* いまの種類の候補だけを数える（キーの頭で見分ける） */
+function riftMarkCount(which){
+  const pre = riftMode === "many" ? "m:" : riftMode === "split" ? "s:" : "n:";
+  return Object.keys(riftMarks()[which]).filter(k => k.startsWith(pre)).length;
+}
+function riftMarkChipsHtml(inner){
+  const nStar = riftMarkCount("star"), nHide = riftMarkCount("hide");
+  const h = '<button class="chip'+(riftStarOnly?" on":"")+'" onclick="riftStarOnly=!riftStarOnly;riftShowHidden=false;renderRiftKeepScroll()">⭐ '+nStar+'</button>'
+    + (nHide ? '<button class="chip'+(riftShowHidden?" on":"")+'" onclick="riftShowHidden=!riftShowHidden;riftStarOnly=false;renderRiftKeepScroll()">消したもの '+nHide+'</button>' : '');
+  return inner ? h : '<div id="riftMarkChips" style="margin-bottom:6px">'+h+'</div>';
+}
+/* 消したものを見ているときは、消したものだけを出す */
+function riftVisible(k){
+  if(riftShowHidden) return riftHidden(k);
+  if(riftHidden(k)) return false;
+  return !riftStarOnly || riftStarred(k);
+}
 function riftCardHtml(){
   if(!db.entries.length) return "";
   const nm = riftMany().filter(x => !x.weak).length, ns = riftSplit().length;
@@ -1334,7 +1394,7 @@ function riftCardHtml(){
     + '<div class="sub">一語で複数の意味 '+nm+' ／ 1つの意味を言い分けている '+ns
     + ' ／ 言い分けの軸 '+na+'</div></div>';
 }
-function riftSet(mode, lang){ riftMode = mode; riftLang = lang; riftAx = null; riftScroll = 0; renderRift(); window.scrollTo(0,0); }
+function riftSet(mode, lang){ riftMode = mode; riftLang = lang; riftAx = null; riftScroll = 0; riftShowHidden = false; renderRift(); window.scrollTo(0,0); }
 function riftGo(id){ riftScroll = window.scrollY; openSense(id); }
 function riftManyCard(x){
   const first = x.senses.map(s => entriesOf(s.id, x.lang).find(e => termKey(e) === x.key)).find(Boolean);
@@ -1349,13 +1409,14 @@ function riftManyCard(x){
       + (tn ? '<div class="sub">'+esc(tn)+'</div>' : '') + '</div><span class="sub">›</span></div>');
   });
   return '<div class="card"><div class="row"><span class="term grow">'+esc(first ? first.term : "")+'</span>'
-    + '<span class="sub">'+esc(x.lang)+'</span></div>'
+    + '<span class="sub">'+esc(x.lang)+'</span>' + riftMarkBtns("m:"+x.lang+":"+x.key) + '</div>'
     + (first ? readingHtml(first) : '') + rows.join("") + '</div>';
 }
 function riftSplitCard(x){
   const ls = riftLang ? x.langs.filter(v => v.lang === riftLang) : x.langs;
-  return '<div class="card"><div class="row tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
-    + '<b class="grow">'+esc(x.s.name)+'</b><span class="sub">'+x.langs.length+'言語が言い分け ›</span></div>'
+  return '<div class="card"><div class="row"><b class="grow tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
+    + esc(x.s.name)+'</b><span class="sub tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
+    + x.langs.length+'言語が言い分け ›</span>' + riftMarkBtns("s:"+x.s.id) + '</div>'
     + ls.map(v => '<div class="langblock"><div class="langname">'+esc(v.lang)
         + '<span class="sub"> ／ '+esc((source(v.srcId)||{}).title||"")+'</span></div>'
         + v.es.map(e => '<div><span style="font-size:16px">'+esc(e.term)+'</span>'
@@ -1365,8 +1426,8 @@ function riftSplitCard(x){
 }
 /* 音が似ている語の一覧(2026-09-12k)。似ている言語と、**そこに入らない言語**を並べて出す。 */
 function soundViewHtml(){
-  const list = soundList().filter(x => !riftLang || x.forms.has(riftLang));
-  let h = riftLensBtn() + '<div class="sub" style="margin-bottom:10px">読み（読みを付けない言語は原語）の'
+  const list = soundList().filter(x => (!riftLang || x.forms.has(riftLang)) && riftVisible("n:"+x.s.id));
+  let h = riftMarkChipsHtml() + riftLensBtn() + '<div class="sub" style="margin-bottom:10px">読み（読みを付けない言語は原語）の'
     + '<b>音のつづきが近い</b>ものをまとめたもの。借用語や同じ語源の広がりが見える。'
     + '<b>語源を確かめたわけではない。</b>近いかどうかの判定だけで、'
     + '同じ形になっていない言語も並べて出している。</div>';
@@ -1382,9 +1443,10 @@ function soundViewHtml(){
   h += list.map(x=>{
     const inGroup = new Set(x.groups.flat());
     const rest = [...x.forms.keys()].filter(l => !inGroup.has(l));
-    return '<div class="card"><div class="row tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
-      + '<b class="grow">'+esc(x.s.name)+'</b>'
-      + '<span class="sub">'+x.groups[0].length+'／'+x.forms.size+'言語が近い ›</span></div>'
+    return '<div class="card"><div class="row">'
+      + '<b class="grow tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'+esc(x.s.name)+'</b>'
+      + '<span class="sub tap" style="cursor:pointer" onclick="riftGo(\''+esc(x.s.id)+'\')">'
+      + x.groups[0].length+'／'+x.forms.size+'言語が近い ›</span>' + riftMarkBtns("n:"+x.s.id) + '</div>'
       + x.groups.map((g,i) => '<div class="sndrow">'
           + '<span class="sndhead">音'+("ABCDE".charAt(i) || "")+'（'+g.length+'言語）</span>'
           + g.map(l => chip(x,l)).join("") + '</div>').join("")
@@ -1523,13 +1585,14 @@ function renderRift(){
         + esc(l)+' '+counts.get(l)+'</button>').join("")
     + '</div>';
 
+  h += riftMarkChipsHtml();
   if(riftMode === "many"){
     h += riftLensBtn();
     h += '<div class="sub" style="margin-bottom:10px">同じ言語の同じ綴りが、日本語の別々の見出しに出てくるもの。'
       + '1つの語が日本語の2つの意味にまたがっている候補。<b>同じ綴りの別の語（同音異義）</b>や、'
       + '本による見出しの付け方の違い（「はじまる」と「始まる」）も混ざる。</div>';
     const byLang = (a,b) => order(a.lang) - order(b.lang) || a.key.localeCompare(b.key);
-    const pick = arr => arr.filter(x => !riftLang || x.lang === riftLang).sort(byLang);
+    const pick = arr => arr.filter(x => (!riftLang || x.lang === riftLang) && riftVisible("m:"+x.lang+":"+x.key)).sort(byLang);
     const c = pick(cand), w = pick(weak);
     let last = "";
     c.forEach(x=>{
@@ -1548,7 +1611,7 @@ function renderRift(){
       + '数・性別・丁寧さなどで言い分けている候補。<b>同じ本の中で</b>数えている（本をまたぐ違いは入れない）。'
       + '<b>本が別の言い方を並べただけ</b>のものも混ざる。'
       + '構文枠（「〜」を含む形）も入れている。ロシア語の「3・4」と「5以上」の分け方などがそこに出るため。</div>';
-    const list = split.filter(x => !riftLang || x.langs.some(v => v.lang === riftLang))
+    const list = split.filter(x => (!riftLang || x.langs.some(v => v.lang === riftLang)) && riftVisible("s:"+x.s.id))
       .sort((a,b) => b.langs.length - a.langs.length
         || (a.s.order==null?1e9:a.s.order) - (b.s.order==null?1e9:b.s.order));
     h += list.length ? list.map(riftSplitCard).join("") : '<div class="empty">該当なし。</div>';
