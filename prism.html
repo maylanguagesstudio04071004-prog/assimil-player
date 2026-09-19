@@ -281,7 +281,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-20a";
+const BUILD = "2026-09-20b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -302,7 +302,17 @@ function toNative(l){ return NATIVE[String(l||"").trim()] || String(l||"").trim(
    ここに書いていないテーマは末尾の「その他」に落ちる。**消えない**ので、
    素材に新しいテーマが来たら、ここへ足すだけでよい。
    並べ替えたいときはこの配列を書き換える。 */
+/* 並びは2026-09-20にMayが指定（Mayの記録・Atlasの◇と同じ軸を先頭へ）。
+   notFromBook が付いた節は「本から来たテーマ」の見出しより上に出る。
+   戻すなら、この2つを下（まとまった言い回しの後ろ）に移し、notFromBook を消す。 */
 const THEME_GROUPS = [
+  /* Notionの記録（2026-09-20）。本から来たテーマではないので、見出しの外に出す */
+  {name:"Mayの記録（Notion）", notFromBook:true,
+   note:"本ではなく、MayがNotionに付けていた記録（2025年6〜10月）。語には⚠でそう出る。",
+   themes:["Mayの記録（Notion）"]},
+  {name:"Atlasの◇と同じ軸", notFromBook:true,
+   note:"本から来たテーマの一部を切り出したもの。Atlasの◇へ行き来するための入口。",
+   themes:["数","曜日","月"]},
   {name:"数と時",     note:"", themes:["数字","時間","月日と年月","1年と天気"]},
   {name:"身のまわり", note:"", themes:["色・買い物","街歩き/散歩"]},
   {name:"人と話す",   note:"", themes:["あいさつ","自己紹介","呼びかけ","人間関係"]},
@@ -310,14 +320,7 @@ const THEME_GROUPS = [
   /* DKの巻末（Useful Phrases）。場面ごとの言い回しで、他のテーマとは粒が違う(2026-09-13) */
   {name:"まとまった言い回し",
    note:"DKの巻末にある、場面ごとの言い方。紙面の欄（あいさつ・案内表示・道案内…）は各語に出る。",
-   themes:["Useful Phrases","助詞・位置・反対語"]},
-  /* Notionの記録（2026-09-20）。本から来たテーマではないので、最後に置いて出どころを断る */
-  {name:"Mayの記録（Notion）",
-   note:"本ではなく、MayがNotionに付けていた記録（2025年6〜10月）。語には⚠でそう出る。",
-   themes:["Mayの記録（Notion）"]},
-  {name:"Atlasの◇と同じ軸",
-   note:"上のテーマの一部を切り出したもの。Atlasの◇へ行き来するための入口。",
-   themes:["数","曜日","月"]}
+   themes:["Useful Phrases","助詞・位置・反対語"]}
 ];
 
 /* Atlasに◇概念として実在するtopic（2026-09-06時点）。
@@ -1058,13 +1061,19 @@ function renderThemes(){
   // : '<div class="empty">まだありません。「観察」タブから作れます。</div>';
   // h += '<div class="row" style="margin:0 0 14px">'
   // + '<button class="btn" onclick="showTab(\'Collections\')">観察タブへ</button></div>';
-  h += '<div class="ghead">本から来たテーマ</div>'
-    + '<div class="sub" style="margin:-4px 2px 7px">'
-    + '<b>元の本の編集者が決めた分類</b>。Prismの構造ではなく、語がどこに載っていたかという出典の情報。'
-    + '同じ語が複数のテーマに入ることもある。</div>';
+  /* 「本から来たテーマ」の見出しは、本から来た節の直前に出す(2026-09-20)。
+     先頭の Mayの記録・Atlasの◇と同じ軸 は本の分類ではないので、この見出しの下に入れない。 */
+  let bookHead = false;
   THEME_GROUPS.forEach(g=>{
     const ts = g.themes.map(n => byName.get(n)).filter(Boolean);
     if(!ts.length) return;
+    if(!g.notFromBook && !bookHead){
+      bookHead = true;
+      h += '<div class="ghead">本から来たテーマ</div>'
+        + '<div class="sub" style="margin:-4px 2px 7px">'
+        + '<b>元の本の編集者が決めた分類</b>。Prismの構造ではなく、語がどこに載っていたかという出典の情報。'
+        + '同じ語が複数のテーマに入ることもある。</div>';
+    }
     ts.forEach(t => used.add(t.id));
     h += '<div class="ghead">'+esc(g.name)+'</div>'
       + (g.note ? '<div class="sub" style="margin:-4px 2px 7px">'+esc(g.note)+'</div>' : '')
