@@ -160888,6 +160888,4094 @@
   },
   {
    "source": {
+    "id": "notion-may",
+    "title": "Mayの記録（Notion「言語学習 - 横比較 -」）",
+    "kind": "notebook",
+    "lang": "",
+    "note": "本ではない。Mayが2025年6〜10月にNotionに付けていた記録（Assimil・NE+・ChatGPTから）。2026-09-20に取り込んだ。本・Atlasの辞書が埋めている欄には入れていない。Notionに書いてあったローマ字はAtlas式ではないので、読みの注に残している。"
+   },
+   "bookTheme": {
+    "name": "比較-単語",
+    "page": "",
+    "themes": [
+     "Mayの記録（Notion）"
+    ],
+    "note": "Notionのデータベース「比較-単語」（https://app.notion.com/p/209bc557d3e080d0852cfeeec3b9edf6）。1行＝日本語の見出し1つに各言語の語。"
+   },
+   "items": [
+    {
+     "srcId": "notion/20dbc557d3e080eba2bef7234e79d093/English",
+     "senseKey": "dkhi_with",
+     "sense": "〜と一緒に",
+     "solo": false,
+     "order": 508621,
+     "lang": "English",
+     "term": "with",
+     "ja": "一緒に",
+     "note": "Notionの記録 2025-06-10 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e080eba2bef7234e79d093/Français",
+     "senseKey": "dkhi_with",
+     "sense": "〜と一緒に",
+     "solo": false,
+     "order": 508621,
+     "lang": "Français",
+     "term": "avec",
+     "ja": "一緒に",
+     "note": "Notionの記録 2025-06-10 ／ 学習ソース: Assimil",
+     "reading": "avek",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/20dbc557d3e080eba2bef7234e79d093/Italiano",
+     "senseKey": "dkhi_with",
+     "sense": "〜と一緒に",
+     "solo": false,
+     "order": 508621,
+     "lang": "Italiano",
+     "term": "con",
+     "ja": "一緒に",
+     "note": "Notionの記録 2025-06-10 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e080eba2bef7234e79d093/Türkçe",
+     "senseKey": "dkhi_with",
+     "sense": "〜と一緒に",
+     "solo": false,
+     "order": 508621,
+     "lang": "Türkçe",
+     "term": "beraber",
+     "ja": "一緒に",
+     "note": "Notionの記録 2025-06-10 ／ 学習ソース: Assimil",
+     "reading": "beraber",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/20dbc557d3e080eba2bef7234e79d093/Bahasa Indonesia",
+     "senseKey": "dkhi_with",
+     "sense": "〜と一緒に",
+     "solo": false,
+     "order": 508621,
+     "lang": "Bahasa Indonesia",
+     "term": "dengan",
+     "ja": "一緒に",
+     "note": "Notionの記録 2025-06-10 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e080eba2bef7234e79d093/中文",
+     "senseKey": "dkhi_with",
+     "sense": "〜と一緒に",
+     "solo": false,
+     "order": 508621,
+     "lang": "中文",
+     "term": "一起",
+     "ja": "一緒に",
+     "note": "Notionの記録 2025-06-10 ／ 学習ソース: Assimil",
+     "reading": "yìqǐ",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: yi qi（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/209bc557d3e0801aaaa3c4129a60eda1/Italiano",
+     "senseKey": "adj_delicious",
+     "sense": "おいしい",
+     "solo": false,
+     "order": 504133,
+     "lang": "Italiano",
+     "term": "buono",
+     "ja": "美味しい",
+     "note": "Notionの記録 2025-06-11 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e0801aaaa3c4129a60eda1/Türkçe",
+     "senseKey": "adj_delicious",
+     "sense": "おいしい",
+     "solo": false,
+     "order": 504133,
+     "lang": "Türkçe",
+     "term": "güzel",
+     "ja": "美味しい",
+     "note": "Notionの記録 2025-06-11 ／ 学習ソース: Assimil",
+     "reading": "güzel",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/20dbc557d3e0808abdd3d8d730e7b17f/English",
+     "senseKey": "may_fresh",
+     "sense": "新鮮な",
+     "solo": false,
+     "order": 95000,
+     "lang": "English",
+     "term": "fresh",
+     "ja": "新鮮な",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e0808abdd3d8d730e7b17f/Français",
+     "senseKey": "may_fresh",
+     "sense": "新鮮な",
+     "solo": false,
+     "order": 95000,
+     "lang": "Français",
+     "term": "frais(m) / fraîche(f)",
+     "ja": "新鮮な",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e0808abdd3d8d730e7b17f/Español",
+     "senseKey": "may_fresh",
+     "sense": "新鮮な",
+     "solo": false,
+     "order": 95000,
+     "lang": "Español",
+     "term": "fresco(m) / fresca(f)",
+     "ja": "新鮮な",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e0808abdd3d8d730e7b17f/Italiano",
+     "senseKey": "may_fresh",
+     "sense": "新鮮な",
+     "solo": false,
+     "order": 95000,
+     "lang": "Italiano",
+     "term": "fresco(m) / fresca(f)",
+     "ja": "新鮮な",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e0808abdd3d8d730e7b17f/हिन्दी",
+     "senseKey": "may_fresh",
+     "sense": "新鮮な",
+     "solo": false,
+     "order": 95000,
+     "lang": "हिन्दी",
+     "term": "ताज़े",
+     "ja": "新鮮な",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil",
+     "reading": "taaze",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: taze（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/20dbc557d3e0808abdd3d8d730e7b17f/Türkçe",
+     "senseKey": "may_fresh",
+     "sense": "新鮮な",
+     "solo": false,
+     "order": 95000,
+     "lang": "Türkçe",
+     "term": "taze",
+     "ja": "新鮮な",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil",
+     "reading": "taze",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/20dbc557d3e0808abdd3d8d730e7b17f/中文",
+     "senseKey": "may_fresh",
+     "sense": "新鮮な",
+     "solo": false,
+     "order": 95000,
+     "lang": "中文",
+     "term": "新鲜",
+     "ja": "新鮮な",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil",
+     "reading": "xīnxiān",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: xin xian（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/English",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "English",
+     "term": "for example",
+     "ja": "例えば",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/Français",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "Français",
+     "term": "par exemple",
+     "ja": "例えば",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/Español",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "Español",
+     "term": "por ejemplo",
+     "ja": "例えば",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/Italiano",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "Italiano",
+     "term": "per esempio",
+     "ja": "例えば",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/हिन्दी",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "हिन्दी",
+     "term": "उदाहरण के लिए",
+     "ja": "例えば",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: udaharan ke liye（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/Türkçe",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "Türkçe",
+     "term": "mesela",
+     "ja": "例えば",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/Bahasa Indonesia",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "Bahasa Indonesia",
+     "term": "misalnya / contohnya",
+     "ja": "例えば",
+     "note": "(口語) ／ Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e0808080bdc4a335ac4d75/中文",
+     "senseKey": "may_for_example",
+     "sense": "例えば",
+     "solo": false,
+     "order": 95001,
+     "lang": "中文",
+     "term": "比如",
+     "ja": "例えば",
+     "note": "Notionの記録 2025-06-12 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: bi ru（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/English",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "English",
+     "term": "every day",
+     "ja": "毎日",
+     "note": "Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/Français",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "Français",
+     "term": "chaque jour",
+     "ja": "毎日",
+     "note": "Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/Español",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "Español",
+     "term": "cada día",
+     "ja": "毎日",
+     "note": "Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/Italiano",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "Italiano",
+     "term": "ogni giorno",
+     "ja": "毎日",
+     "note": "Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/हिन्दी",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "हिन्दी",
+     "term": "हर दिन",
+     "ja": "毎日",
+     "note": "2026-09-20にNotion側を直した（前は जाता jata） ／ Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: har din（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/Türkçe",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "Türkçe",
+     "term": "her gün",
+     "ja": "毎日",
+     "note": "Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/Bahasa Indonesia",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "Bahasa Indonesia",
+     "term": "setiap hari",
+     "ja": "毎日",
+     "note": "Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080c0831fc6ec25df3539/中文",
+     "senseKey": "may_every_day",
+     "sense": "毎日",
+     "solo": false,
+     "order": 95002,
+     "lang": "中文",
+     "term": "每天",
+     "ja": "毎日",
+     "note": "Notionの記録 2025-06-13 ／ 学習ソース: Assimil",
+     "reading": "měitiān",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: mei tian（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/209bc557d3e080d49ab9f39e95e112eb/English",
+     "senseKey": "transport_on_foot",
+     "sense": "歩いて",
+     "solo": false,
+     "order": 502749,
+     "lang": "English",
+     "term": "by walk",
+     "ja": "歩いて",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080d49ab9f39e95e112eb/Français",
+     "senseKey": "transport_on_foot",
+     "sense": "歩いて",
+     "solo": false,
+     "order": 502749,
+     "lang": "Français",
+     "term": "à pied",
+     "ja": "歩いて",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080d49ab9f39e95e112eb/Español",
+     "senseKey": "transport_on_foot",
+     "sense": "歩いて",
+     "solo": false,
+     "order": 502749,
+     "lang": "Español",
+     "term": "a pie",
+     "ja": "歩いて",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080d49ab9f39e95e112eb/Italiano",
+     "senseKey": "transport_on_foot",
+     "sense": "歩いて",
+     "solo": false,
+     "order": 502749,
+     "lang": "Italiano",
+     "term": "a piedi",
+     "ja": "歩いて",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080d49ab9f39e95e112eb/Bahasa Indonesia",
+     "senseKey": "transport_on_foot",
+     "sense": "歩いて",
+     "solo": false,
+     "order": 502749,
+     "lang": "Bahasa Indonesia",
+     "term": "jalan kaki",
+     "ja": "歩いて",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/209bc557d3e080d49ab9f39e95e112eb/中文",
+     "senseKey": "transport_on_foot",
+     "sense": "歩いて",
+     "solo": false,
+     "order": 502749,
+     "lang": "中文",
+     "term": "走",
+     "ja": "歩いて",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "zǒu",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: zou（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/20dbc557d3e08099a4d6cec1a58e657f/English",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "English",
+     "term": "late",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e08099a4d6cec1a58e657f/Français",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "Français",
+     "term": "tard",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "tar",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/20dbc557d3e08099a4d6cec1a58e657f/Español",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "Español",
+     "term": "tarde",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e08099a4d6cec1a58e657f/Italiano",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "Italiano",
+     "term": "tardi",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e08099a4d6cec1a58e657f/Türkçe",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "Türkçe",
+     "term": "geç kalmak",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e08099a4d6cec1a58e657f/Bahasa Indonesia",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "Bahasa Indonesia",
+     "term": "lambat",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/20dbc557d3e08099a4d6cec1a58e657f/中文",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "中文",
+     "term": "迟到",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-06-15 ／ 学習ソース: Assimil",
+     "reading": "chídào",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: chi doa（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/English",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "English",
+     "term": "too",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/Français",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "Français",
+     "term": "aussi",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "osi",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/Español",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "Español",
+     "term": "también",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/Italiano",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "Italiano",
+     "term": "anche",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/हिन्दी",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "हिन्दी",
+     "term": "भी",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "bhii",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: bhī（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/Türkçe",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "Türkçe",
+     "term": "da/de",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/Bahasa Indonesia",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "Bahasa Indonesia",
+     "term": "juga",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0805a824fcaeb1cf2ce05/中文",
+     "senseKey": "may_also",
+     "sense": "〜も",
+     "solo": false,
+     "order": 95004,
+     "lang": "中文",
+     "term": "也",
+     "ja": "〜も",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "yě",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: yě（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/212bc557d3e0806a8ecefb003c55124f/English",
+     "senseKey": "dkhi_near",
+     "sense": "近くに",
+     "solo": false,
+     "order": 508603,
+     "lang": "English",
+     "term": "near / by",
+     "ja": "〜のそばに",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0806a8ecefb003c55124f/Français",
+     "senseKey": "dkhi_near",
+     "sense": "近くに",
+     "solo": false,
+     "order": 508603,
+     "lang": "Français",
+     "term": "près",
+     "ja": "〜のそばに",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "pre",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/212bc557d3e0806a8ecefb003c55124f/Español",
+     "senseKey": "dkhi_near",
+     "sense": "近くに",
+     "solo": false,
+     "order": 508603,
+     "lang": "Español",
+     "term": "cerca",
+     "ja": "〜のそばに",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0806a8ecefb003c55124f/Italiano",
+     "senseKey": "dkhi_near",
+     "sense": "近くに",
+     "solo": false,
+     "order": 508603,
+     "lang": "Italiano",
+     "term": "vicino a",
+     "ja": "〜のそばに",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0806a8ecefb003c55124f/Türkçe",
+     "senseKey": "dkhi_near",
+     "sense": "近くに",
+     "solo": false,
+     "order": 508603,
+     "lang": "Türkçe",
+     "term": "yakın",
+     "ja": "〜のそばに",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "yakən",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/212bc557d3e0806a8ecefb003c55124f/中文",
+     "senseKey": "dkhi_near",
+     "sense": "近くに",
+     "solo": false,
+     "order": 508603,
+     "lang": "中文",
+     "term": "近",
+     "ja": "〜のそばに",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "jìn",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: jin（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/212bc557d3e0806fa40ef54b278ec77c/English",
+     "senseKey": "may_i_have",
+     "sense": "私は〜を持っている",
+     "solo": false,
+     "order": 95005,
+     "lang": "English",
+     "term": "I have / with me",
+     "ja": "私は～を持っている",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0806fa40ef54b278ec77c/Français",
+     "senseKey": "may_i_have",
+     "sense": "私は〜を持っている",
+     "solo": false,
+     "order": 95005,
+     "lang": "Français",
+     "term": "j’ai",
+     "ja": "私は～を持っている",
+     "note": "2026-09-20にNotion側を直した（前は j’al） ／ Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0806fa40ef54b278ec77c/Español",
+     "senseKey": "may_i_have",
+     "sense": "私は〜を持っている",
+     "solo": false,
+     "order": 95005,
+     "lang": "Español",
+     "term": "yo tengo",
+     "ja": "私は～を持っている",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0806fa40ef54b278ec77c/हिन्दी",
+     "senseKey": "may_i_have",
+     "sense": "私は〜を持っている",
+     "solo": false,
+     "order": 95005,
+     "lang": "हिन्दी",
+     "term": "मेरे पास",
+     "ja": "私は～を持っている",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: me pas（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/212bc557d3e0806fa40ef54b278ec77c/العربية",
+     "senseKey": "may_i_have",
+     "sense": "私は〜を持っている",
+     "solo": false,
+     "order": 95005,
+     "lang": "العربية",
+     "term": "لَدَيَّ / عِندِي",
+     "ja": "私は～を持っている",
+     "note": "(文) لَدَيَّ ／ (口) عِندِي ／ Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: ladayya / indī（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/212bc557d3e0806fa40ef54b278ec77c/Türkçe",
+     "senseKey": "may_i_have",
+     "sense": "私は〜を持っている",
+     "solo": false,
+     "order": 95005,
+     "lang": "Türkçe",
+     "term": "sahip olmak",
+     "ja": "私は～を持っている",
+     "note": "(持つ) ／ Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/212bc557d3e0806fa40ef54b278ec77c/中文",
+     "senseKey": "may_i_have",
+     "sense": "私は〜を持っている",
+     "solo": false,
+     "order": 95005,
+     "lang": "中文",
+     "term": "我有",
+     "ja": "私は～を持っている",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: wo you（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/213bc557d3e080e18756da81093efbe8/English",
+     "senseKey": "may_your",
+     "sense": "あなたの",
+     "solo": false,
+     "order": 95006,
+     "lang": "English",
+     "term": "your",
+     "ja": "あなたの",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/213bc557d3e080e18756da81093efbe8/العربية",
+     "senseKey": "may_your",
+     "sense": "あなたの",
+     "solo": false,
+     "order": 95006,
+     "lang": "العربية",
+     "term": "كِ",
+     "ja": "あなたの",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: ki（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/213bc557d3e080e18756da81093efbe8/Türkçe",
+     "senseKey": "may_your",
+     "sense": "あなたの",
+     "solo": false,
+     "order": 95006,
+     "lang": "Türkçe",
+     "term": "-ın, -un, -in, -ün / -nın, -nun, -nin, -nün",
+     "ja": "あなたの",
+     "note": "子音で終わる単語は -ın, -un, -in, -ün ／ 母音で終わる単語は -nın, -nun, -nin, -nün（Notionでは母音・子音が逆に書いてあった。直さずに注で並べる） ／ Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "pattern",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/213bc557d3e080e18756da81093efbe8/中文",
+     "senseKey": "may_your",
+     "sense": "あなたの",
+     "solo": false,
+     "order": 95006,
+     "lang": "中文",
+     "term": "你的",
+     "ja": "あなたの",
+     "note": "Notionの記録 2025-06-16 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: nide（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/213bc557d3e080798ab5c740bf4c7136/العربية",
+     "senseKey": "short",
+     "sense": "短い",
+     "solo": false,
+     "order": 500516,
+     "lang": "العربية",
+     "term": "قصير",
+     "ja": "短い",
+     "note": "Notionの記録 2025-06-17 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: qaṣīr（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/213bc557d3e0808da4ded5efd2f7b9e6/English",
+     "senseKey": "may_map",
+     "sense": "地図",
+     "solo": false,
+     "order": 95007,
+     "lang": "English",
+     "term": "map",
+     "ja": "地図",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/213bc557d3e0808da4ded5efd2f7b9e6/Français",
+     "senseKey": "may_map",
+     "sense": "地図",
+     "solo": false,
+     "order": 95007,
+     "lang": "Français",
+     "term": "plan",
+     "ja": "地図",
+     "note": "構造や配置を示す図 ／ Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "plahñ",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/213bc557d3e0808da4ded5efd2f7b9e6/Español",
+     "senseKey": "may_map",
+     "sense": "地図",
+     "solo": false,
+     "order": 95007,
+     "lang": "Español",
+     "term": "mapa",
+     "ja": "地図",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/213bc557d3e0808da4ded5efd2f7b9e6/Italiano",
+     "senseKey": "may_map",
+     "sense": "地図",
+     "solo": false,
+     "order": 95007,
+     "lang": "Italiano",
+     "term": "mappa",
+     "ja": "地図",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/213bc557d3e0808da4ded5efd2f7b9e6/Türkçe",
+     "senseKey": "may_map",
+     "sense": "地図",
+     "solo": false,
+     "order": 95007,
+     "lang": "Türkçe",
+     "term": "harita",
+     "ja": "地図",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "harita",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/213bc557d3e0808da4ded5efd2f7b9e6/中文",
+     "senseKey": "may_map",
+     "sense": "地図",
+     "solo": false,
+     "order": 95007,
+     "lang": "中文",
+     "term": "地图",
+     "ja": "地図",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "dìtú",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: ditu（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/215bc557d3e08062a28cfa72bc583076/English",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "English",
+     "term": "all",
+     "ja": "全部、全て",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e08062a28cfa72bc583076/Español",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "Español",
+     "term": "todo",
+     "ja": "全部、全て",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e08062a28cfa72bc583076/Italiano",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "Italiano",
+     "term": "tutti",
+     "ja": "全部、全て",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e08062a28cfa72bc583076/हिन्दी",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "हिन्दी",
+     "term": "सारे",
+     "ja": "全部、全て",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "saare",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: sāre（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/215bc557d3e08062a28cfa72bc583076/Bahasa Indonesia",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "Bahasa Indonesia",
+     "term": "semua",
+     "ja": "全部、全て",
+     "note": "Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e08062a28cfa72bc583076/中文",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "中文",
+     "term": "所有的",
+     "ja": "全部、全て",
+     "note": "＋ 名詞 ／ Notionの記録 2025-06-18 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: suǒyǒude（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/215bc557d3e08053b060f6df9d30fcd3/English",
+     "senseKey": "may_delay",
+     "sense": "遅れる／遅れ（名詞も）",
+     "solo": false,
+     "order": 95009,
+     "lang": "English",
+     "term": "late",
+     "ja": "遅れる / 遅れ",
+     "note": "Notionの記録 2025-06-19 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e08053b060f6df9d30fcd3/Français",
+     "senseKey": "may_delay",
+     "sense": "遅れる／遅れ（名詞も）",
+     "solo": false,
+     "order": 95009,
+     "lang": "Français",
+     "term": "retard",
+     "ja": "遅れる / 遅れ",
+     "note": "※英語では侮蔑語 ／ Notionの記録 2025-06-19 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "retar",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/215bc557d3e08053b060f6df9d30fcd3/Español",
+     "senseKey": "may_delay",
+     "sense": "遅れる／遅れ（名詞も）",
+     "solo": false,
+     "order": 95009,
+     "lang": "Español",
+     "term": "retraso / tarde",
+     "ja": "遅れる / 遅れ",
+     "note": "retraso(名詞) / tarde(副詞) ／ Notionの記録 2025-06-19 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e08053b060f6df9d30fcd3/Italiano",
+     "senseKey": "may_delay",
+     "sense": "遅れる／遅れ（名詞も）",
+     "solo": false,
+     "order": 95009,
+     "lang": "Italiano",
+     "term": "ritardo / tardi",
+     "ja": "遅れる / 遅れ",
+     "note": "Notionの記録 2025-06-19 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e08053b060f6df9d30fcd3/Bahasa Indonesia",
+     "senseKey": "may_delay",
+     "sense": "遅れる／遅れ（名詞も）",
+     "solo": false,
+     "order": 95009,
+     "lang": "Bahasa Indonesia",
+     "term": "keterlambatan / terlambat",
+     "ja": "遅れる / 遅れ",
+     "note": "Notionの記録 2025-06-19 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/English",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "English",
+     "term": "not cooked",
+     "ja": "生の、未調理の",
+     "note": "Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/Français",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "Français",
+     "term": "cru / frais",
+     "ja": "生の、未調理の",
+     "note": "cru(野菜) / frais(果物) ／ Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/Español",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "Español",
+     "term": "crudo",
+     "ja": "生の、未調理の",
+     "note": "Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/Italiano",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "Italiano",
+     "term": "crudo",
+     "ja": "生の、未調理の",
+     "note": "Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/हिन्दी",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "हिन्दी",
+     "term": "कच्ची",
+     "ja": "生の、未調理の",
+     "note": "Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: kacchī（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/العربية",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "العربية",
+     "term": "نَيّ",
+     "ja": "生の、未調理の",
+     "note": "Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: naʾī（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/Bahasa Indonesia",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "Bahasa Indonesia",
+     "term": "mentah",
+     "ja": "生の、未調理の",
+     "note": "Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/215bc557d3e0807f8a5bdb38460f5926/中文",
+     "senseKey": "may_raw",
+     "sense": "生の・未調理の",
+     "solo": false,
+     "order": 95010,
+     "lang": "中文",
+     "term": "生的",
+     "ja": "生の、未調理の",
+     "note": "Notionの記録 2025-06-20 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: shēng de（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/English",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "English",
+     "term": "little by little / gradually / bit by bit",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/Français",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "Français",
+     "term": "peu à peu",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/Español",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "Español",
+     "term": "poco a poco",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/Italiano",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "Italiano",
+     "term": "piano piano",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/हिन्दी",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "हिन्दी",
+     "term": "धीरे-धीरे",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: dhīre-dhīre（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/العربية",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "العربية",
+     "term": "تَدْرِيجِيًّا",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: tadrijiyyan（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/Türkçe",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "Türkçe",
+     "term": "yavaş yavaş",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/Bahasa Indonesia",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "Bahasa Indonesia",
+     "term": "pelan-pelan",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/218bc557d3e08048a358dab340120228/中文",
+     "senseKey": "may_gradually",
+     "sense": "だんだん",
+     "solo": false,
+     "order": 95011,
+     "lang": "中文",
+     "term": "慢慢",
+     "ja": "だんだん",
+     "note": "Notionの記録 2025-06-22 ／ 学習ソース: Assimil",
+     "reading": "màn-man",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: man man（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/English",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "English",
+     "term": "home / house",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/Français",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "Français",
+     "term": "chez moi / maison",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/Español",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "Español",
+     "term": "casa",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/Italiano",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "Italiano",
+     "term": "casa",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/हिन्दी",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "हिन्दी",
+     "term": "घर",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "ghar",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: ghar（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/العربية",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "العربية",
+     "term": "بيت / منزل",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: bayt / manzil（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/Türkçe",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "Türkçe",
+     "term": "ev",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "ev",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/Bahasa Indonesia",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "Bahasa Indonesia",
+     "term": "rumah",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0805b8a3add1b84707eaa/中文",
+     "senseKey": "may_home",
+     "sense": "家",
+     "solo": false,
+     "order": 95012,
+     "lang": "中文",
+     "term": "家 / 房子",
+     "ja": "家",
+     "note": "Notionの記録 2025-06-25 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: jiā / fáng zi（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/219bc557d3e08074ae0bfeeb5a3d37f4/Italiano",
+     "senseKey": "may_pleasant",
+     "sense": "（旅行や会話などが）しみじみと楽しい",
+     "solo": false,
+     "order": 95013,
+     "lang": "Italiano",
+     "term": "piacevole",
+     "ja": "（旅行や会話などが）しみじみと楽しい",
+     "note": "Notionの記録 2025-06-26 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e08074ae0bfeeb5a3d37f4/Bahasa Indonesia",
+     "senseKey": "may_pleasant",
+     "sense": "（旅行や会話などが）しみじみと楽しい",
+     "solo": false,
+     "order": 95013,
+     "lang": "Bahasa Indonesia",
+     "term": "menyenangkan / nyaman",
+     "ja": "（旅行や会話などが）しみじみと楽しい",
+     "note": "nyaman は「落ち着く」の意味も ／ Notionの記録 2025-06-26 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e08074ae0bfeeb5a3d37f4/中文",
+     "senseKey": "may_pleasant",
+     "sense": "（旅行や会話などが）しみじみと楽しい",
+     "solo": false,
+     "order": 95013,
+     "lang": "中文",
+     "term": "惬意",
+     "ja": "（旅行や会話などが）しみじみと楽しい",
+     "note": "(舒服 shu fuだと心地よくてリラックスするような意味も含まれる) ／ Notionの記録 2025-06-26 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingNote": "Notionに書いてあった読み: qièyì（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/219bc557d3e0801fb0c2d79599461c14/English",
+     "senseKey": "may_this_here",
+     "sense": "これ／ここ",
+     "solo": false,
+     "order": 95014,
+     "lang": "English",
+     "term": "this / here",
+     "ja": "これ / ここ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0801fb0c2d79599461c14/Français",
+     "senseKey": "may_this_here",
+     "sense": "これ／ここ",
+     "solo": false,
+     "order": 95014,
+     "lang": "Français",
+     "term": "-ci",
+     "ja": "これ / ここ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "pattern",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0801fb0c2d79599461c14/Español",
+     "senseKey": "may_this_here",
+     "sense": "これ／ここ",
+     "solo": false,
+     "order": 95014,
+     "lang": "Español",
+     "term": "qué",
+     "ja": "これ / ここ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0801fb0c2d79599461c14/Italiano",
+     "senseKey": "may_this_here",
+     "sense": "これ／ここ",
+     "solo": false,
+     "order": 95014,
+     "lang": "Italiano",
+     "term": "qui",
+     "ja": "これ / ここ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0801fb0c2d79599461c14/Türkçe",
+     "senseKey": "may_this_here",
+     "sense": "これ／ここ",
+     "solo": false,
+     "order": 95014,
+     "lang": "Türkçe",
+     "term": "bu",
+     "ja": "これ / ここ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "bu",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/219bc557d3e0801fb0c2d79599461c14/Bahasa Indonesia",
+     "senseKey": "may_this_here",
+     "sense": "これ／ここ",
+     "solo": false,
+     "order": 95014,
+     "lang": "Bahasa Indonesia",
+     "term": "ini",
+     "ja": "これ / ここ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e0801fb0c2d79599461c14/中文",
+     "senseKey": "may_this_here",
+     "sense": "これ／ここ",
+     "solo": false,
+     "order": 95014,
+     "lang": "中文",
+     "term": "这个",
+     "ja": "これ / ここ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "zhège",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: zhège（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/219bc557d3e08092886cd79416ef2b97/English",
+     "senseKey": "may_that_there",
+     "sense": "あれ／あそこ",
+     "solo": false,
+     "order": 95015,
+     "lang": "English",
+     "term": "that / there",
+     "ja": "あれ / あそこ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e08092886cd79416ef2b97/Français",
+     "senseKey": "may_that_there",
+     "sense": "あれ／あそこ",
+     "solo": false,
+     "order": 95015,
+     "lang": "Français",
+     "term": "- là",
+     "ja": "あれ / あそこ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "pattern",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e08092886cd79416ef2b97/Español",
+     "senseKey": "may_that_there",
+     "sense": "あれ／あそこ",
+     "solo": false,
+     "order": 95015,
+     "lang": "Español",
+     "term": "eso",
+     "ja": "あれ / あそこ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e08092886cd79416ef2b97/Italiano",
+     "senseKey": "may_that_there",
+     "sense": "あれ／あそこ",
+     "solo": false,
+     "order": 95015,
+     "lang": "Italiano",
+     "term": "la",
+     "ja": "あれ / あそこ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e08092886cd79416ef2b97/Türkçe",
+     "senseKey": "may_that_there",
+     "sense": "あれ／あそこ",
+     "solo": false,
+     "order": 95015,
+     "lang": "Türkçe",
+     "term": "o",
+     "ja": "あれ / あそこ",
+     "note": "※聞き手・話し手のいずれ空も遠い人やもの。聞き手が意識していない（と話し手がみなす）人やものは、遠近関係なく、şu ／ Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "o",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/219bc557d3e08092886cd79416ef2b97/Bahasa Indonesia",
+     "senseKey": "may_that_there",
+     "sense": "あれ／あそこ",
+     "solo": false,
+     "order": 95015,
+     "lang": "Bahasa Indonesia",
+     "term": "itu",
+     "ja": "あれ / あそこ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/219bc557d3e08092886cd79416ef2b97/中文",
+     "senseKey": "may_that_there",
+     "sense": "あれ／あそこ",
+     "solo": false,
+     "order": 95015,
+     "lang": "中文",
+     "term": "那个",
+     "ja": "あれ / あそこ",
+     "note": "Notionの記録 2025-06-28 ／ 学習ソース: Assimil",
+     "reading": "nàge",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: nàge（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/21fbc557d3e0808fb348ee727ef4a7f3/English",
+     "senseKey": "modal_can",
+     "sense": "〜できる",
+     "solo": false,
+     "order": 504572,
+     "lang": "English",
+     "term": "can",
+     "ja": "できる",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/21fbc557d3e0808fb348ee727ef4a7f3/हिन्दी",
+     "senseKey": "modal_can",
+     "sense": "〜できる",
+     "solo": false,
+     "order": 504572,
+     "lang": "हिन्दी",
+     "term": "सकती",
+     "ja": "できる",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "saktii",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/21fbc557d3e0808fb348ee727ef4a7f3/Türkçe",
+     "senseKey": "modal_can",
+     "sense": "〜できる",
+     "solo": false,
+     "order": 504572,
+     "lang": "Türkçe",
+     "term": "mümkün / -abilir, -ebilir, -yabilir, -yebilir",
+     "ja": "できる",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil・Chat GPT",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "pattern",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/21fbc557d3e080048b80c453b908f97f/English",
+     "senseKey": "dkhi_difficult",
+     "sense": "難しい",
+     "solo": false,
+     "order": 508698,
+     "lang": "English",
+     "term": "difficult",
+     "ja": "難しい",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/21fbc557d3e080048b80c453b908f97f/Français",
+     "senseKey": "dkhi_difficult",
+     "sense": "難しい",
+     "solo": false,
+     "order": 508698,
+     "lang": "Français",
+     "term": "difficile",
+     "ja": "難しい",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil",
+     "reading": "difisil",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/21fbc557d3e080048b80c453b908f97f/Italiano",
+     "senseKey": "dkhi_difficult",
+     "sense": "難しい",
+     "solo": false,
+     "order": 508698,
+     "lang": "Italiano",
+     "term": "difficile",
+     "ja": "難しい",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/21fbc557d3e080048b80c453b908f97f/Türkçe",
+     "senseKey": "dkhi_difficult",
+     "sense": "難しい",
+     "solo": false,
+     "order": 508698,
+     "lang": "Türkçe",
+     "term": "zor",
+     "ja": "難しい",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil",
+     "reading": "zor",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/21fbc557d3e080048b80c453b908f97f/Bahasa Indonesia",
+     "senseKey": "dkhi_difficult",
+     "sense": "難しい",
+     "solo": false,
+     "order": 508698,
+     "lang": "Bahasa Indonesia",
+     "term": "susah",
+     "ja": "難しい",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/21fbc557d3e080048b80c453b908f97f/中文",
+     "senseKey": "dkhi_difficult",
+     "sense": "難しい",
+     "solo": false,
+     "order": 508698,
+     "lang": "中文",
+     "term": "难",
+     "ja": "難しい",
+     "note": "Notionの記録 2025-07-02 ／ 学習ソース: Assimil",
+     "reading": "nán",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: neng（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/21fbc557d3e080eba4a5cd6929a42c81/中文",
+     "senseKey": "adj_easy",
+     "sense": "簡単な",
+     "solo": false,
+     "order": 502926,
+     "lang": "中文",
+     "term": "容易",
+     "ja": "やさしい、簡単",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "róngyì",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused",
+     "readingNote": "Notionに書いてあった読み: rong yı（Atlas式ではない）"
+    },
+    {
+     "srcId": "notion/233bc557d3e08095b76aee1e89e9aeb4/English",
+     "senseKey": "adj_narrow",
+     "sense": "狭い（男性）",
+     "solo": false,
+     "order": 503174,
+     "lang": "English",
+     "term": "narrow",
+     "ja": "狭い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080bfbef9ca1bcbfd29f6/Türkçe",
+     "senseKey": "adj_light_weight",
+     "sense": "軽い",
+     "solo": false,
+     "order": 502909,
+     "lang": "Türkçe",
+     "term": "hafif",
+     "ja": "軽い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080f7885bfc169db7c5c1/English",
+     "senseKey": "adj_thick",
+     "sense": "厚い（男性）",
+     "solo": false,
+     "order": 503161,
+     "lang": "English",
+     "term": "thik",
+     "ja": "厚い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080f7885bfc169db7c5c1/Türkçe",
+     "senseKey": "adj_thick",
+     "sense": "厚い（男性）",
+     "solo": false,
+     "order": 503161,
+     "lang": "Türkçe",
+     "term": "kalın",
+     "ja": "厚い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "kalən",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e080288b25e3f1988a3f1c/English",
+     "senseKey": "adj_thin",
+     "sense": "薄い（男性）",
+     "solo": false,
+     "order": 503163,
+     "lang": "English",
+     "term": "thin",
+     "ja": "薄い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080288b25e3f1988a3f1c/Türkçe",
+     "senseKey": "adj_thin",
+     "sense": "薄い（男性）",
+     "solo": false,
+     "order": 503163,
+     "lang": "Türkçe",
+     "term": "ince",
+     "ja": "薄い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080f8ab8ccc6c3824248e/English",
+     "senseKey": "expensive",
+     "sense": "高い（値段）",
+     "solo": false,
+     "order": 500535,
+     "lang": "English",
+     "term": "expensive",
+     "ja": "高い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080f8ab8ccc6c3824248e/Español",
+     "senseKey": "expensive",
+     "sense": "高い（値段）",
+     "solo": false,
+     "order": 500535,
+     "lang": "Español",
+     "term": "caros",
+     "ja": "高い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08027a1d7fcb6a77a724f/Français",
+     "senseKey": "cheap",
+     "sense": "安い",
+     "solo": false,
+     "order": 500536,
+     "lang": "Français",
+     "term": "bon marché / pas cher",
+     "ja": "安い",
+     "note": "2026-09-20にNotion側を直した（前は bas / basse） ／ Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804f85ede7ef03ac8444/English",
+     "senseKey": "good",
+     "sense": "いい",
+     "solo": false,
+     "order": 502798,
+     "lang": "English",
+     "term": "good",
+     "ja": "良い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804f85ede7ef03ac8444/Türkçe",
+     "senseKey": "good",
+     "sense": "いい",
+     "solo": false,
+     "order": 502798,
+     "lang": "Türkçe",
+     "term": "iyi",
+     "ja": "良い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "iyi",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e080888503d7772ca23857/English",
+     "senseKey": "bad",
+     "sense": "わるい",
+     "solo": false,
+     "order": 502900,
+     "lang": "English",
+     "term": "bad",
+     "ja": "悪い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080888503d7772ca23857/Türkçe",
+     "senseKey": "bad",
+     "sense": "わるい",
+     "solo": false,
+     "order": 502900,
+     "lang": "Türkçe",
+     "term": "kötü",
+     "ja": "悪い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "kötü",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e0806a8e5cea100231864d/English",
+     "senseKey": "adj_many",
+     "sense": "多い",
+     "solo": false,
+     "order": 502903,
+     "lang": "English",
+     "term": "many / much",
+     "ja": "多い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0806a8e5cea100231864d/Français",
+     "senseKey": "adj_many",
+     "sense": "多い",
+     "solo": false,
+     "order": 502903,
+     "lang": "Français",
+     "term": "beaucoup",
+     "ja": "多い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "boku",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e0806a8e5cea100231864d/Türkçe",
+     "senseKey": "adj_many",
+     "sense": "多い",
+     "solo": false,
+     "order": 502903,
+     "lang": "Türkçe",
+     "term": "çok",
+     "ja": "多い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "chok",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e080258698ca1ecc040a25/English",
+     "senseKey": "adj_few",
+     "sense": "少ない",
+     "solo": false,
+     "order": 502904,
+     "lang": "English",
+     "term": "a few / a little",
+     "ja": "少ない",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080258698ca1ecc040a25/Français",
+     "senseKey": "adj_few",
+     "sense": "少ない",
+     "solo": false,
+     "order": 502904,
+     "lang": "Français",
+     "term": "un peu",
+     "ja": "少ない",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "öñ pö",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e0805db928d239e023eeec/English",
+     "senseKey": "dkhi_hot",
+     "sense": "暑い／熱い",
+     "solo": false,
+     "order": 508678,
+     "lang": "English",
+     "term": "hot",
+     "ja": "熱い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0805db928d239e023eeec/Français",
+     "senseKey": "dkhi_hot",
+     "sense": "暑い／熱い",
+     "solo": false,
+     "order": 508678,
+     "lang": "Français",
+     "term": "chaud(e)",
+     "ja": "熱い",
+     "note": "2026-09-20にNotion側を直した（前は froid(e)） ／ Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0805db928d239e023eeec/Italiano",
+     "senseKey": "dkhi_hot",
+     "sense": "暑い／熱い",
+     "solo": false,
+     "order": 508678,
+     "lang": "Italiano",
+     "term": "caldo",
+     "ja": "熱い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0805db928d239e023eeec/Türkçe",
+     "senseKey": "dkhi_hot",
+     "sense": "暑い／熱い",
+     "solo": false,
+     "order": 508678,
+     "lang": "Türkçe",
+     "term": "sıcak",
+     "ja": "熱い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "səjak",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e0805db928d239e023eeec/Bahasa Indonesia",
+     "senseKey": "dkhi_hot",
+     "sense": "暑い／熱い",
+     "solo": false,
+     "order": 508678,
+     "lang": "Bahasa Indonesia",
+     "term": "panas",
+     "ja": "熱い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080ef9839da48849540ab/English",
+     "senseKey": "dkhi_cold",
+     "sense": "寒い／冷たい",
+     "solo": false,
+     "order": 508693,
+     "lang": "English",
+     "term": "cold",
+     "ja": "冷たい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080ef9839da48849540ab/Français",
+     "senseKey": "dkhi_cold",
+     "sense": "寒い／冷たい",
+     "solo": false,
+     "order": 508693,
+     "lang": "Français",
+     "term": "froid(e)",
+     "ja": "冷たい",
+     "note": "2026-09-20にNotion側を直した（前は chaud(e)） ／ Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080ef9839da48849540ab/Italiano",
+     "senseKey": "dkhi_cold",
+     "sense": "寒い／冷たい",
+     "solo": false,
+     "order": 508693,
+     "lang": "Italiano",
+     "term": "freddo",
+     "ja": "冷たい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080ef9839da48849540ab/Türkçe",
+     "senseKey": "dkhi_cold",
+     "sense": "寒い／冷たい",
+     "solo": false,
+     "order": 508693,
+     "lang": "Türkçe",
+     "term": "soğuk",
+     "ja": "冷たい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "soouk",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e080ef9839da48849540ab/Bahasa Indonesia",
+     "senseKey": "dkhi_cold",
+     "sense": "寒い／冷たい",
+     "solo": false,
+     "order": 508693,
+     "lang": "Bahasa Indonesia",
+     "term": "dingin",
+     "ja": "冷たい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080d68f1dd7a76aae642a/Türkçe",
+     "senseKey": "adj_hard",
+     "sense": "固い",
+     "solo": false,
+     "order": 502988,
+     "lang": "Türkçe",
+     "term": "sert",
+     "ja": "硬い",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0800b81f8f11c762c9e44/English",
+     "senseKey": "adj_soft",
+     "sense": "やわらかい",
+     "solo": false,
+     "order": 502989,
+     "lang": "English",
+     "term": "soft",
+     "ja": "やわらかい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0800b81f8f11c762c9e44/Türkçe",
+     "senseKey": "adj_soft",
+     "sense": "やわらかい",
+     "solo": false,
+     "order": 502989,
+     "lang": "Türkçe",
+     "term": "yumuşak",
+     "ja": "やわらかい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804bb7c8e9e03feb6c46/English",
+     "senseKey": "adj_rich",
+     "sense": "金持ち",
+     "solo": false,
+     "order": 502940,
+     "lang": "English",
+     "term": "rich",
+     "ja": "裕福な",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804bb7c8e9e03feb6c46/Français",
+     "senseKey": "adj_rich",
+     "sense": "金持ち",
+     "solo": false,
+     "order": 502940,
+     "lang": "Français",
+     "term": "riche",
+     "ja": "裕福な",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "rish",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e0804bb7c8e9e03feb6c46/Türkçe",
+     "senseKey": "adj_rich",
+     "sense": "金持ち",
+     "solo": false,
+     "order": 502940,
+     "lang": "Türkçe",
+     "term": "zengin",
+     "ja": "裕福な",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08082b701ef8fd0382272/English",
+     "senseKey": "adj_poor",
+     "sense": "貧乏",
+     "solo": false,
+     "order": 502941,
+     "lang": "English",
+     "term": "poor",
+     "ja": "貧しい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08082b701ef8fd0382272/Français",
+     "senseKey": "adj_poor",
+     "sense": "貧乏",
+     "solo": false,
+     "order": 502941,
+     "lang": "Français",
+     "term": "pauvre",
+     "ja": "貧しい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "povr",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e08082b701ef8fd0382272/Türkçe",
+     "senseKey": "adj_poor",
+     "sense": "貧乏",
+     "solo": false,
+     "order": 502941,
+     "lang": "Türkçe",
+     "term": "fakir",
+     "ja": "貧しい",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080de9c8ac25d08f1ffe1/English",
+     "senseKey": "direction_east",
+     "sense": "東",
+     "solo": false,
+     "order": 502619,
+     "lang": "English",
+     "term": "East",
+     "ja": "東",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080979121cbbdb3935ffd/Français",
+     "senseKey": "location_behind",
+     "sense": "後ろ",
+     "solo": false,
+     "order": 503250,
+     "lang": "Français",
+     "term": "derrière",
+     "ja": "後ろ",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "deryer",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e080df8745fa65f4603045/English",
+     "senseKey": "location_above",
+     "sense": "上",
+     "solo": false,
+     "order": 502641,
+     "lang": "English",
+     "term": "up",
+     "ja": "上",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080df8745fa65f4603045/Türkçe",
+     "senseKey": "location_above",
+     "sense": "上",
+     "solo": false,
+     "order": 502641,
+     "lang": "Türkçe",
+     "term": "üst",
+     "ja": "上",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804fad6ec9402bacf92c/English",
+     "senseKey": "dkhi_inside",
+     "sense": "内側に",
+     "solo": false,
+     "order": 508598,
+     "lang": "English",
+     "term": "inside",
+     "ja": "内",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804fad6ec9402bacf92c/Français",
+     "senseKey": "dkhi_inside",
+     "sense": "内側に",
+     "solo": false,
+     "order": 508598,
+     "lang": "Français",
+     "term": "intérieur(m)",
+     "ja": "内",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804fad6ec9402bacf92c/Türkçe",
+     "senseKey": "dkhi_inside",
+     "sense": "内側に",
+     "solo": false,
+     "order": 508598,
+     "lang": "Türkçe",
+     "term": "ıç",
+     "ja": "内",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e0804fad6ec9402bacf92c/中文",
+     "senseKey": "dkhi_inside",
+     "sense": "内側に",
+     "solo": false,
+     "order": 508598,
+     "lang": "中文",
+     "term": "内",
+     "ja": "内",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080229214ef67f25ffb6c/English",
+     "senseKey": "dkhi_outside",
+     "sense": "外側に",
+     "solo": false,
+     "order": 508612,
+     "lang": "English",
+     "term": "outside",
+     "ja": "外",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080229214ef67f25ffb6c/Français",
+     "senseKey": "dkhi_outside",
+     "sense": "外側に",
+     "solo": false,
+     "order": 508612,
+     "lang": "Français",
+     "term": "dehors(m)",
+     "ja": "外",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080229214ef67f25ffb6c/Türkçe",
+     "senseKey": "dkhi_outside",
+     "sense": "外側に",
+     "solo": false,
+     "order": 508612,
+     "lang": "Türkçe",
+     "term": "dış",
+     "ja": "外",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "dəsh",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/233bc557d3e080229214ef67f25ffb6c/中文",
+     "senseKey": "dkhi_outside",
+     "sense": "外側に",
+     "solo": false,
+     "order": 508612,
+     "lang": "中文",
+     "term": "外",
+     "ja": "外",
+     "note": "Notionの記録 2025-07-18 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08051b2b2e0f67a488c6e/Français",
+     "senseKey": "adj_near",
+     "sense": "近い",
+     "solo": false,
+     "order": 502623,
+     "lang": "Français",
+     "term": "proche",
+     "ja": "近い",
+     "note": "2026-09-20にNotion側を直した（前は fermer） ／ Notionの記録 2025-07-21 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08051b2b2e0f67a488c6e/Español",
+     "senseKey": "adj_near",
+     "sense": "近い",
+     "solo": false,
+     "order": 502623,
+     "lang": "Español",
+     "term": "cerca",
+     "ja": "近い",
+     "note": "Notionの記録 2025-07-21 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e080b3b586feaabe1557e8/Español",
+     "senseKey": "adj_far",
+     "sense": "遠い",
+     "solo": false,
+     "order": 502624,
+     "lang": "Español",
+     "term": "lejos",
+     "ja": "遠い",
+     "note": "Notionの記録 2025-07-21 ／ 学習ソース: NE+・Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08073adabe89f0b47aec1/English",
+     "senseKey": "may_slowly",
+     "sense": "ゆっくりと",
+     "solo": false,
+     "order": 95016,
+     "lang": "English",
+     "term": "slowly",
+     "ja": "ゆっくりと",
+     "note": "Notionの記録 2025-07-30 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08073adabe89f0b47aec1/Türkçe",
+     "senseKey": "may_slowly",
+     "sense": "ゆっくりと",
+     "solo": false,
+     "order": 95016,
+     "lang": "Türkçe",
+     "term": "yavaş yavaş",
+     "ja": "ゆっくりと",
+     "note": "Notionの記録 2025-07-30 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/233bc557d3e08073adabe89f0b47aec1/Bahasa Indonesia",
+     "senseKey": "may_slowly",
+     "sense": "ゆっくりと",
+     "solo": false,
+     "order": 95016,
+     "lang": "Bahasa Indonesia",
+     "term": "pelan-pelan",
+     "ja": "ゆっくりと",
+     "note": "Notionの記録 2025-07-30 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/23fbc557d3e080c28b0afcb41d969935/English",
+     "senseKey": "daytime",
+     "sense": "昼・日中",
+     "solo": false,
+     "order": 500545,
+     "lang": "English",
+     "term": "afternoon",
+     "ja": "昼",
+     "note": "Notionの記録 2025-07-30 ／ 学習ソース: NE+",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/23fbc557d3e080c28b0afcb41d969935/Français",
+     "senseKey": "daytime",
+     "sense": "昼・日中",
+     "solo": false,
+     "order": 500545,
+     "lang": "Français",
+     "term": "après-midi",
+     "ja": "昼",
+     "note": "Notionの記録 2025-07-30 ／ 学習ソース: NE+",
+     "reading": "apre midi",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/244bc557d3e080b4afd0cfdf96b0e825/English",
+     "senseKey": "may_lots",
+     "sense": "いっぱい",
+     "solo": false,
+     "order": 95017,
+     "lang": "English",
+     "term": "a lot of / many",
+     "ja": "いっぱい",
+     "note": "Notionの記録 2025-09-14 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/244bc557d3e080b4afd0cfdf96b0e825/Türkçe",
+     "senseKey": "may_lots",
+     "sense": "いっぱい",
+     "solo": false,
+     "order": 95017,
+     "lang": "Türkçe",
+     "term": "dolu",
+     "ja": "いっぱい",
+     "note": "Notionの記録 2025-09-14 ／ 学習ソース: Assimil",
+     "reading": "dolu",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/244bc557d3e080b4afd0cfdf96b0e825/中文",
+     "senseKey": "may_lots",
+     "sense": "いっぱい",
+     "solo": false,
+     "order": 95017,
+     "lang": "中文",
+     "term": "很多",
+     "ja": "いっぱい",
+     "note": "Notionの記録 2025-09-14 ／ 学習ソース: Assimil",
+     "reading": "hěnduō",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/244bc557d3e080d7ab23eafecdd2abb3/English",
+     "senseKey": "may_only",
+     "sense": "〜だけ",
+     "solo": false,
+     "order": 95018,
+     "lang": "English",
+     "term": "only",
+     "ja": "〜だけ",
+     "note": "Notionの記録 2025-09-14 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/244bc557d3e080d7ab23eafecdd2abb3/Bahasa Indonesia",
+     "senseKey": "may_only",
+     "sense": "〜だけ",
+     "solo": false,
+     "order": 95018,
+     "lang": "Bahasa Indonesia",
+     "term": "hanya",
+     "ja": "〜だけ",
+     "note": "Notionの記録 2025-09-14 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/244bc557d3e080d7ab23eafecdd2abb3/中文",
+     "senseKey": "may_only",
+     "sense": "〜だけ",
+     "solo": false,
+     "order": 95018,
+     "lang": "中文",
+     "term": "只",
+     "ja": "〜だけ",
+     "note": "Notionの記録 2025-09-14 ／ 学習ソース: Assimil",
+     "reading": "zhǐ",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/26dbc557d3e080398518e0bbf4c8bdb6/Español",
+     "senseKey": "beautiful",
+     "sense": "美しい",
+     "solo": false,
+     "order": 500531,
+     "lang": "Español",
+     "term": "hermosa / hermoso",
+     "ja": "美しい",
+     "note": "Notionの記録 2025-09-14 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26dbc557d3e080cdb82dcd6dc6c56784/English",
+     "senseKey": "may_of_course",
+     "sense": "もちろん",
+     "solo": false,
+     "order": 95019,
+     "lang": "English",
+     "term": "Of caurse",
+     "ja": "もちろん",
+     "note": "Notionの記録 2025-09-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26dbc557d3e080cdb82dcd6dc6c56784/Türkçe",
+     "senseKey": "may_of_course",
+     "sense": "もちろん",
+     "solo": false,
+     "order": 95019,
+     "lang": "Türkçe",
+     "term": "tabii",
+     "ja": "もちろん",
+     "note": "Notionの記録 2025-09-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26dbc557d3e080cdb82dcd6dc6c56784/中文",
+     "senseKey": "may_of_course",
+     "sense": "もちろん",
+     "solo": false,
+     "order": 95019,
+     "lang": "中文",
+     "term": "当然",
+     "ja": "もちろん",
+     "note": "Notionの記録 2025-09-15 ／ 学習ソース: Assimil",
+     "reading": "dāngrán",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/26ebc557d3e080e398d1f6929bdaccbd/English",
+     "senseKey": "may_that_is",
+     "sense": "つまり",
+     "solo": false,
+     "order": 95020,
+     "lang": "English",
+     "term": "so / it means",
+     "ja": "つまり",
+     "note": "Notionの記録 2025-09-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e080e398d1f6929bdaccbd/Türkçe",
+     "senseKey": "may_that_is",
+     "sense": "つまり",
+     "solo": false,
+     "order": 95020,
+     "lang": "Türkçe",
+     "term": "demek",
+     "ja": "つまり",
+     "note": "Notionの記録 2025-09-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_transcribed",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e08025b0ced763d264bb36/English",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "English",
+     "term": "all / every",
+     "ja": "全て",
+     "note": "Notionの記録 2025-09-15 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e08025b0ced763d264bb36/Türkçe",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "Türkçe",
+     "term": "her",
+     "ja": "全て",
+     "note": "Notionの記録 2025-09-15 ／ 学習ソース: Assimil",
+     "reading": "her",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/26ebc557d3e08095943fdfb1ef63e656/English",
+     "senseKey": "dkhi_always",
+     "sense": "いつも",
+     "solo": false,
+     "order": 508626,
+     "lang": "English",
+     "term": "always",
+     "ja": "いつも",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e08095943fdfb1ef63e656/Türkçe",
+     "senseKey": "dkhi_always",
+     "sense": "いつも",
+     "solo": false,
+     "order": 508626,
+     "lang": "Türkçe",
+     "term": "hep",
+     "ja": "いつも",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: Assimil",
+     "reading": "hep",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/26ebc557d3e0808e8b09f4413fae3b92/English",
+     "senseKey": "may_because",
+     "sense": "なぜなら",
+     "solo": false,
+     "order": 95021,
+     "lang": "English",
+     "term": "because",
+     "ja": "なぜなら",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e0808e8b09f4413fae3b92/Türkçe",
+     "senseKey": "may_because",
+     "sense": "なぜなら",
+     "solo": false,
+     "order": 95021,
+     "lang": "Türkçe",
+     "term": "çünkü",
+     "ja": "なぜなら",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: Assimil",
+     "reading": "chünkü",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/26ebc557d3e080d8a6dbdf53f7626bbd/English",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "English",
+     "term": "all / entire",
+     "ja": "全ての",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: Assimil",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e080d8a6dbdf53f7626bbd/Türkçe",
+     "senseKey": "may_all",
+     "sense": "全部・全て",
+     "solo": false,
+     "order": 95008,
+     "lang": "Türkçe",
+     "term": "bütün",
+     "ja": "全ての",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: Assimil",
+     "reading": "bütün",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/26ebc557d3e08076b772ea3e732b3eb7/Türkçe",
+     "senseKey": "adj_happy",
+     "sense": "幸せ",
+     "solo": false,
+     "order": 503474,
+     "lang": "Türkçe",
+     "term": "mutlu",
+     "ja": "幸せ",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: 未記入",
+     "reading": "mutlu",
+     "readingSrc": "added",
+     "readingStatus": "",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ],
+     "readingLevel": "reused"
+    },
+    {
+     "srcId": "notion/26ebc557d3e08026bae3c053219f5ee0/English",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "English",
+     "term": "be late",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: 未記入",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e08026bae3c053219f5ee0/Bahasa Indonesia",
+     "senseKey": "may_be_late",
+     "sense": "遅れる",
+     "solo": false,
+     "order": 95003,
+     "lang": "Bahasa Indonesia",
+     "term": "terlambat",
+     "ja": "遅れる",
+     "note": "Notionの記録 2025-09-16 ／ 学習ソース: 未記入",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    },
+    {
+     "srcId": "notion/26ebc557d3e0802dae3be8a7865b840d/Bahasa Indonesia",
+     "senseKey": "may_hesitate",
+     "sense": "躊躇う",
+     "solo": false,
+     "order": 95022,
+     "lang": "Bahasa Indonesia",
+     "term": "ragu-ragu",
+     "ja": "躊躇う",
+     "note": "Notionの記録 日付なし ／ 学習ソース: 未記入",
+     "reading": "",
+     "readingSrc": "added",
+     "readingStatus": "not_required",
+     "kind": "term",
+     "flags": [
+      "from_notion"
+     ]
+    }
+   ]
+  },
+  {
+   "source": {
     "id": "supplement-atlas5",
     "kind": "supplement",
     "title": "補い（Atlasの5言語。本は無い）",
@@ -163069,6 +167157,154 @@
     {
      "target": "sense:relation_baby",
      "text": "【ChatGPTの気づき候補・未確認】文脈で読みが変わる\n赤ちゃんを表す語は、紙面で男性形と女性形が別の形として対に示されている。人物の性別に応じた語形変化を観察できる。\n根拠: العربية رضيع raDī3 ／ العربية رضيعة raDī3a\n次に見たいこと: 子ども・十代・成人の男女形にも共通する形の違いがあるか比較する。\n確かさ: 紙面・データで確認"
+    }
+   ]
+  },
+  {
+   "memos": [
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】似て非なる（note投稿 2025-09-23・Medium投稿 2025-09-23）\nanda / anta / あんた\n言語: インドネシア語・アラビア語・日本語\n意味とニュアンスの違い:\n・インドネシア語：anda → 丁寧な「あなた」\n・アラビア語：anta → 一般的な男性向け2人称\n・日本語：あんた → くだけた・やや乱暴な「あなた」\n見た目・音の類似点: 語形（\"an–ta/da\"）が非常に似ている\n誤解や混乱の可能性: インドネシア語話者が日本語の「あんた」に丁寧さを感じて誤解する可能性あり\n例文:\n🇮🇩 Anda tinggal di mana?\n🇸🇦 Anta min ayna?\n🇯🇵 あんた、今日どこ行ってたの？\n自由メモ・気づき:\n・同じ「あなた」なのに、語感の温度が全く違っていて面白い\n・敬意や距離感を表す文化の違いが表れている\nタグ: #人称代名詞 #敬語 #インドネシア語 #アラビア語 #日本語 #語感の違い\nNotion: https://app.notion.com/p/22ebc557d3e080efae38c393e49757f0"
+    },
+    {
+     "target": "sense:what_time_now",
+     "text": "【Notionから】似て非なる\nJam berapa? / Berapa jam?\n言語: インドネシア語\n意味とニュアンスの違い:\n・Berapa jam → 何時間（量）を聞く\n・Jam berapa → 何時（時刻）を聞く\n見た目・音の類似点: 両者とも同じ語（berapa, jam）を使っているが、語順だけが違う\n誤解や混乱の可能性: 初心者はどちらも同じ意味に見えてしまい、使い分けを間違える可能性あり。日本語では「何時間／何時」で語順に依存しないので混同しやすい。\n例文:\n- Berapa jam kamu belajar hari ini?\n- Jam berapa kamu mulai bekerja?\n自由メモ・気づき:\n・「疑問語（berapa）の位置によって焦点が変わる」のはインドネシア語らしさ\n・「何時」と「何時間」を1語ずつしっかり区別する感覚が大事\nタグ: #インドネシア語 #アラビア語 #日本語 #語順の違い\nNotion: https://app.notion.com/p/22ebc557d3e080f7b7f6ee4e9958a2c8"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】似て非なる\nbaka / 馬鹿\n言語: インドネシア語・日本語\n（Notionでは本文が空。見出しだけの記録）\nNotion: https://app.notion.com/p/22ebc557d3e080ffacdfea1b61a7d7fe"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】似て非なる\nactuellement / actually\n言語: フランス語・英語\n意味とニュアンスの違い:\n・フランス語 actuellement：今、現在（英語 currently）\n・英語 actually：実は、実際には（＝フランス語 en fait）\nNotion: https://app.notion.com/p/271bc557d3e080459d05c957dae80268"
+    },
+    {
+     "target": "sense:place_bookstore",
+     "text": "【Notionから】似て非なる\nlibrairie / library\n言語: フランス語・英語\n意味とニュアンスの違い:\n・フランス語 本屋・書店（book store）\n・英語 （未記入）\nNotion: https://app.notion.com/p/271bc557d3e080f588aede350c85c328"
+    },
+    {
+     "target": "sense:place_school",
+     "text": "【Notionから】似て非なる\ncollège / college\n言語: フランス語・英語\n意味とニュアンスの違い:\n・フランス語 中学校（英語ならmiddle high school）\n・英語 大学\n（Notionのページに、読めなかったブロックが 6 個ある。画像などかもしれない）\nNotion: https://app.notion.com/p/271bc557d3e0807c86cfd73acea4a80f"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】似て非なる\nassister à / assist\n言語: フランス語・英語\n意味とニュアンスの違い:\n・フランス語 出席する（英語ならattend）\n・英語 手伝う\nNotion: https://app.notion.com/p/271bc557d3e080f5a901fb9e71567796"
+    },
+    {
+     "target": "sense:verb_rest",
+     "text": "【Notionから】似て非なる\nrester / rest\n言語: フランス語・英語\n意味とニュアンスの違い:\n・フランス語 留まる（英語ならstay）\n・英語 休む\nNotion: https://app.notion.com/p/271bc557d3e080869cdefedba7cba499"
+    },
+    {
+     "target": "sense:place_toilet",
+     "text": "【Notionから】似て非なる\ncloset / closet\n言語: 英語・インドネシア語\nインドネシア語 ／ 意味 ／ 備考\n・closet ／ トイレの便器（洋式・和式どちらも） ／ 英語由来だが、意味がずれて定着\n・toilet ／ トイレ全体、または便所 ／ 英語とほぼ同じ感覚\n・WC / kamar kecil ／ トイレ（部屋） ／ “水洗便所”の略が一般化\nNotion: https://app.notion.com/p/271bc557d3e080bc89fce35d920fcc89"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】同じ単語なのに意味が全然違う言葉たち（note投稿 2025-09-22）\nson\n言語: トルコ語\n意味: 最後、最近\nNotion: https://app.notion.com/p/26dbc557d3e080d3bcb4db10929c0715"
+    },
+    {
+     "target": "sense:yesterday",
+     "text": "【Notionから】同じ単語なのに意味が全然違う言葉たち（note投稿 2025-09-22）\nकल kal\n言語: ヒンディー語\n意味: 昨日、明日\nNotion: https://app.notion.com/p/26dbc557d3e0807d9e4fff93991c3f18"
+    },
+    {
+     "target": "sense:tomorrow",
+     "text": "【Notionから】同じ単語なのに意味が全然違う言葉たち（note投稿 2025-09-22）\nकल kal\n言語: ヒンディー語\n意味: 昨日、明日\nNotion: https://app.notion.com/p/26dbc557d3e0807d9e4fff93991c3f18"
+    },
+    {
+     "target": "sense:yesterday",
+     "text": "【Notionから】同じ単語なのに意味が全然違う言葉たち\nkemarin\n言語: インドネシア語\n意味: 昨日／最近／この前\nインドネシア語には時間を表す曖昧語が多い。どうして混乱しないのかというと、インドネシア語話者は：\n• 文脈と他の語（副詞や時制）との組み合わせで理解しています。\n• 正確な日付を言いたいときは tanggal（〜日） や minggu lalu（先週）、bulan lalu（先月） などの語を加える。\nNotion: https://app.notion.com/p/26dbc557d3e080e49fded2098a2c4fbe"
+    },
+    {
+     "target": "sense:tomorrow",
+     "text": "【Notionから】同じ単語なのに意味が全然違う言葉たち\nbesok\n言語: インドネシア語\n意味: 近い未来（「今度」「そのうち」）\nNotion: https://app.notion.com/p/26dbc557d3e080d392d8d3a41dd1de11"
+    },
+    {
+     "target": "sense:time_later",
+     "text": "【Notionから】同じ単語なのに意味が全然違う言葉たち\nnanti\n言語: インドネシア語\n意味: あとで、いつか、将来、しばらくして\nNotion: https://app.notion.com/p/277bc557d3e0801c9cadf4e0446f66bf"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】同じ単語なのに意味が全然違う言葉たち\ndulu\n言語: インドネシア語\n意味: 以前、昔、先に、前に（順番的にも）\nNotion: https://app.notion.com/p/277bc557d3e080859aa8fa4321157672"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】日本語にない表現（記録 2025-07-06）\nكُلُّ لِسَانٍ فِي الْحَقِيقَةِ إِنسَانٌ\n言語: アラビア語\n読み方: kullu lisānin fī al-ḥaqīqati insānun\n意味: どの言語も、実際にはひとりの人間そのもの\n気づき: 多言語学習を通じて自分が感じていたことが、過去に全然接点がなかったアラビア語でそういう表現があるとは、思いもしなかった\nNotion: https://app.notion.com/p/227bc557d3e080b3b63bcce939fe71a3"
+    },
+    {
+     "target": "sense:greeting_goodbye",
+     "text": "【Notionから】日本語にない表現（note投稿 2025-09-25・記録 2025-07-25）\nHoşça kal.\n言語: トルコ語\n意味: 立ち去る側の挨拶）さようなら\n気づき: 今ここにいる相手との関係を大事にするトルコ語らしく、挨拶が見送る側と立ち去る側で違う\nNotion: https://app.notion.com/p/227bc557d3e080f9b773f84db5e9aaf2"
+    },
+    {
+     "target": "sense:greeting_goodbye",
+     "text": "【Notionから】日本語にない表現（note投稿 2025-09-25・記録 2025-07-25）\nGüle güle.\n言語: トルコ語\n意味: 見送る側の挨拶）さようなら\n気づき: 今ここにいる相手との関係を大事にするトルコ語らしく、挨拶が見送る側と立ち去る側で違う\nNotion: https://app.notion.com/p/23abc557d3e080f9b4a8fa4fae639312"
+    },
+    {
+     "target": "sense:greeting_see_you",
+     "text": "【Notionから】日本語にない表現（note投稿 2025-09-26・記録 2025-09-25）\nSampai jumpa\n言語: インドネシア語\n意味: 立ち去る側の挨拶）また会いましょう\nNotion: https://app.notion.com/p/278bc557d3e08076a429f0c07324bfd5"
+    },
+    {
+     "target": "sense:greeting_good_trip",
+     "text": "【Notionから】日本語にない表現（記録 2025-09-25）\nSelamat jalan\n言語: インドネシア語\n意味: 見送る側の挨拶）よい旅を\nNotion: https://app.notion.com/p/278bc557d3e080ca9a3dd0f309db7425"
+    },
+    {
+     "target": "sense:greeting_goodbye",
+     "text": "【Notionから】日本語にない表現（記録 2025-09-25）\nSelamat tinggal\n言語: インドネシア語\n意味: 残る人に対して）よい滞在を\nNotion: https://app.notion.com/p/278bc557d3e080eeb15ef9f9cf81c156"
+    },
+    {
+     "target": "sense:greeting_goodbye",
+     "text": "【Notionから】日本語にない表現（記録 2025-09-25）\n再见\n言語: 中国語\n読み方: zàijiàn\n意味: じゃあね　さようなら\nNotion: https://app.notion.com/p/278bc557d3e0806f897eff1efb83d8c8"
+    },
+    {
+     "target": "sense:transport_on_foot",
+     "text": "【Notionから・出典 Chat GPT】含有する範囲（記録 2025-06-21）\nà pied\n言語: フランス語\n意味・用途: 徒歩で\n発音・綴り: 語末の\"d\"は発音しない /a pjɛ/\n文化的背景・気づき: フランスでは「徒歩」は環境意識や文化的価値観と結びつくことが多い\n他言語との比較: 英語 “on foot” より頻出。イタリア語 “a piedi”、スペイン語 “a pie” と類似\n使いたい場面・例文: 「会社まではà piedで行ける距離です」など\nNotion: https://app.notion.com/p/219bc557d3e081a6becfe88dc91e1adf"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから・出典 Chat GPT】含有する範囲（記録 2025-06-21）\nजैसा आप चाहें\n言語: ヒンディー語\n意味・用途: あなたの望む通りに\n発音・綴り: jaise āp chāhen\n文化的背景・気づき: 礼儀的かつ柔らかい印象。「どうぞお好きに」に近いが、日本語より丁寧な印象\n他言語との比較: 英語 “As you like” よりもしっくりくる。イタリア語「come preferisce」にも似たニュアンス\n使いたい場面・例文: 相手に選択を委ねたいとき。「食べたいものを選んでください」など\nNotion: https://app.notion.com/p/219bc557d3e081ce871afbbc63d739df"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから・出典 Assimil L12】含有する範囲（記録 2025-06-22）\nN'hésitez pas. Allez-y !\n言語: フランス語\n意味・用途: 遠慮しないでくださいね、どうぞご自由に / どうぞ、さあ行ってください、始めてください\n文化的背景・気づき: 「気兼ねせずに、安心して始めてくださいね」「ためらわずどうぞ！」という、思いやりや社交性がこもった優しさのニュアンスを持つ\n他言語との比較: 英語”Don't hesitate. Go ahead!”はストレートで少しドライな印象を持つことも。\n使いたい場面・例文: 試食を促す時など\nNotion: https://app.notion.com/p/219bc557d3e080928cefcd87f8e3ef12"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】含有する範囲（note投稿 2025-09-22・記録 2025-07-23）\nひとつひとつ\n言語: 日本語\n意味・用途: 一つ一つにフォーカス。丁寧、など、ポジティブな文脈で使用\n他言語との比較: 中国語でも同じ「一」だからと言って「いちいち」と読むと落とし穴。いちいちはネガティブな文脈で使用するため、ギャップあり\nNotion: https://app.notion.com/p/239bc557d3e080bbb3d1dec06bdee4ae"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから・出典 Assimil L17】含有する範囲（記録 2025-09-08）\nMaşallah\n言語: トルコ語\n意味・用途: すごいね！神のご加護に感謝！\n文化的背景・気づき: アラビア語のما شاء الله (mā shāʾ allāh)が由来\n他言語との比較: アラビア語だと「神が望まれた通り」ともう少し重た目な意味・シーンになる感じ。ちなみにトルコ語の意味はウルドゥー語とほぼ同じ。さらにいうと、インドネシア語のMasya Allahは驚きや賞賛の意味合いになる\n使いたい場面・例文: Sınavdan 100 almışsın, maşallah!「試験で100点取ったの？すごいじゃん！」\nNotion: https://app.notion.com/p/267bc557d3e0808c9d2cfa4df5dfa252"
+    },
+    {
+     "target": "sense:good",
+     "text": "【Notionから】言語は違えど、似ている言葉（note投稿 2025-09-29）\n良い（いい） / iyi\n言語: 日本語・トルコ語\n日本語 良い（いい） ／ トルコ語 iyi\n解説: ほぼ同じ意味。日本語の「いい」も、善悪の「良い」や調子がいいなど幅広く使う。トルコ語の「iyi」は「良い」「健康な」「うまくいっている」といった幅広い「ポジティブな状態」。\nNotion: https://app.notion.com/p/239bc557d3e080af818ec1b1f39e6824"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】多言語で“意味がズレる”単語たち（note投稿 2025-09-28・記録 2025-09-24）\nチャイ（Chai）\n文化借用語の意味ズレ\nヒンディー語で「お茶」全般 → 日本語では「スパイス入りミルクティー」\nNotion: https://app.notion.com/p/277bc557d3e0807b9b67f5f98937c93d"
+    },
+    {
+     "target": "sense:direction_east",
+     "text": "【Notionから】多言語で“意味がズレる”単語たち（note投稿 2025-09-28・記録 2025-09-24）\nティモール（Timor）\n地名の意味が言語でズレる\nインドネシア語で「東」 → 東ティモール（Timor-Leste）では「東の東」\nNotion: https://app.notion.com/p/277bc557d3e0802c928cddd9db632868"
+    },
+    {
+     "target": "theme:Mayの記録（Notion）",
+     "text": "【Notionから】ページ「視点・構造・思考・文化・パターン」\n列: 言語 ／ 語族 ／ 中心的視点 ／ 構造的特徴 ／ 思考様式 ／ 文化的価値観 ／ 言語パターン分類\n・英語 ／ インド・ヨーロッパ語族（ゲルマン語派） ／ 客観的・観察者視点 ／ 主語明示必須／三人称の強調／動詞の活用は少なめ／SVO型 ／ 論理的・外向的 ／ 個人主義、効率性、情報の透明性 ／ 叙述中心・三人称ベース\n・ドイツ語 ／ インド・ヨーロッパ語族（ゲルマン語派） ／ 客観的記述＋社会階層意識 ／ 主語明示必須／動詞語尾変化が多い／du / Sie の区別／SVO（文末動詞） ／ 分析的・秩序志向 ／ 社会的距離、正確さ、敬意の重視 ／ 叙述中心＋社会階層重視型\n・フランス語 ／ インド・ヨーロッパ語族（ロマンス語派） ／ 相手との社会的関係性 ／ 動詞活用／vous / tu の厳格な区別／文法上主語明示が多め／SVO型 ／ 論理的・形式的 ／ 社会的階層、形式美、敬意を重視 ／ 対話中心・今ここの関係性重視\n・スペイン語 ／ インド・ヨーロッパ語族（ロマンス語派） ／ 話し手と聞き手の関係性 ／ 動詞で主語明示／tú / usted の区別／親密さと尊敬の共存／主語省略が頻繁 ／ 直感的・共感重視 ／ 距離感・礼儀・共感とカジュアルの融合 ／ 対話中心・今ここの関係性重視\n・イタリア語 ／ インド・ヨーロッパ語族（ロマンス語派） ／ 話し手と聞き手の関係性 ／ 動詞活用が豊富／主語省略可／tu / Lei の明確な区別／SVO型 ／ 感情的・関係志向 ／ 社交性・感情表現・敬意のバランス ／ 対話中心・今ここの関係性重視\n・ヒンディー語 ／ インド・ヨーロッパ語族（インド・アーリア語派） ／ 社会的関係性と階層意識 ／ 動詞に性・数・人称が反映／tu / tum / aap の3段階敬称／主語省略あり／SOV型 ／ 関係重視・階層志向 ／ 年齢・地位・礼儀・集団志向 ／ 対話中心＋社会階層重視型\n・アラビア語 ／ アフロ・アジア語族（セム語派） ／ 三人称男性・神視点 ／ 動詞が語頭で性・数を示す／男性形が包括形／叙述は三人称主体 ／ 絶対的・啓示的視点 ／ 神中心、聖典重視、性別と権威の明確な分離 ／ 叙述中心・三人称ベース\n・トルコ語 ／ アルタイ系（テュルク語族） ／ 自分と相手（今ここ） ／ 動詞活用が豊か／主語省略可／丁寧語（siz）あり／SOV型 ／ 関係重視・実践的 ／ 礼儀と人間関係重視、実用志向、語順が柔軟 ／ 対話中心・今ここの関係性重視\n・インドネシア語 ／ オーストロネシア語族（マレー・ポリネシア語派） ／ 行為と伝達重視（簡潔志向） ／ 動詞変化なし／主語は基本必要／語彙で丁寧さを調整／語順SVO ／ 実用的・簡明志向 ／ 明瞭さ、寛容さ、礼儀と簡潔性のバランス ／ 対話中心・今ここの関係性重視\n・中国語（普通話） ／ シナ・チベット語族 ／ 話者と場面の流れ重視（文脈依存） ／ 主語省略が多い／語順SVO／代名詞は音が共通（他/她/它） ／ 状況志向・柔軟的 ／ 文脈理解、形式より通達性、調和・暗黙の了解 ／ 対話中心・今ここの関係性重視\n・日本語 ／ 孤立語（日本語族） ／ 関係性と場の空気重視（察し文化） ／ 主語・目的語の省略が多い／語順柔軟／敬語体系が極めて発達／SOV型 ／ 文脈依存・高コンテクスト ／ 調和、遠慮、察する文化、上下関係の繊細な調整 ／ 対話中心＋社会階層重視型\nNotion: https://app.notion.com/p/226bc557d3e0808298e2d0e1c576f863"
+    },
+    {
+     "target": "theme:人間関係",
+     "text": "【Notionから】ページ「人間関係構築における傾向」\n列: 言語 ／ 敬語の形式 ／ 主な使い分け ／ 人間関係の築き方の傾向\n・フランス語 ／ tu / vous ／ 親しさと距離感に応じて変化。vousは敬意と距離の両方を示す。 ／ 段階的に親しくなりつつ、tuに切り替えることで関係性を深める。\n・スペイン語 ／ tú / usted ／ túが基本。ustedはフォーマルな場・年長者向け。国や地域で差あり。 ／ 比較的オープンに親しみを示す。感情の共有が関係性を築く。\n・イタリア語 ／ tu / Lei ／ 日常的にはtuが多い。Leiは丁寧だが地域差もある。 ／ 距離を縮めるタイミングが文化的に共有されている。相手に寄り添う。\n・ヒンディー語 ／ तू / तुम / आप ／ 社会的上下関係に強く依存（年齢・身分）。丁寧さより上下意識。 ／ 立場を前提にして言葉を選ぶ。関係性は「築く」より「踏まえる」。\n・アラビア語 ／ أنتَ / أنتم / حضرتك ／ 主に社会的地位や宗教的背景に応じた使い分け。حضرتكは非常に丁寧。 ／ 敬語が宗教・伝統に根ざす。関係は安定しており、崩しづらい。\n・インドネシア語 ／ kamu / Anda / saudara ／ Andaが丁寧、kamuがカジュアル。一般的に敬語の階層は浅め。 ／ 上下よりフラットな関係性を前提にする。会話で親しみを構築。\n・中国語 ／ 你 / 您 ／ 您が丁寧語。相手の年齢・地位に応じて変える。儒教的敬意が影響。 ／ 社会的立場や年齢による配慮が強い。関係構築には段階と慎重さが必要。\nNotion: https://app.notion.com/p/22dbc557d3e08015bafff4936ececdee"
+    },
+    {
+     "target": "theme:数字",
+     "text": "【Notionから】ページ「数の扱い方」\n数詞（助数詞）\n・トルコ語: 基本方針「全て同じ」。個・本・人など、どれも tane\n（他の言語の欄は空）\n複数の表現\n・トルコ語: 基本は複数語尾をつけるが、数詞を伴う名詞には複数語尾をつけない。主語が示されている場合は省いてもOK。無生物の場合もつけない（-lar / -ler）\n・中国語: 日本語に似ているが、一定のルールがある\n・日本語: 多様過ぎて地獄\n（他の言語の欄は空）\nNotion: https://app.notion.com/p/22dbc557d3e080aca537eacf8a5e3fdd"
+    },
+    {
+     "target": "theme:数字",
+     "text": "【Notionから】ページ「数字の言い方」（note投稿 2025-09-24）\nアラビア語・ドイツ語は１桁目からいう。\nNotion: https://app.notion.com/p/277bc557d3e08022b851e3e65b7f36a5"
+    },
+    {
+     "target": "theme:時間",
+     "text": "【Notionから】ページ「時間の言い方」（note投稿 2025-09-30）\n・日本語・英語・中国語・ラテン系・アラビア語 →「今の時刻＋30分」という足し算型。\n・インドネシア語・トルコ語・ドイツ語 →「次の時刻から30分引く」という逆算型。\n・ヒンディー語 →「1.5時」という専用の数詞を使う。\nNotion: https://app.notion.com/p/27dbc557d3e08079bf48c5940af1b7f7"
     }
    ]
   }
