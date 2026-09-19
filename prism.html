@@ -281,7 +281,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-19a";
+const BUILD = "2026-09-20a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -311,6 +311,10 @@ const THEME_GROUPS = [
   {name:"まとまった言い回し",
    note:"DKの巻末にある、場面ごとの言い方。紙面の欄（あいさつ・案内表示・道案内…）は各語に出る。",
    themes:["Useful Phrases","助詞・位置・反対語"]},
+  /* Notionの記録（2026-09-20）。本から来たテーマではないので、最後に置いて出どころを断る */
+  {name:"Mayの記録（Notion）",
+   note:"本ではなく、MayがNotionに付けていた記録（2025年6〜10月）。語には⚠でそう出る。",
+   themes:["Mayの記録（Notion）"]},
   {name:"Atlasの◇と同じ軸",
    note:"上のテーマの一部を切り出したもの。Atlasの◇へ行き来するための入口。",
    themes:["数","曜日","月"]}
@@ -939,6 +943,7 @@ function flagsHtml(e){
     image_read_source_spelling: "紙面の綴りのまま（標準の綴りと違う）",
     supplement: "本には無い。比較のために足した語（書籍の転記ではない）",
     from_atlas: "Atlasの辞書から（Assimilの課に出てきた形。本の転記ではない。見出し形とは限らない）",
+    from_notion: "MayがNotionに付けていた記録から（本の転記ではない。読みはAtlas式ではないので注に残している）",
     source_layout_requires_review: "紙面での置かれ方が要確認（原典の並びをそのまま採らない）",
     review_note: "校訂前"
   };
@@ -2579,7 +2584,7 @@ function doExportAI(){
       読むときの約束: [
         "比較軸は**編集上のグルーピング**で、同義や文法的互換性の保証ではない。",
         "ある言語に語が無いのは『その資料に載っていなかった』という意味。その言語に表現が無いという意味ではない。",
-        "flags に supplement があれば本の転記ではなくClaudeが足した語、from_atlas ならAtlas（Assimilの課）の辞書から。",
+        "flags に supplement があれば本の転記ではなくClaudeが足した語、from_atlas ならAtlas（Assimilの課）の辞書から、from_notion ならMayのNotionの記録から。",
         "読みは原語から付けたAtlas式のローマ字。紙面のカナ読みではない。",
         "父方/母方・年上/年下・性・数・体・丁寧さなどの区別は、**わざと潰していない**。"
       ],
