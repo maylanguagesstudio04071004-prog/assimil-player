@@ -159,7 +159,10 @@ table.ax td.off{color:var(--line)}
   <!-- 並びは 観察・語・メモ・テーマ・設定(2026-09-18。Mayの指定)。観察が主役で、テーマは出典の情報なので後ろ -->
   <button id="tabCollections" onclick="showTab('Collections')">観察</button>
   <button id="tabWords"    onclick="showTab('Words')">語</button>
-  <button id="tabMemos"    onclick="showTab('Memos')">メモ</button>
+  <!-- メモのタブは撤去した(2026-09-21。Mayが「メモのタブごとやめる」を選んだ)。
+       中身は2025年のnote時代の記録とChatGPTの気づき候補で、Mediumには浅くて使いにくい、という判断。
+       **db.memos のデータは消していない。** 戻すなら、この行と下の pageMemos・TABS・memoBox の撤去を元に戻す。
+  <button id="tabMemos"    onclick="showTab('Memos')">メモ</button> -->
   <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
   <button id="tabSettings" onclick="showTab('Settings')">設定</button>
 </nav>
@@ -179,9 +182,11 @@ table.ax td.off{color:var(--line)}
   <div id="colList"></div>
 </section>
 
+<!-- メモのタブは撤去した(2026-09-21)。戻すならこのコメントを外す
 <section id="pageMemos">
   <div id="memoList"></div>
 </section>
+-->
 
 <section id="pageSettings">
   <h2>本</h2>
@@ -281,7 +286,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-20b";
+const BUILD = "2026-09-21a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -478,7 +483,7 @@ function normalizeDb(d){
 }
 
 /* ---------- 画面切替 ---------- */
-const TABS = ["Collections","Words","Memos","Themes","Settings"];   // 画面の並びと同じ順(2026-09-18)
+const TABS = ["Collections","Words","Themes","Settings"];   // 画面の並びと同じ順(2026-09-18。メモは2026-09-21に撤去)
 const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift","pageCollection"];
 let curTab = "Collections";   // 起動時はいちばん左の観察(2026-09-18。Mayがタブの並びを変えた)
 let backStack = [];
@@ -493,7 +498,7 @@ function showTab(name, keepStack){
   SUBS.forEach(p => $(p).classList.remove("on"));
   window.scrollTo(0,0);
   ({Themes:renderThemes, Words:renderWords, Collections:renderCols,
-    Memos:renderMemos, Settings:renderSettings}[name])();
+    Settings:renderSettings}[name])();   // Memos:renderMemos は2026-09-21に撤去
 }
 function openSub(id, render){
   backStack.push(()=>{ TABS.forEach(t=>$("page"+t).classList.remove("on"));
@@ -1335,7 +1340,7 @@ function renderSense(id){
     h += '</div>';
   });
   h += '</div>';
-  h += memoBox("sense", id);
+  // h += memoBox("sense", id);   // メモ欄は撤去(2026-09-21)。戻すならこの行を復活させる
   $("senseBody").innerHTML = h;
 }
 
@@ -1699,7 +1704,7 @@ function renderBt(id){
       + '他の言語と比べる</button></div>'
       + '</div>';
   }).join("") : '<div class="empty">語がありません。</div>') + '</div>';
-  h += memoBox("bookTheme", id);
+  // h += memoBox("bookTheme", id);   // メモ欄は撤去(2026-09-21)
   $("btBody").innerHTML = h;
 }
 
@@ -2131,6 +2136,8 @@ function colBoxHtml(senseId){
   return h;
 }
 
+/* ここから下のメモの関数は、画面から呼ばれていない(2026-09-21にタブと入力欄を撤去)。
+   **消さずに残してある。** db.memos のデータも残っていて、取り込みの memos も今までどおり入る（画面に出ないだけ）。 */
 function memosFor(tType,tId){ return db.memos.filter(m=>m.tType===tType && m.tId===tId); }
 function memoBox(tType,tId){
   const ms = memosFor(tType,tId);
