@@ -119,10 +119,15 @@ input,textarea,select{font-family:inherit}
 .phrase .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
+.seek-foot{display:flex; align-items:center; gap:6px; margin-top:2px}
+.seek-side{flex:1; display:flex; min-width:0}
+#loopBtn{padding:7px 12px; border-radius:11px; background:var(--accent-soft); color:var(--accent);
+  font-size:13px; font-weight:700; white-space:nowrap}
+#loopBtn.on{background:var(--accent); color:#fff}
 #spdBtn{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
 .audio-row{display:flex; gap:10px; margin-top:12px; align-items:center; justify-content:center}
 #seekBar{width:100%; accent-color:var(--accent); margin:12px 0 2px}
-#seekTime{font-size:12px; color:var(--sub); text-align:center; font-variant-numeric:tabular-nums}
+#seekTime{font-size:12px; color:var(--sub); text-align:center; font-variant-numeric:tabular-nums; flex:none}
 .words{display:flex; flex-wrap:wrap; gap:8px}
 .words button{padding:8px 14px; border-radius:12px; background:var(--accent-soft); color:var(--text);
   font-size:15px; line-height:1.4; border:1px solid transparent;
@@ -315,7 +320,13 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     </div>
     <div id="seekRow" style="display:none">
       <input type="range" id="seekBar" min="0" max="100" step="0.1" value="0">
-      <div id="seekTime">0:00 / 0:00</div>
+      <div class="seek-foot">
+        <span class="seek-side"></span>
+        <div id="seekTime">0:00 / 0:00</div>
+        <span class="seek-side" style="justify-content:flex-end">
+          <button id="loopBtn" title="この課をくり返す">🔁 くり返し</button>
+        </span>
+      </div>
     </div>
     <div id="lessonActions" style="display:flex; gap:8px; margin-top:12px; align-items:stretch">
       <button class="obs-btn" id="mapBtn" title="カバレッジマップ">🗺</button>
@@ -578,7 +589,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-16b";
+const BUILD = "2026-09-21a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4745,19 +4756,32 @@ function speedStep(dir){
   b.addEventListener("contextmenu", e=>e.preventDefault()); // 長押しメニュー抑止
 })();
 let playToken = 0;
+// この課をくり返す(2026-09-21にMayの依頼)。速度と違い言語ごとではなく1つだけ覚える
+let apLoop = localStorage.getItem(KEY + ".loop") === "1";
+AP.audio.loop = apLoop;
 function setAudioVisible(v){
   $("playBtn").style.display = v ? "" : "none";
   $("spdBtn").style.display = v ? "" : "none";
   $("seekRow").style.display = v ? "" : "none";
 }
+$("loopBtn").onclick = ()=>{
+  apLoop = !apLoop;
+  AP.audio.loop = apLoop;
+  lsSet(KEY + ".loop", apLoop ? "1" : "");
+  $("loopBtn").classList.toggle("on", apLoop);
+};
 async function updatePlayBtn(){
   const my = ++playToken;
+  // くり返し中に別の課・別の言語へ移ったら、鳴っている音声は止める。
+  // そのままだと画面に無い課が永遠に鳴り続け、止めるボタンがどこにも無くなる(2026-09-21)
+  if(apLoop && AP.key && AP.key !== currentLang + "|" + currentNo && !AP.audio.paused) AP.audio.pause();
   if(compareMode){ setAudioVisible(false); return; }
   const rec = await getTrack(currentLang, currentNo);
   if(my !== playToken) return;
   if(!rec){ setAudioVisible(false); return; }
   setAudioVisible(true);
   $("spdBtn").textContent = speedLabel(currentSpeed());
+  $("loopBtn").classList.toggle("on", apLoop);
   const key = currentLang + "|" + currentNo;
   $("playBtn").textContent = (AP.key===key && !AP.audio.paused) ? "⏸" : "▶";
   syncSeek();
