@@ -70,8 +70,11 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--border); color:var(--accent); font-size:13.5px; font-weight:600}
 .obs-btn{flex:none; width:48px; border-radius:10px; background:var(--accent-soft);
   color:var(--accent); font-size:19px; border:1px solid transparent}
-/* 比較ボタン撤去後、レッスン画面のアイコン行は横いっぱいに広げる */
-#lessonActions .obs-btn{flex:1; width:auto; padding:12px 0}
+/* 2026-09-21: レッスン画面のアイコン行は🗺だけになったので、横いっぱいには広げない */
+#lessonActions .obs-btn{flex:none; width:64px; padding:12px 0}
+.lesson-foot{display:flex; gap:8px; margin-top:10px; align-items:stretch}
+.lesson-foot #editBtn{flex:1}
+.lesson-foot .obs-btn{flex:none; width:56px}
 .result .txt{white-space:pre-wrap}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
   background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
@@ -334,16 +337,24 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
            気づきはキモの一言・note・placeNote 側に集まったため、器が二重になっていた。
            仕組みは残してあるので、下の1行を戻せば復活する:
            <button class="obs-btn" id="obsBtn" title="気づきメモ">✎</button> -->
-      <button class="obs-btn" id="wordFormBtn" style="display:none" title="この言語のキモ">✦</button>
-      <button class="obs-btn" id="wordsBtn" title="単語をまとめて登録">単</button>
+      <!-- ✦(この言語のキモ)は2026-09-21に本文の下へ移した(Mayの依頼)。上は聴きながら触るものだけにする -->
+      <!-- 単(単語をまとめて登録)は2026-09-21に撤去(Mayが「不要」と判断。取り込みと辞書が終わり出番が無い)。
+           画面(pageWords)と自動翻訳の仕組みは残してあるので、下の1行を戻せば復活する:
+           <button class="obs-btn" id="wordsBtn" title="単語をまとめて登録">単</button> -->
     </div>
     <!-- 比較モードのボタンは2026-07-26に撤去(本人が使わないため)。
          compareMode の仕組み自体は残してあるので、下の1行を戻せば復活する:
          <button class="compare-btn" id="compareBtn" style="margin-top:0; flex:1">全言語でこのレッスンを見る</button> -->
-    <div class="week-strip" id="weekStrip"></div>
+    <!-- レッスン番号の帯は2026-09-21に撤去(Mayの判断)。全課が入って色分けが全部同じになり、
+         「入っているか」を見せる役目が終わった。飛ぶのは −＋・番号入力・🗺 でできる。
+         renderWeekStrip() は残してあるので、下の1行を戻せば復活する:
+         <div class="week-strip" id="weekStrip"></div> -->
   </div>
   <div id="content"></div>
-  <button class="btn soft full" id="editBtn">このレッスンを編集</button>
+  <div class="lesson-foot">
+    <button class="obs-btn" id="wordFormBtn" style="display:none" title="この言語のキモ">✦</button>
+    <button class="btn soft" id="editBtn">このレッスンを編集</button>
+  </div>
 </section>
 
 <!-- 検索 -->
@@ -589,7 +600,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-21a";
+const BUILD = "2026-09-21b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2507,6 +2518,7 @@ function lessonCellHTML(n){
 }
 function renderWeekStrip(){
   const el = $("weekStrip");
+  if(!el) return;          // 帯は撤去済み。戻したときだけ描く
   el.innerHTML = "";
   const w = Math.floor((currentNo-1)/7);
   const prev = document.createElement("button");
@@ -4173,7 +4185,8 @@ function openWordsPage(){
   renderWordsPage();
 }
 $("wdToLesson").onclick = ()=>showTab("tabLesson");
-$("wordsBtn").onclick = openWordsPage;
+// 単のボタンは撤去済み。戻したときだけ結ぶ(無いまま呼ぶと起動時に止まる)
+if($("wordsBtn")) $("wordsBtn").onclick = openWordsPage;
 [["wdLesson","lesson"],["wdLang","lang"],["wdAll","all"]].forEach(([id,v])=>{
   $(id).onclick = ()=>{
     if(wdRunning) return;
