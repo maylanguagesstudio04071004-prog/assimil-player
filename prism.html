@@ -158,12 +158,12 @@ table.ax td.off{color:var(--line)}
 <nav>
   <!-- 並びは 観察・語・メモ・テーマ・設定(2026-09-18。Mayの指定)。観察が主役で、テーマは出典の情報なので後ろ -->
   <button id="tabCollections" onclick="showTab('Collections')">観察</button>
+  <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
   <button id="tabWords"    onclick="showTab('Words')">語</button>
   <!-- メモのタブは撤去した(2026-09-21。Mayが「メモのタブごとやめる」を選んだ)。
        中身は2025年のnote時代の記録とChatGPTの気づき候補で、Mediumには浅くて使いにくい、という判断。
        **db.memos のデータは消していない。** 戻すなら、この行と下の pageMemos・TABS・memoBox の撤去を元に戻す。
   <button id="tabMemos"    onclick="showTab('Memos')">メモ</button> -->
-  <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
   <button id="tabSettings" onclick="showTab('Settings')">設定</button>
 </nav>
 
@@ -286,7 +286,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-21a";
+const BUILD = "2026-09-21b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -483,7 +483,7 @@ function normalizeDb(d){
 }
 
 /* ---------- 画面切替 ---------- */
-const TABS = ["Collections","Words","Themes","Settings"];   // 画面の並びと同じ順(2026-09-18。メモは2026-09-21に撤去)
+const TABS = ["Collections","Themes","Words","Settings"];   // 画面の並びと同じ順(2026-09-21にMayが 観察/テーマ/語/設定 に変更)
 const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift","pageCollection"];
 let curTab = "Collections";   // 起動時はいちばん左の観察(2026-09-18。Mayがタブの並びを変えた)
 let backStack = [];
