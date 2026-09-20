@@ -597,7 +597,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-21c";
+const BUILD = "2026-09-21d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2235,6 +2235,8 @@ $("wfQ").oninput = ()=>renderWf();
 });
 function jumpTo(lang, no){
   currentLang = lang; currentNo = no; compareMode = false;
+  // 例文・検索・語根などから飛ぶ先は本文の行なので、文法解説のタブを開いたままにしない(2026-09-21)
+  lessonTab = "phrase";
   lsSet(KEY + ".lang", lang);
   if(typeof closeMap === "function") closeMap(); // マトリクス/マップ経由のジャンプ時に重なりを残さない
   showTab("tabLesson");
@@ -2292,6 +2294,39 @@ function wordChip(lang, lesson, w){
   b.onclick = ()=>openNotePopup(lang, lesson, w, b, "word");
   return b;
 }
+// フレーズ / 文法解説 のどちらを見ていたか(2026-09-21にMayの依頼)。
+// 復習回(7の倍数)が続くとき、毎回タブを押し直さずに済むよう覚えておく
+let lessonTab = localStorage.getItem(KEY + ".ltab") === "grammar" ? "grammar" : "phrase";
+
+/* 本文を「フレーズ」と「文法解説」に分けて出す。
+   文法解説がある課だけタブが出る。無い課は今までどおりそのまま並ぶ。 */
+function appendLessonBody(box, nodes){
+  const pb = document.createElement("div");
+  nodes.forEach(n=>pb.appendChild(n));
+  appendObsCard(pb);
+  const gs = db.grammar.filter(g=>g.lang===currentLang && g.lesson===currentNo);
+  if(!gs.length){ box.appendChild(pb); return; }
+  const gb = document.createElement("div");
+  appendGrammarCard(gb);
+  const bar = document.createElement("div");
+  bar.className = "filterbar";
+  const mk = t=>{ const b = document.createElement("button"); b.textContent = t; return b; };
+  const bp = mk("フレーズ"), bg = mk("文法解説");
+  const select = k=>{
+    lessonTab = k;
+    lsSet(KEY + ".ltab", k);
+    bp.className = k === "phrase" ? "on" : "";
+    bg.className = k === "grammar" ? "on" : "";
+    pb.style.display = k === "phrase" ? "" : "none";
+    gb.style.display = k === "grammar" ? "" : "none";
+  };
+  bp.onclick = ()=>select("phrase");
+  bg.onclick = ()=>select("grammar");
+  bar.append(bp, bg);
+  box.append(bar, pb, gb);
+  select(lessonTab);
+}
+
 function lessonCards(L, withLangTitle){
   const frag = document.createDocumentFragment();
   if(withLangTitle){
@@ -2409,14 +2444,12 @@ function renderLesson(){
   const L = findLesson(currentLang, currentNo);
   $("lessonTitle").textContent = ""; // タイトルは本文側の見出しに表示(▶・速度ボタンと重なるため)
   if(!L){
-    appendGrammarCard(box);
-    appendObsCard(box);
     const d = document.createElement("div");
     d.className = "empty-msg";
     d.innerHTML = esc(currentLang) + ' L' + currentNo + ' のフレーズは未登録です。<br><br>'
       + 'テキストのページ写真や本文をClaudeに渡すと<br>取り込み用JSONにしてもらえます。<br>'
       + '下のボタンから手で入力することもできます。';
-    box.appendChild(d);
+    appendLessonBody(box, [d]);
     $("editBtn").textContent = "このレッスンを入力する";
     return;
   }
@@ -2463,9 +2496,7 @@ function renderLesson(){
     });
     box.appendChild(tr);
   }
-  box.appendChild(lessonCards(L, false));
-  appendGrammarCard(box);
-  appendObsCard(box);
+  appendLessonBody(box, [lessonCards(L, false)]);
 }
 // この言語(+全言語)・このL番号の気づき一覧カード
 function appendObsCard(box){
@@ -2495,7 +2526,7 @@ function appendGrammarCard(box){
   if(!gs.length) return;
   const c = document.createElement("div");
   c.className = "card";
-  c.innerHTML = '<h2>§ このレッスンの文法解説</h2>';
+  // 見出しは上のタブ(「文法解説」)に出るので、カードの中では繰り返さない(2026-09-21)
   gs.forEach(g=>{
     const b = document.createElement("button");
     b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:12px 14px;"
