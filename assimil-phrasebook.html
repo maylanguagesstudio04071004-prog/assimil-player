@@ -123,6 +123,17 @@ input,textarea,select{font-family:inherit}
 #content.has-audio .phrase .no.no-play{background:var(--accent-soft); color:var(--accent);
   border-radius:7px; width:24px; padding:4px 0 3px; text-align:center; cursor:pointer}
 .phrase.playing{background:var(--accent-soft); border-radius:8px}
+#markBtn{padding:7px 12px; border-radius:11px; background:var(--accent-soft); color:var(--accent);
+  font-size:13px; font-weight:700; white-space:nowrap}
+#markBtn.on{background:var(--accent); color:#fff}
+#markHint{font-size:12px; color:var(--sub); line-height:1.6; margin-top:8px;
+  background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px 11px}
+#markHint button{margin-top:6px; padding:7px 12px; border-radius:9px; background:var(--card);
+  border:1px solid var(--border); color:var(--danger); font-size:12px; font-weight:700}
+/* 位置を直している間は、番号が「ここから」の印になる */
+#content.time-edit .phrase .no{background:var(--card); border:1px dashed var(--accent); color:var(--accent);
+  border-radius:7px; width:26px; padding:3px 0 2px; text-align:center; cursor:pointer}
+#content.time-edit .phrase .no.marked{border-style:solid; background:var(--accent-soft)}
 .phrase .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
@@ -328,12 +339,15 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="seekRow" style="display:none">
       <input type="range" id="seekBar" min="0" max="100" step="0.1" value="0">
       <div class="seek-foot">
-        <span class="seek-side"></span>
+        <span class="seek-side">
+          <button id="markBtn" title="行の位置を直す">⏱ 位置</button>
+        </span>
         <div id="seekTime">0:00 / 0:00</div>
         <span class="seek-side" style="justify-content:flex-end">
           <button id="loopBtn" title="この課をくり返す">🔁 くり返し</button>
         </span>
       </div>
+      <div id="markHint" style="display:none"></div>
     </div>
     <!-- レッスン画面のアイコン行は2026-09-21cに撤去(Mayの判断)。上は聴きながら触るものだけ。
          🗺(カバレッジマップ)は全課が入って色分けが死に、飛ぶのは −＋・番号入力で足りる。
@@ -601,7 +615,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-21e";
+const BUILD = "2026-09-21f";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2273,9 +2287,14 @@ function phraseRow(lang, lesson, p, i){
     + '<div style="flex:1; min-width:0"><span class="txt">' + phraseHtml(lang, p) + '</span>'
     + (note && note.roman ? '<div class="roman">' + esc(note.roman) + '</div>' : '')
     + '</div>';
+  const noEl = row.querySelector(".no");
   const sp = spansOf(lang, lesson);
-  if(sp && sp[i]){
-    const noEl = row.querySelector(".no");
+  if(timeEdit){
+    // 位置を直している間は、押すと「この行はここから」を記録する
+    const cur = rawSpans(lang, lesson);
+    if(cur && cur[i] && cur[i][1] > cur[i][0]){ noEl.classList.add("marked"); noEl.title = fmtTime(cur[i][0]) + " から"; }
+    noEl.onclick = (ev)=>{ ev.stopPropagation(); markLine(lang, lesson, i, noEl); };
+  } else if(sp && sp[i]){
     noEl.classList.add("no-play");
     noEl.title = "この行だけ鳴らす";
     noEl.onclick = (ev)=>{ ev.stopPropagation(); playSpan(lang, lesson, i, row); };
@@ -4828,10 +4847,69 @@ function speedStep(dir){
   });
   b.addEventListener("contextmenu", e=>e.preventDefault()); // 長押しメニュー抑止
 })();
-function spansOf(lang, no){
+function rawSpans(lang, no){
   const t = db.times.find(x=>x.lang===lang && x.lesson===no);
-  return (t && Array.isArray(t.spans) && t.spans.length) ? t.spans : null;
+  return t && Array.isArray(t.spans) ? t.spans : null;
 }
+function spansOf(lang, no){
+  const sp = rawSpans(lang, no);
+  if(!sp || !sp.length) return null;
+  // 長さの無い行(まだ位置を決めていない行)は鳴らせない
+  return sp.map(x=>(x && x[1] > x[0]) ? x : null);
+}
+// 位置を直す(2026-09-21)。鳴らしながら番号を押すと、その行の開始をいまの位置にする
+let timeEdit = false;
+const MARK_LAG = 0.35;      // 押すのは聞こえてからになるので、その分だけ戻す
+function markLine(lang, lesson, i, noEl){
+  const L = findLesson(lang, lesson);
+  const n = L && L.phrases ? L.phrases.length : 0;
+  if(!n) return;
+  if(AP.key !== lang + "|" + lesson || !AP.audio.duration){
+    showMarkHint("先に ▶ でこの課を鳴らしてから、行の頭で番号を押してください。");
+    return;
+  }
+  let t = db.times.find(x=>x.lang===lang && x.lesson===lesson);
+  if(!t){ t = {lang, lesson, spans: Array.from({length:n}, ()=>[0,0]), src:"手で付けた"}; db.times.push(t); }
+  while(t.spans.length < n) t.spans.push([0,0]);
+  const prevEnd = i > 0 ? t.spans[i-1][1] : 0;
+  const start = Math.max(0, Math.min(AP.audio.duration - 0.2, AP.audio.currentTime - MARK_LAG), prevEnd ? prevEnd + 0.05 : 0);
+  t.spans[i][0] = Math.round(start * 100) / 100;
+  // 終わりは、いまの終わりが使えるならそのまま(せっかくの短い終わりを伸ばさない)。
+  // 使えないときだけ、次の行の直前まで(次も無ければ音声の終わりまで)
+  if(t.spans[i][1] <= start + 0.2){
+    const next = (t.spans[i+1] && t.spans[i+1][0] > start) ? t.spans[i+1][0] - 0.05 : AP.audio.duration;
+    t.spans[i][1] = Math.round(next * 100) / 100;
+  }
+  // 前の行が新しい開始に食い込んでいるときだけ、そこで切る
+  if(i > 0 && t.spans[i-1][1] > start) t.spans[i-1][1] = Math.round((start - 0.05) * 100) / 100;
+  t.src = (t.src || "") + (t.src && t.src.indexOf("手で直した") < 0 ? " / 手で直した" : "");
+  save();
+  noEl.classList.add("marked");
+  noEl.title = fmtTime(t.spans[i][0]) + " から";
+  showMarkHint("行 " + (i+1) + " を " + fmtTime(t.spans[i][0]) + " からにしました。");
+}
+function showMarkHint(extra){
+  const h = $("markHint");
+  if(!timeEdit){ h.style.display = "none"; return; }
+  h.style.display = "";
+  h.innerHTML = "▶ で鳴らしながら、行が始まったところで<b>その行の番号</b>を押してください"
+    + "（押す遅れぶん 0.35秒 戻します）。終わりは自動で決めます ── いまの終わりが使えればそのまま、使えなければ次の行の直前までです。"
+    + (extra ? '<br><b>' + esc(extra) + '</b>' : "");
+  const b = document.createElement("button");
+  b.textContent = "この課の位置を消す";
+  b.onclick = ()=>{
+    if(!confirm("この課の行の位置を消しますか?")) return;
+    db.times = db.times.filter(x=>!(x.lang===currentLang && x.lesson===currentNo));
+    save(); renderLesson();
+  };
+  h.appendChild(b);
+}
+$("markBtn").onclick = ()=>{
+  timeEdit = !timeEdit;
+  $("markBtn").classList.toggle("on", timeEdit);
+  AP.span = null; clearPlaying();
+  renderLesson();
+};
 // いま鳴らしている行(開始・終了)。null なら課まるごと
 function clearPlaying(){
   document.querySelectorAll(".phrase.playing").forEach(e=>e.classList.remove("playing"));
@@ -4896,6 +4974,8 @@ async function updatePlayBtn(){
   const rec = await getTrack(currentLang, currentNo);
   if(my !== playToken) return;
   $("content").classList.toggle("has-audio", !!rec);
+  $("content").classList.toggle("time-edit", timeEdit && !!rec);
+  showMarkHint("");
   if(!rec){ setAudioVisible(false); return; }
   setAudioVisible(true);
   $("spdBtn").textContent = speedLabel(currentSpeed());
