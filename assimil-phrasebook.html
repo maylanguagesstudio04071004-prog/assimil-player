@@ -119,6 +119,10 @@ input,textarea,select{font-family:inherit}
 .phrase .no{flex:none; width:22px; font-size:12px; color:var(--sub); font-weight:600; padding-top:4px;
   font-variant-numeric:tabular-nums; text-align:right}
 .phrase .txt{font-size:17px; line-height:1.65; overflow-wrap:anywhere; flex:1}
+/* 行の音声の位置が分かっている課だけ、番号を押せる印にする */
+#content.has-audio .phrase .no.no-play{background:var(--accent-soft); color:var(--accent);
+  border-radius:7px; width:24px; padding:4px 0 3px; text-align:center; cursor:pointer}
+.phrase.playing{background:var(--accent-soft); border-radius:8px}
 .phrase .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
@@ -597,7 +601,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-21d";
+const BUILD = "2026-09-21e";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -652,6 +656,11 @@ function load(raw){
      dict は画面には出さず、選択したときの引きにだけ使う。混ぜると「単」が数千語で埋まる。 */
   if(!Array.isArray(d.dict)) d.dict = [];
   d.dict.forEach(x=>{ x.lang = toNative(x.lang); });
+  /* 行ごとの音声の位置(2026-09-21)。{lang, lesson, spans:[[開始秒,終了秒], …]}。
+     音声は課まるごと1本なので、どこからどこまでが何行目かをここに持つ。
+     無くても従来どおり動く(番号が押せなくなるだけ)。 */
+  if(!Array.isArray(d.times)) d.times = [];
+  d.times.forEach(t=>{ t.lang = toNative(t.lang); });
   // 語根索引。rootsを持たない従来データも空配列で問題なく読める
   if(!Array.isArray(d.roots)) d.roots = [];
   d.roots.forEach(r=>{ r.lang = toNative(r.lang); });
@@ -2264,6 +2273,13 @@ function phraseRow(lang, lesson, p, i){
     + '<div style="flex:1; min-width:0"><span class="txt">' + phraseHtml(lang, p) + '</span>'
     + (note && note.roman ? '<div class="roman">' + esc(note.roman) + '</div>' : '')
     + '</div>';
+  const sp = spansOf(lang, lesson);
+  if(sp && sp[i]){
+    const noEl = row.querySelector(".no");
+    noEl.classList.add("no-play");
+    noEl.title = "この行だけ鳴らす";
+    noEl.onclick = (ev)=>{ ev.stopPropagation(); playSpan(lang, lesson, i, row); };
+  }
   const hasNote = !!(note && NOTE_FIELDS.some(f=>note[f.key]));
   const gs = grammarOf(lang, lesson, p);
   if(gs.length){
@@ -3149,7 +3165,7 @@ function importData(raw, msgEl){
   if(!Array.isArray(list)){ msgEl.textContent = "lessons の配列が見つかりません"; msgEl.className = "msg err"; return false; }
   if(!list.length && !Array.isArray(data.notes) && !Array.isArray(data.favs)
      && !Array.isArray(data.grammar) && !Array.isArray(data.observations)
-     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds) && !Array.isArray(data.suffixChains) && !Array.isArray(data.dict)){
+     && !Array.isArray(data.roots) && !Array.isArray(data.bases) && !Array.isArray(data.suffixes) && !Array.isArray(data.parts) && !Array.isArray(data.classifiers) && !Array.isArray(data.profiles) && !Array.isArray(data.prefixes) && !Array.isArray(data.cases) && !Array.isArray(data.stacks) && !Array.isArray(data.adds) && !Array.isArray(data.suffixChains) && !Array.isArray(data.dict) && !Array.isArray(data.times)){
     msgEl.textContent = "lessons / notes / favs / grammar / observations / roots / bases / suffixes / parts / classifiers / prefixes / cases / stacks / adds / profiles / dict のいずれも見つかりません"; msgEl.className = "msg err"; return false;
   }
   // 取り込みの直前を1回分だけ控えておく。上書きで消えたときに戻せるように(2026-08-15)
@@ -3212,6 +3228,20 @@ function importData(raw, msgEl){
         if(!orec.lang) orec.lang = orec.langs[0];
       }
       db.observations.push(orec);
+    });
+  }
+  // 行ごとの音声の位置。(lang, lesson) で照合して丸ごと差し替える(2026-09-21)
+  let timesAdded = 0, timesUpdated = 0;
+  if(Array.isArray(data.times)){
+    data.times.forEach(t=>{
+      if(!t || !t.lang || t.lesson==null || !Array.isArray(t.spans)) return;
+      const rec = {lang: toNative(String(t.lang)), lesson: Number(t.lesson),
+                   spans: t.spans.map(x=>[Number(x[0]), Number(x[1])]).filter(x=>isFinite(x[0]) && isFinite(x[1]) && x[1] > x[0])};
+      if(t.src) rec.src = String(t.src);
+      if(!rec.spans.length) return;
+      const i = db.times.findIndex(x=>x.lang===rec.lang && x.lesson===rec.lesson);
+      if(i>=0){ db.times[i] = rec; timesUpdated++; }
+      else { db.times.push(rec); timesAdded++; }
     });
   }
   let dictAdded = 0, dictUpdated = 0, dictDeleted = 0;
@@ -3440,6 +3470,7 @@ function importData(raw, msgEl){
     : "取り込み完了:";
   if(notesAdded || notesUpdated || notesDeleted) msg += "(日本語訳など: 新規 " + notesAdded + " 件 / 上書き " + notesUpdated + " 件"
     + (notesDeleted ? " / 掃除 " + notesDeleted + " 件" : "") + ")";
+  if(timesAdded || timesUpdated) msg += "(行の音声の位置: 新規 " + timesAdded + " 課 / 上書き " + timesUpdated + " 課)";
   if(dictAdded || dictUpdated || dictDeleted) msg += "(辞書: 新規 " + dictAdded + " 語 / 上書き " + dictUpdated + " 語"
     + (dictDeleted ? " / 掃除 " + dictDeleted + " 語" : "") + ")";
   if(gAdded || gUpdated) msg += "(文法: 新規 " + gAdded + " 件 / 上書き " + gUpdated + " 件)";
@@ -4797,6 +4828,50 @@ function speedStep(dir){
   });
   b.addEventListener("contextmenu", e=>e.preventDefault()); // 長押しメニュー抑止
 })();
+function spansOf(lang, no){
+  const t = db.times.find(x=>x.lang===lang && x.lesson===no);
+  return (t && Array.isArray(t.spans) && t.spans.length) ? t.spans : null;
+}
+// いま鳴らしている行(開始・終了)。null なら課まるごと
+function clearPlaying(){
+  document.querySelectorAll(".phrase.playing").forEach(e=>e.classList.remove("playing"));
+}
+async function playSpan(lang, lesson, i, row){
+  const sp = spansOf(lang, lesson);
+  if(!sp || !sp[i]) return;
+  const key = lang + "|" + lesson;
+  if(AP.key !== key){
+    const rec = await getTrack(lang, lesson);
+    if(!rec || !rec.blob) return;          // 音声が無い端末では何もしない
+    if(AP.url) URL.revokeObjectURL(AP.url);
+    AP.url = URL.createObjectURL(rec.blob);
+    AP.audio.src = AP.url;
+    AP.key = key;
+    await new Promise(res=>{
+      if(AP.audio.readyState >= 1) return res();
+      AP.audio.addEventListener("loadedmetadata", res, {once:true});
+      setTimeout(res, 3000);               // 読めないまま待ち続けない
+    });
+  }
+  AP.audio.playbackRate = currentSpeed();
+  AP.audio.loop = false;                   // 行のくり返しは下の timeupdate で面倒を見る
+  AP.span = {start: sp[i][0], end: sp[i][1]};
+  clearPlaying();
+  if(row) row.classList.add("playing");
+  AP.audio.currentTime = sp[i][0];
+  try{ await AP.audio.play(); }catch(e){}
+}
+AP.audio.addEventListener("timeupdate", ()=>{
+  const s = AP.span;
+  if(!s) return;
+  if(AP.audio.currentTime >= s.end){
+    // 「くり返し」が入っていれば、その行を繰り返す
+    if(apLoop) AP.audio.currentTime = s.start;
+    else { AP.audio.pause(); AP.span = null; clearPlaying(); }
+  }
+});
+AP.audio.addEventListener("pause", ()=>{ if(!AP.span) clearPlaying(); });
+
 let playToken = 0;
 // この課をくり返す(2026-09-21にMayの依頼)。速度と違い言語ごとではなく1つだけ覚える
 let apLoop = localStorage.getItem(KEY + ".loop") === "1";
@@ -4808,7 +4883,7 @@ function setAudioVisible(v){
 }
 $("loopBtn").onclick = ()=>{
   apLoop = !apLoop;
-  AP.audio.loop = apLoop;
+  AP.audio.loop = apLoop && !AP.span;      // 行を鳴らしている間は timeupdate 側で繰り返す
   lsSet(KEY + ".loop", apLoop ? "1" : "");
   $("loopBtn").classList.toggle("on", apLoop);
 };
@@ -4820,6 +4895,7 @@ async function updatePlayBtn(){
   if(compareMode){ setAudioVisible(false); return; }
   const rec = await getTrack(currentLang, currentNo);
   if(my !== playToken) return;
+  $("content").classList.toggle("has-audio", !!rec);
   if(!rec){ setAudioVisible(false); return; }
   setAudioVisible(true);
   $("spdBtn").textContent = speedLabel(currentSpeed());
@@ -4848,10 +4924,12 @@ AP.audio.addEventListener("timeupdate", syncSeek);
 AP.audio.addEventListener("loadedmetadata", syncSeek);
 $("seekBar").addEventListener("input", e=>{
   if(AP.key !== currentLang + "|" + currentNo) return;
+  AP.span = null; clearPlaying();           // 手で動かしたら、その行だけの再生はやめる
   AP.audio.currentTime = Number(e.target.value);
 });
 $("playBtn").onclick = async ()=>{
   const key = currentLang + "|" + currentNo;
+  AP.span = null; clearPlaying(); AP.audio.loop = apLoop;   // 課まるごとに戻す
   if(AP.key===key){
     if(AP.audio.paused){ try{ await AP.audio.play(); }catch(e){} }
     else AP.audio.pause();
