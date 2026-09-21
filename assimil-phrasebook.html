@@ -615,7 +615,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-21f";
+const BUILD = "2026-09-22a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3250,11 +3250,18 @@ function importData(raw, msgEl){
     });
   }
   // 行ごとの音声の位置。(lang, lesson) で照合して丸ごと差し替える(2026-09-21)
-  let timesAdded = 0, timesUpdated = 0;
+  let timesAdded = 0, timesUpdated = 0, timesDeleted = 0;
   if(Array.isArray(data.times)){
     data.times.forEach(t=>{
-      if(!t || !t.lang || t.lesson==null || !Array.isArray(t.spans)) return;
-      const rec = {lang: toNative(String(t.lang)), lesson: Number(t.lesson),
+      if(!t || !t.lang || t.lesson==null || (!Array.isArray(t.spans) && t.delete !== true)) return;
+      const lang = toNative(String(t.lang)), lesson = Number(t.lesson);
+      // "delete":true は掃除用。当てにならない位置を引き上げられる(2026-09-22)
+      if(t.delete === true){
+        const j = db.times.findIndex(x=>x.lang===lang && x.lesson===lesson);
+        if(j>=0){ db.times.splice(j,1); timesDeleted++; }
+        return;
+      }
+      const rec = {lang, lesson,
                    spans: t.spans.map(x=>[Number(x[0]), Number(x[1])]).filter(x=>isFinite(x[0]) && isFinite(x[1]) && x[1] > x[0])};
       if(t.src) rec.src = String(t.src);
       if(!rec.spans.length) return;
@@ -3489,7 +3496,8 @@ function importData(raw, msgEl){
     : "取り込み完了:";
   if(notesAdded || notesUpdated || notesDeleted) msg += "(日本語訳など: 新規 " + notesAdded + " 件 / 上書き " + notesUpdated + " 件"
     + (notesDeleted ? " / 掃除 " + notesDeleted + " 件" : "") + ")";
-  if(timesAdded || timesUpdated) msg += "(行の音声の位置: 新規 " + timesAdded + " 課 / 上書き " + timesUpdated + " 課)";
+  if(timesAdded || timesUpdated || timesDeleted) msg += "(行の音声の位置: 新規 " + timesAdded + " 課 / 上書き " + timesUpdated + " 課"
+    + (timesDeleted ? " / 取り消し " + timesDeleted + " 課" : "") + ")";
   if(dictAdded || dictUpdated || dictDeleted) msg += "(辞書: 新規 " + dictAdded + " 語 / 上書き " + dictUpdated + " 語"
     + (dictDeleted ? " / 掃除 " + dictDeleted + " 語" : "") + ")";
   if(gAdded || gUpdated) msg += "(文法: 新規 " + gAdded + " 件 / 上書き " + gUpdated + " 件)";
