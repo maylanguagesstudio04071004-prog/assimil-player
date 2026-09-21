@@ -615,7 +615,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-22b";
+const BUILD = "2026-09-22c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4904,7 +4904,25 @@ function showMarkHint(extra){
   h.innerHTML = "▶ で鳴らしながら、行が始まったところで<b>その行の番号</b>を押してください"
     + "（押す遅れぶん 0.35秒 戻します）。終わりは自動で決めます ── いまの終わりが使えればそのまま、使えなければ次の行の直前までです。"
     + (extra ? '<br><b>' + esc(extra) + '</b>' : "");
+  // 最後の行は「次の行」が無いので、終わりが音声の最後のままになる。ここで閉じられるようにする(2026-09-22)
+  const e = document.createElement("button");
+  e.textContent = "いまの位置を最後の行の終わりにする";
+  e.style.color = "var(--accent)";
+  e.onclick = ()=>{
+    const L = findLesson(currentLang, currentNo);
+    const t = db.times.find(x=>x.lang===currentLang && x.lesson===currentNo);
+    if(!L || !t || !t.spans.length) return showMarkHint("先に行の開始を付けてください。");
+    if(AP.key !== currentLang + "|" + currentNo || !AP.audio.duration) return showMarkHint("先に ▶ でこの課を鳴らしてください。");
+    const i = Math.min(t.spans.length, L.phrases.length) - 1;
+    const end = Math.round(AP.audio.currentTime * 100) / 100;
+    if(end <= t.spans[i][0] + 0.2) return showMarkHint("最後の行の開始より後ろで押してください。");
+    t.spans[i][1] = end;
+    save();
+    showMarkHint("最後の行を " + fmtTime(end) + " までにしました。");
+  };
+  h.appendChild(e);
   const b = document.createElement("button");
+  b.style.marginLeft = "8px";
   b.textContent = "この課の位置を消す";
   b.onclick = ()=>{
     if(!confirm("この課の行の位置を消しますか?")) return;
