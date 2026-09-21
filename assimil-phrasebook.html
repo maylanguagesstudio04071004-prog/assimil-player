@@ -615,7 +615,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-22a";
+const BUILD = "2026-09-22b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4879,8 +4879,9 @@ function markLine(lang, lesson, i, noEl){
   let t = db.times.find(x=>x.lang===lang && x.lesson===lesson);
   if(!t){ t = {lang, lesson, spans: Array.from({length:n}, ()=>[0,0]), src:"手で付けた"}; db.times.push(t); }
   while(t.spans.length < n) t.spans.push([0,0]);
-  const prevEnd = i > 0 ? t.spans[i-1][1] : 0;
-  const start = Math.max(0, Math.min(AP.audio.duration - 0.2, AP.audio.currentTime - MARK_LAG), prevEnd ? prevEnd + 0.05 : 0);
+  // 前の行の終わりで下限を作らない。1行目の終わりは音声の終わりなので、
+  // それを下限にすると2行目以降が後ろへ押し出されて登録できなくなる(2026-09-22に踏んだ)
+  const start = Math.max(0, Math.min(AP.audio.duration - 0.2, AP.audio.currentTime - MARK_LAG));
   t.spans[i][0] = Math.round(start * 100) / 100;
   // 終わりは、いまの終わりが使えるならそのまま(せっかくの短い終わりを伸ばさない)。
   // 使えないときだけ、次の行の直前まで(次も無ければ音声の終わりまで)
