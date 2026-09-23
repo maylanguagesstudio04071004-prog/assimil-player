@@ -554,6 +554,18 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div class="msg" id="settingsMsg"></div>
     <div class="small-note">データはこの端末のブラウザ内に保存されます。定期的に書き出しておくと安心です。</div>
   </div>
+  <!-- 保存の状態は2026-09-24にバックアップのすぐ下へ(Mayの依頼) -->
+  <div class="card">
+    <h2>保存の状態</h2>
+    <div id="storeInfo" class="small-note" style="margin-top:0"></div>
+    <!-- 「調べ直す」は2026-09-24に撤去。設定タブを開くたびに同じ表示が自動で出るため(renderStoreInfo)。戻すなら:
+    <button class="btn soft full" id="storeCheckBtn">調べ直す</button> -->
+    <button class="btn soft full" id="freshBtn">新しいファイルを取りに行く</button>
+    <!-- 「通信を調べる」は2026-09-24に撤去。2026-08-22の「翻訳が Load failed」の切り分け用で、原因(SWが別オリジンを仲介)は直してある。戻すなら:
+    <button class="btn soft full" id="netProbeBtn">通信を調べる</button>
+    <div id="netProbeOut" class="small-note" style="margin-top:0"></div> -->
+    <div class="small-note">GitHubに上げても、スマホ側が古いファイルを持ったままのことがあります。上の「版」が渡したものと違うときに押してください。保存したデータは消えません。</div>
+  </div>
   <div class="card">
     <h2>言語(表示順)</h2>
     <div id="langList"></div>
@@ -570,16 +582,6 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <button class="btn soft full" id="audioCheckBtn" style="margin-top:0">プレーヤーの音声を確認</button>
     <div id="audioCheck" class="small-note"></div>
   </div> -->
-  <div class="card">
-    <h2>保存の状態</h2>
-    <div id="storeInfo" class="small-note" style="margin-top:0"></div>
-    <button class="btn soft full" id="storeCheckBtn">調べ直す</button>
-    <button class="btn soft full" id="freshBtn">新しいファイルを取りに行く</button>
-    <!-- 通信の切り分け用(2026-08-22)。原因が分かったら撤去してよい。撤去するときはこの3行を消す -->
-    <button class="btn soft full" id="netProbeBtn">通信を調べる</button>
-    <div id="netProbeOut" class="small-note" style="margin-top:0"></div>
-    <div class="small-note">GitHubに上げても、スマホ側が古いファイルを持ったままのことがあります。上の「版」が渡したものと違うときに押してください。保存したデータは消えません。</div>
-  </div>
   <!-- ベトナム語・オランダ語の読み(2026-09-16。Mayの依頼)。読みが空のところだけに、規則(RULE_ROMAN)で読みを入れる。
        2026-09-24に撤去(Mayが「もう使わない」と判断。読みは入れ終わった)。RULE_ROMAN と押したときの処理は残してあるので、
        下のカードを戻せば復活する:
@@ -621,7 +623,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-24c";
+const BUILD = "2026-09-24d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4298,7 +4300,8 @@ if($("wordsBtn")) $("wordsBtn").onclick = openWordsPage;
     renderWordsPage();
   };
 });
-$("storeCheckBtn").onclick = renderStoreInfo;
+// ボタンは撤去済み。戻したときだけ結ぶ(無いまま結ぶと起動時に止まる)
+if($("storeCheckBtn")) $("storeCheckBtn").onclick = renderStoreInfo;
 /* ベトナム語・オランダ語に読みを付ける(2026-09-16)。端末にある今のデータに直接当てる。
    書き出しからJSONを作ると、書き出した後にMayが直した訳を上書きしてしまうため、この形にした。
    対象は 辞書(db.dict) と notes（ダイアログの行・タイトル・例文・単語の登録）。読みが空のところだけ。
@@ -4350,7 +4353,8 @@ $("freshBtn").onclick = async ()=>{
 /* 通信の切り分け(2026-08-22)。ホーム画面アプリだけ翻訳が Load failed になる件を測るため。
    同一オリジン / Google以外の別オリジン / 翻訳API の3つを順に叩いて結果を並べる。
    原因が分かったらこの関数とボタンを撤去してよい */
-$("netProbeBtn").onclick = async ()=>{
+// ボタンは撤去済み。戻したときだけ結ぶ(無いまま結ぶと起動時に止まる)
+if($("netProbeBtn")) $("netProbeBtn").onclick = async ()=>{
   const out = $("netProbeOut"), btn = $("netProbeBtn");
   btn.disabled = true; out.textContent = "調べています…";
   const targets = [
