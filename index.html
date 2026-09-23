@@ -78,6 +78,9 @@ button{font-family:inherit; cursor:pointer; border:none}
 .transport .main{width:72px; height:72px; background:var(--accent); color:#fff; font-size:26px}
 .shuffle-btn{width:100%; margin-top:14px; padding:11px; border-radius:10px; background:var(--bg);
   border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
+.view-link{display:block; width:100%; margin:6px 0 18px; padding:12px; border-radius:12px; background:transparent;
+  border:1px dashed var(--border); color:var(--sub); font-size:14px; font-weight:600}
+.view-link.back{margin:0 0 12px; border-style:solid; background:var(--card); color:var(--accent)}
 .shuffle-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
 .small-note{font-size:12px; color:var(--sub); margin-top:8px}
 /* speed */
@@ -114,10 +117,12 @@ button{font-family:inherit; cursor:pointer; border:none}
 <body>
 <header>Assimil Player<small>Lesson横断 / 言語縦断 で連続再生</small><a class="hlink" href="./assimil-phrasebook.html">🗺 Atlas</a></header>
 
+<!-- 「再生」「ライブラリ」のタブは2026-09-24に撤去(Mayの依頼。ライブラリはたまにしか使わない)。
+     ライブラリへは再生画面のいちばん下から入る。戻すなら下の4行を戻す:
 <div class="tabs">
   <button id="tabPlay" class="on">再生</button>
   <button id="tabLib">ライブラリ</button>
-</div>
+</div> -->
 
 <main>
 <!-- ================= PLAY VIEW ================= -->
@@ -201,10 +206,13 @@ button{font-family:inherit; cursor:pointer; border:none}
     <h2>再生キュー</h2>
     <ul id="queue"><li style="color:var(--sub)">Lessonを読み込んでください</li></ul>
   </div> -->
+
+  <button class="view-link" id="goLib">📚 ライブラリ（言語・音声の追加）</button>
 </div>
 
 <!-- ================= LIBRARY VIEW ================= -->
 <div id="viewLib" class="hidden">
+  <button class="view-link back" id="backPlay">← 再生へ戻る</button>
   <div class="card">
     <h2>言語を追加</h2>
     <div class="add-lang">
@@ -300,13 +308,17 @@ function trackCount(name){
 }
 
 /* ---------- tabs ---------- */
-$('tabPlay').onclick = () => switchTab(true);
-$('tabLib').onclick  = () => switchTab(false);
+// タブは撤去済み(戻したときだけ結ぶ)。いまは再生画面の下の入口と、ライブラリの「戻る」で切り替える
+if ($('tabPlay')) $('tabPlay').onclick = () => switchTab(true);
+if ($('tabLib'))  $('tabLib').onclick  = () => switchTab(false);
+$('goLib').onclick    = () => switchTab(false);
+$('backPlay').onclick = () => switchTab(true);
 function switchTab(play){
   $('viewPlay').classList.toggle('hidden', !play);
   $('viewLib').classList.toggle('hidden', play);
-  $('tabPlay').classList.toggle('on', play);
-  $('tabLib').classList.toggle('on', !play);
+  if ($('tabPlay')) $('tabPlay').classList.toggle('on', play);
+  if ($('tabLib'))  $('tabLib').classList.toggle('on', !play);
+  window.scrollTo(0, 0);
 }
 
 /* ---------- mode (横断 / 縦断) ---------- */
