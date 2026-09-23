@@ -562,11 +562,14 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <button id="addLangBtn">追加</button>
     </div>
   </div>
+  <!-- 音声連携の状態は2026-09-24に撤去(Mayの判断)。Atlasがプレーヤーの音声を見つけられなかったときの原因調べ用で、
+       いまは音声が正常につながっている。押したときの処理は残してあるので、下のカードを戻せば復活する。
+       (音声が出ないときは、アプリを開き直せば同じ「もう一度探す」が働く)
   <div class="card">
     <h2>音声連携の状態</h2>
     <button class="btn soft full" id="audioCheckBtn" style="margin-top:0">プレーヤーの音声を確認</button>
     <div id="audioCheck" class="small-note"></div>
-  </div>
+  </div> -->
   <div class="card">
     <h2>保存の状態</h2>
     <div id="storeInfo" class="small-note" style="margin-top:0"></div>
@@ -618,7 +621,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-24b";
+const BUILD = "2026-09-24c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -5075,7 +5078,8 @@ AP.audio.addEventListener("play", updatePlayBtn);
 // 知識ベース化に伴い、保存領域の自動削除をOSに抑止してもらう
 if(navigator.storage && navigator.storage.persist) navigator.storage.persist();
 // 診断: プレーヤーの保存領域に何が見えているかを一覧表示
-$("audioCheckBtn").onclick = async ()=>{
+// ボタンは撤去済み。戻したときだけ結ぶ(無いまま結ぶと起動時に止まる)
+if($("audioCheckBtn")) $("audioCheckBtn").onclick = async ()=>{
   const out = $("audioCheck");
   out.textContent = "確認中…";
   AP.failed = false; // 再試行できるように
