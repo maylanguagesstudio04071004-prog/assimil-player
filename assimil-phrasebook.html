@@ -545,6 +545,15 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <!-- 設定 -->
 <section id="pageSettings" style="display:none">
+  <!-- バックアップは2026-09-24にいちばん上へ(Mayの依頼。言語の並べ替えより頻繁に使うため) -->
+  <div class="card">
+    <h2>バックアップ</h2>
+    <button class="btn full" id="exportBtn">JSONを書き出す(お気に入り含む)</button>
+    <button class="btn soft full" id="fileImportBtn">ファイルから読み込む</button>
+    <input type="file" id="fileInput" accept=".json" style="display:none">
+    <div class="msg" id="settingsMsg"></div>
+    <div class="small-note">データはこの端末のブラウザ内に保存されます。定期的に書き出しておくと安心です。</div>
+  </div>
   <div class="card">
     <h2>言語(表示順)</h2>
     <div id="langList"></div>
@@ -568,21 +577,15 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="netProbeOut" class="small-note" style="margin-top:0"></div>
     <div class="small-note">GitHubに上げても、スマホ側が古いファイルを持ったままのことがあります。上の「版」が渡したものと違うときに押してください。保存したデータは消えません。</div>
   </div>
-  <!-- ベトナム語・オランダ語の読み(2026-09-16。Mayの依頼)。読みが空のところだけに、規則(RULE_ROMAN)で読みを入れる -->
+  <!-- ベトナム語・オランダ語の読み(2026-09-16。Mayの依頼)。読みが空のところだけに、規則(RULE_ROMAN)で読みを入れる。
+       2026-09-24に撤去(Mayが「もう使わない」と判断。読みは入れ終わった)。RULE_ROMAN と押したときの処理は残してあるので、
+       下のカードを戻せば復活する:
   <div class="card">
     <h2>ベトナム語・オランダ語の読み</h2>
     <button class="btn soft full" id="viRomanBtn" style="margin-top:0">読みを規則で付ける（辞書とダイアログ）</button>
     <div id="viRomanMsg" class="small-note" style="margin-top:0"></div>
     <div class="small-note">辞書の語と、ダイアログの行・タイトル・例文・単語の登録のうち、読みが空のところだけに入れます。ベトナム語は北部の発音、オランダ語はドイツ語の読みと同じ書き方です。すでにある読みと訳には触りません。何度押しても同じ結果です。</div>
-  </div>
-  <div class="card">
-    <h2>バックアップ</h2>
-    <button class="btn full" id="exportBtn">JSONを書き出す(お気に入り含む)</button>
-    <button class="btn soft full" id="fileImportBtn">ファイルから読み込む</button>
-    <input type="file" id="fileInput" accept=".json" style="display:none">
-    <div class="msg" id="settingsMsg"></div>
-    <div class="small-note">データはこの端末のブラウザ内に保存されます。定期的に書き出しておくと安心です。</div>
-  </div>
+  </div> -->
 </section>
 
 <!-- 編集(レッスン単位) -->
@@ -615,7 +618,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-24a";
+const BUILD = "2026-09-24b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4297,7 +4300,8 @@ $("storeCheckBtn").onclick = renderStoreInfo;
    書き出しからJSONを作ると、書き出した後にMayが直した訳を上書きしてしまうため、この形にした。
    対象は 辞書(db.dict) と notes（ダイアログの行・タイトル・例文・単語の登録）。読みが空のところだけ。
    すでに読みがあるもの・訳(ja)には触らない。notes を新しく作ることはしない（訳の無い行は無いので、既存の note に入れれば足りる）。 */
-$("viRomanBtn").onclick = ()=>{
+// ボタンは撤去済み。戻したときだけ結ぶ(無いまま結ぶと起動時に止まる)
+if($("viRomanBtn")) $("viRomanBtn").onclick = ()=>{
   const lines = [];
   let any = 0;
   Object.keys(RULE_ROMAN).forEach(lang=>{
