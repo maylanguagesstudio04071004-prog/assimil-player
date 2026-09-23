@@ -615,7 +615,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-22c";
+const BUILD = "2026-09-24a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4961,12 +4961,16 @@ async function playSpan(lang, lesson, i, row){
   AP.audio.playbackRate = currentSpeed();
   AP.audio.loop = false;                   // 行のくり返しは下の timeupdate で面倒を見る
   AP.span = {start: sp[i][0], end: sp[i][1]};
+  watchSpan(true);                         // 再生中に別の行を押したときは play が来ないので、ここで始める
   clearPlaying();
   if(row) row.classList.add("playing");
   AP.audio.currentTime = sp[i][0];
   try{ await AP.audio.play(); }catch(e){}
 }
-AP.audio.addEventListener("timeupdate", ()=>{
+// 行の終わりで止める。timeupdate は iPhone の Safari では0.25秒おきくらいにしか来ず、
+// 止まるのが遅れて次の行の頭まで鳴っていた(2026-09-24にMayがトルコ語L20で気づいた)。
+// 行を鳴らしている間だけ、細かく(40ミリ秒ごとに)見張る
+function checkSpan(){
   const s = AP.span;
   if(!s) return;
   if(AP.audio.currentTime >= s.end){
@@ -4974,7 +4978,16 @@ AP.audio.addEventListener("timeupdate", ()=>{
     if(apLoop) AP.audio.currentTime = s.start;
     else { AP.audio.pause(); AP.span = null; clearPlaying(); }
   }
-});
+}
+let spanTimer = null;
+function watchSpan(on){
+  if(spanTimer){ clearInterval(spanTimer); spanTimer = null; }
+  if(on) spanTimer = setInterval(checkSpan, 40);
+}
+AP.audio.addEventListener("timeupdate", checkSpan);     // 念のため残す
+AP.audio.addEventListener("play",  ()=>watchSpan(!!AP.span));
+AP.audio.addEventListener("pause", ()=>watchSpan(false));
+AP.audio.addEventListener("ended", ()=>watchSpan(false));
 AP.audio.addEventListener("pause", ()=>{ if(!AP.span) clearPlaying(); });
 
 let playToken = 0;
@@ -5037,6 +5050,7 @@ $("seekBar").addEventListener("input", e=>{
 $("playBtn").onclick = async ()=>{
   const key = currentLang + "|" + currentNo;
   AP.span = null; clearPlaying(); AP.audio.loop = apLoop;   // 課まるごとに戻す
+  watchSpan(false);
   if(AP.key===key){
     if(AP.audio.paused){ try{ await AP.audio.play(); }catch(e){} }
     else AP.audio.pause();
