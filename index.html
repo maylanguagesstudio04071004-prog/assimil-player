@@ -180,6 +180,8 @@ button{font-family:inherit; cursor:pointer; border:none}
     </div>
   </div>
 
+  <!-- 区間リピート(A点・B点)とキュー全体のループは2026-09-24に撤去(Mayの判断。使っていない)。
+       仕組みは残してあるので、下のカードを戻せば復活する:
   <div class="card">
     <h2>区間リピート</h2>
     <div class="row ab-row">
@@ -191,12 +193,14 @@ button{font-family:inherit; cursor:pointer; border:none}
       <span>キュー全体をループ</span>
       <input type="checkbox" id="loopAll">
     </div>
-  </div>
+  </div> -->
 
+  <!-- 再生キューの一覧は2026-09-24に撤去(Mayの判断。使っていない)。キューそのものは再生の順番として残っている。
+       下のカードを戻せば一覧も復活する:
   <div class="card">
     <h2>再生キュー</h2>
     <ul id="queue"><li style="color:var(--sub)">Lessonを読み込んでください</li></ul>
-  </div>
+  </div> -->
 </div>
 
 <!-- ================= LIBRARY VIEW ================= -->
@@ -572,7 +576,7 @@ audio.addEventListener('pause', () => { $('playBtn').textContent = '▶'; });
 
 function nextTrack(){
   if (qi < queue.length - 1) playIndex(qi + 1);
-  else if ($('loopAll').checked && queue.length){
+  else if ($('loopAll') && $('loopAll').checked && queue.length){   // ループは撤去済み(戻したときだけ効く)
     if (shuffleMode !== 'off') shuffleArr(queue); // ループ時は毎周ちがう順番に
     playIndex(0);
   }
@@ -595,6 +599,7 @@ $('seek').oninput = e => { audio.currentTime = +e.target.value; };
 
 function renderQueue(finished){
   const ul = $('queue');
+  if (!ul) return;                   // 一覧は撤去済み(戻したときだけ描く)
   ul.innerHTML = '';
   if (!queue.length){
     ul.innerHTML = '<li style="color:var(--sub)">Lessonを読み込んでください</li>';
@@ -631,24 +636,25 @@ document.querySelectorAll('.presets button').forEach(b => {
 /* ---------- A-B repeat ---------- */
 function clearAB(){
   abA = abB = null;
+  if (!$('abASet')) return;          // 区間リピートは撤去済み
   $('abASet').classList.remove('set'); $('abASet').textContent = 'A点';
   $('abBSet').classList.remove('set'); $('abBSet').textContent = 'B点';
 }
-$('abASet').onclick = () => {
+if ($('abASet')) $('abASet').onclick = () => {
   abA = audio.currentTime;
   $('abASet').classList.add('set');
   $('abASet').textContent = 'A ' + fmt(abA);
   if (abB != null && abB <= abA){ abB = null; $('abBSet').classList.remove('set'); $('abBSet').textContent = 'B点'; }
 };
-$('abBSet').onclick = () => {
+if ($('abBSet')) $('abBSet').onclick = () => {
   if (audio.currentTime <= (abA != null ? abA : 0)) return;
   abB = audio.currentTime;
   $('abBSet').classList.add('set');
   $('abBSet').textContent = 'B ' + fmt(abB);
 };
-$('abClear').onclick = clearAB;
+if ($('abClear')) $('abClear').onclick = clearAB;
 
-$('loopAll').onchange = e => localStorage.setItem('loopAll', e.target.checked ? '1' : '');
+if ($('loopAll')) $('loopAll').onchange = e => localStorage.setItem('loopAll', e.target.checked ? '1' : '');
 
 /* ---------- Media Session (ロック画面) ---------- */
 function updateMediaSession(t){
@@ -703,7 +709,7 @@ async function migrateNative(){
   if (last) $('lessonNum').value = last;
   if (localStorage.getItem('mode') === 'lang') setMode('lang');
   updateShuffleBtn();
-  $('loopAll').checked = !!localStorage.getItem('loopAll');
+  if ($('loopAll')) $('loopAll').checked = !!localStorage.getItem('loopAll');
   if (!langs.length) switchTab(false); // 初回はライブラリへ
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
   if ('serviceWorker' in navigator && location.protocol === 'https:')
