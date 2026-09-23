@@ -1,4 +1,4 @@
-const CACHE = 'assimil-player-v7';
+const CACHE = 'assimil-player-v8';
 const ASSETS = ['./', './index.html', './assimil-phrasebook.html', './manifest.json', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -28,8 +28,14 @@ self.addEventListener('fetch', e => {
   const accept = req.headers.get('accept') || '';
   // HTML/画面: ネットワーク優先(最新を取得) → オフライン時のみキャッシュ
   if (req.mode === 'navigate' || accept.includes('text/html')) {
+    // ブラウザの控え(HTTPキャッシュ)も使わずに取りに行く(2026-09-24)。
+    // GitHub Pages は max-age=600 を付けて返すので、ふつうの fetch だと最大10分は古い画面が出ていた
+    // (プレーヤーの区間リピートを外したのに、Mayの端末に残って見えた)。
+    // 転送(リダイレクト)がかかったときは、画面の読み込みで失敗しないよう元の要求で取り直す
+    const fresh = fetch(new Request(req.url, { cache: 'no-store', credentials: 'same-origin' }))
+      .then(r => r.redirected ? fetch(req) : r);
     e.respondWith(
-      fetch(req)
+      fresh
         .then(r => {
           // 取得したHTMLは「そのURL」のキーで保存する。
           // 以前は全てのHTMLを './index.html' に上書きしていたため、
