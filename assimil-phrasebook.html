@@ -7,6 +7,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Language Atlas">
 <title>Language Atlas</title>
+<script>
+/* ホーム画面アプリで Atlas⇄Player を行き来すると、iOSが上の余白(env)も standalone も返さなくなり、
+   見出しと Player/Atlas ボタンが時計や電波の表示の下に潜る(2026-09-25 Mayの報告)。
+   ホーム画面アプリか、画面いっぱいに表示されているときは html に pwa を付け、下の CSS で最低余白を確保する。
+   ふつうの Safari で誤って付いても、上が少し空くだけ。 */
+(function(){
+  try{
+    var full = Math.max(innerWidth, innerHeight) >= Math.max(screen.width, screen.height) - 1;
+    if (navigator.standalone || matchMedia('(display-mode: standalone)').matches || full)
+      document.documentElement.classList.add('pwa');
+  }catch(e){}
+})();
+</script>
 <style>
 :root{
   --bg:#f5f4f0; --card:#ffffff; --text:#2a2723; --sub:#8a857c;
@@ -35,6 +48,8 @@ header .hlink{position:absolute; right:14px; top:calc(8px + env(safe-area-inset-
   header{padding-top:max(calc(14px + env(safe-area-inset-top)), 64px)}
   header .hlink{top:max(calc(8px + env(safe-area-inset-top)), 58px)}
 }
+html.pwa header{padding-top:max(calc(14px + env(safe-area-inset-top)), 64px)}
+html.pwa header .hlink{top:max(calc(8px + env(safe-area-inset-top)), 58px)}
 .tabs{display:flex; gap:6px; padding:12px 16px}
 .tabs button{flex:1; padding:13px 2px; border:1px solid var(--border); background:var(--card);
   color:var(--sub); border-radius:12px; font-size:14px; font-weight:600; white-space:nowrap}
@@ -623,7 +638,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-24d";
+const BUILD = "2026-09-25a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
