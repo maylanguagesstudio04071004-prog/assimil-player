@@ -362,7 +362,9 @@ function renderLangSelect(){
 }
 function updateLangRange(){
   const ls = lessonsOf($('langSelect').value);
-  $('langRange').textContent = ls.length ? '全' + ls.length + '本' : '';
+  // 「全◯本」は2026-09-25に外した(Mayの依頼。言語名の選択肢から本数を外したのと同じ理由)。
+  // 戻すなら: ls.length ? '全' + ls.length + '本' : ''
+  $('langRange').textContent = '';
 }
 $('langSelect').onchange = updateLangRange;
 $('loadLangBtn').onclick = () => loadLanguage();
