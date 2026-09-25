@@ -286,7 +286,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-21b";
+const BUILD = "2026-09-26a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1196,7 +1196,8 @@ function renderWords(){
     $("wordList").innerHTML =
       '<div class="empty">' + db.senses.length + ' の意味があります。<br>'
       + '上の欄で探すか、「テーマ」タブから開いてください。</div>'
-      + riftCardHtml();
+      // + riftCardHtml();   // ズレの候補の入口は観察タブへ移した(2026-09-26。Mayの依頼)。戻すならこの行を復活させる
+      + "";
     return;
   }
 
@@ -1405,6 +1406,20 @@ function riftVisible(k){
   if(riftHidden(k)) return false;
   return !riftStarOnly || riftStarred(k);
 }
+/* 観察タブの直下に置く入口(2026-09-26。Mayの依頼で「語」タブから移した)。
+   「一語で複数の意味」「1つの意味を言い分け」は多言語観察には効かないという判断で画面から外した（関数は残してある）。 */
+function riftEntryHtml(){
+  if(!db.entries.length) return "";
+  const na = [...axisMap().keys()].filter(a => a !== "男女の別（要確認）").length;
+  const ns = soundList().length;
+  return '<div class="ghead">データから拾った候補</div>'
+    + '<div class="sub" style="margin:-4px 2px 7px">機械的に拾ったもの。<b>ズレかどうかは見て判断する。</b></div>'
+    + '<div class="card tap" onclick="openRiftMode(\'axis\')"><b>何で形が変わるか</b>'
+    + '<div class="sub">日本語では言わなくていいのに、その言語では言い分けていること。軸 '+na+'</div></div>'
+    + '<div class="card tap" onclick="openRiftMode(\'sound\')"><b>音が似ている</b>'
+    + '<div class="sub">読みの音のつづきが近いもの。項目ごとにまとめてある。'+ns+'件</div></div>';
+}
+function openRiftMode(mode){ riftMode = mode; riftLang = ""; riftAx = null; openRift(); }
 function riftCardHtml(){
   if(!db.entries.length) return "";
   const nm = riftMany().filter(x => !x.weak).length, ns = riftSplit().length;
@@ -1443,6 +1458,38 @@ function riftSplitCard(x){
         + '</div>').join("")
     + '</div>';
 }
+/* 「音が似ている」を項目ごとにまとめる(2026-09-26。Mayの依頼: 月・季節・国・職業など)。
+   比較キーの頭で振り分ける。当てはまらないものは「その他」に落ちる（消えない）。
+   キーが増えたらここに足す。 */
+const SOUND_CATS = [
+  ["月",            k => /^month_/.test(k)],
+  ["季節",          k => /^(season_|spring$|summer$|autumn$|winter$)/.test(k)],
+  ["曜日",          k => /^(monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekday)/.test(k)],
+  ["数",            k => /^(number_|ordinal_|count_)/.test(k)],
+  ["色",            k => /^color/.test(k)],
+  ["方角",          k => /^direction_/.test(k)],
+  ["服",            k => /^(trousers|skirt|pajamas|shirt|shoes|hat|jeans|tshirt|swimwear|necktie|clothes)/.test(k)],
+  ["国・国籍",      k => /^(country_|nationality_|language_)/.test(k)],
+  ["職業",          k => /^profession_/.test(k)],
+  ["人間関係",      k => /^(relation_|self_)/.test(k)],
+  ["場所・乗り物",  k => /^(place_|transport_|go_)/.test(k)],
+  ["時間",          k => /^(time_|duration_|hour|minute|clock|morning|noon|evening|night|today|tomorrow|yesterday)/.test(k)],
+  ["天気・自然",    k => /^(weather_|rain|snow|wind|storm|cloud|sun|typhoon|temperature)/.test(k)],
+  ["食べ物・買い物", k => /^(food_|drink_|fruit_|shop_|money_|price_|currency_)/.test(k)],
+  ["体・健康",      k => /^(body_|health_|sick|pain)/.test(k)],
+  ["動詞",          k => /^verb_/.test(k)],
+  ["形容詞",        k => /^adj_/.test(k)
+      || /^(warm|cold|hot|cool|long|short|large|small|new|old|cheap|tight|beautiful)$/.test(k)
+      || /difficult|_easy$/.test(k)],
+  ["あいさつ",      k => /^greeting_/.test(k)],
+  ["言い回し・疑問", k => /^(useful_|response_|question_|ask_|modal_|how_|identity_)/.test(k)],
+  ["Mayの記録",     k => /^may_/.test(k)]
+];
+function soundCat(sn){
+  const k = (sn && sn.key) || "";
+  const hit = SOUND_CATS.find(c => c[1](k));
+  return hit ? hit[0] : "その他";
+}
 /* 音が似ている語の一覧(2026-09-12k)。似ている言語と、**そこに入らない言語**を並べて出す。 */
 function soundViewHtml(){
   const list = soundList().filter(x => (!riftLang || x.forms.has(riftLang)) && riftVisible("n:"+x.s.id));
@@ -1459,7 +1506,13 @@ function soundViewHtml(){
       + (form ? ' <span class="sndrom">'+esc(form)+'</span>' : '')
       + '<span class="sndlang">'+esc(l)+'</span></span>';
   };
-  h += list.map(x=>{
+  const byCat = new Map();
+  list.forEach(x=>{
+    const c = soundCat(x.s);
+    if(!byCat.has(c)) byCat.set(c, []);
+    byCat.get(c).push(x);
+  });
+  const cardOf = x=>{
     const inGroup = new Set(x.groups.flat());
     const rest = [...x.forms.keys()].filter(l => !inGroup.has(l));
     return '<div class="card"><div class="row">'
@@ -1472,7 +1525,13 @@ function soundViewHtml(){
       + (rest.length ? '<div class="sndrow off"><span class="sndhead">そうでない</span>'
           + rest.map(l => chip(x,l)).join("") + '</div>' : '')
       + '</div>';
-  }).join("") || '<div class="empty">該当なし。</div>';
+  };
+  /* 項目ごとにまとめて出す(2026-09-26)。並びは SOUND_CATS の順で、最後に「その他」 */
+  const order = SOUND_CATS.map(c => c[0]).concat(["その他"]);
+  const body = order.filter(c => byCat.has(c)).map(c =>
+      '<div class="ghead">'+esc(c)+' <span class="sub">'+byCat.get(c).length+'</span></div>'
+      + byCat.get(c).map(cardOf).join("")).join("");
+  h += body || '<div class="empty">該当なし。</div>';
   return h;
 }
 /* 言語 × 言い分けの軸(2026-09-12j)。
@@ -1576,6 +1635,9 @@ function riftLensBtn(){
 function riftAxis(ax, lang){ riftAx = [ax, lang]; renderRift();
   const el = document.querySelector("#riftBody h2"); if(el) el.scrollIntoView({block:"start"}); }
 function renderRift(){
+  /* 「一語で複数の意味」「1つの意味を言い分け」は2026-09-26に画面から外した（Mayの判断）。
+     計算する関数は残してあるので、戻すなら下のボタン2つと、この寄せを消す。 */
+  if(riftMode !== "axis" && riftMode !== "sound") riftMode = "sound";
   const many = riftMany(), split = riftSplit();
   const cand = many.filter(x => !x.weak), weak = many.filter(x => x.weak);
   const order = l => { const i = db.langs.indexOf(l); return i < 0 ? 999 : i; };
@@ -1583,8 +1645,9 @@ function renderRift(){
     + '<div class="sub" style="margin-bottom:10px">データから機械的に拾ったもの。'
     + '<b>ズレかどうかは見て判断する。</b>何も統合・削除していない。</div>'
     + '<div class="row" style="margin-bottom:10px">'
+    /* 外した2つ(2026-09-26)。戻すならこの2行のコメントを外す
     + '<button class="btn'+(riftMode==="many"?" pri":"")+'" onclick="riftSet(\'many\',\'\')">一語で複数の意味 '+cand.length+'</button>'
-    + '<button class="btn'+(riftMode==="split"?" pri":"")+'" onclick="riftSet(\'split\',\'\')">1つの意味を言い分け '+split.length+'</button>'
+    + '<button class="btn'+(riftMode==="split"?" pri":"")+'" onclick="riftSet(\'split\',\'\')">1つの意味を言い分け '+split.length+'</button>' */
     + '<button class="btn'+(riftMode==="axis"?" pri":"")+'" onclick="riftSet(\'axis\',\'\')">何で形が変わるか</button>'
     + '<button class="btn'+(riftMode==="sound"?" pri":"")+'" onclick="riftSet(\'sound\',\'\')">音が似ている '+soundList().length+'</button>'
     + '</div>';
@@ -1935,6 +1998,7 @@ function renderCols(){
   h += '<div class="row" style="margin-bottom:9px">'
     + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">観察を作る</button></div>';
   if(colFormOpen) h += colFormHtml();
+  h += riftEntryHtml();
   const cnt = k => db.collections.filter(c => colKind(c)===k).length;
   h += '<div style="margin-bottom:6px">'
     + '<button class="chip'+(colFilter?"":" on")+'" onclick="colFilter=\'\';renderCols()">すべて '
