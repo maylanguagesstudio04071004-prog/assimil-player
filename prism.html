@@ -33,6 +33,10 @@ header b{font-size:17px}
 header small{color:var(--sub); font-size:11px; flex:1}
 header a.hlink{color:var(--accent); text-decoration:none; font-size:12px; white-space:nowrap;
   border:1px solid var(--line); border-radius:6px; padding:3px 7px}
+/* 検索バー(2026-09-26。Mayの依頼で「語」をタブから出して、いつでも検索できる窓にした) */
+#searchBar{background:var(--card); border-bottom:1px solid var(--line); padding:7px 12px}
+#searchBar input{width:100%; box-sizing:border-box}
+header a.hlink.icon{font-size:14px; padding:3px 8px}
 nav{display:flex; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:19}
 nav button{
   flex:1; min-width:0; border:0; background:none; color:var(--sub); font:inherit; font-size:14px;
@@ -153,18 +157,27 @@ table.ax td.off{color:var(--line)}
   <b id="appName">Prism</b>
   <small>身近な単語から観察する</small>
   <a class="hlink" id="atlasLink" href="./assimil-phrasebook.html">▶ Atlas</a>
+  <!-- 設定はタブから外してここへ(2026-09-26。Mayの依頼「独立したタブで置いておく必要はない」) -->
+  <a class="hlink icon" id="settingsLink" href="#" title="設定" onclick="event.preventDefault();showTab('Settings')">⚙</a>
 </header>
+
+<!-- 語の検索窓。タブではなく、いつでも打てる窓として上に置く(2026-09-26) -->
+<div id="searchBar">
+  <input type="search" id="q" placeholder="語を検索（意味・原語・読み）" oninput="searchFromBar()">
+</div>
 
 <nav>
   <!-- 並びは 観察・語・メモ・テーマ・設定(2026-09-18。Mayの指定)。観察が主役で、テーマは出典の情報なので後ろ -->
   <button id="tabCollections" onclick="showTab('Collections')">観察</button>
   <button id="tabThemes"   onclick="showTab('Themes')">テーマ</button>
-  <button id="tabWords"    onclick="showTab('Words')">語</button>
+  <!-- 語と設定はタブから外した(2026-09-26)。ボタンは showTab の対応を保つために残し、隠してある。
+       戻すなら hidden を外す -->
+  <button id="tabWords"    onclick="showTab('Words')" hidden>語</button>
   <!-- メモのタブは撤去した(2026-09-21。Mayが「メモのタブごとやめる」を選んだ)。
        中身は2025年のnote時代の記録とChatGPTの気づき候補で、Mediumには浅くて使いにくい、という判断。
        **db.memos のデータは消していない。** 戻すなら、この行と下の pageMemos・TABS・memoBox の撤去を元に戻す。
   <button id="tabMemos"    onclick="showTab('Memos')">メモ</button> -->
-  <button id="tabSettings" onclick="showTab('Settings')">設定</button>
+  <button id="tabSettings" onclick="showTab('Settings')" hidden>設定</button>
 </nav>
 
 <main>
@@ -174,7 +187,6 @@ table.ax td.off{color:var(--line)}
 </section>
 
 <section id="pageWords">
-  <div style="margin-bottom:10px"><input type="search" id="q" placeholder="意味・原語・読みで探す" oninput="renderWords()"></div>
   <div id="wordList"></div>
 </section>
 
@@ -286,7 +298,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-26a";
+const BUILD = "2026-09-26b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1186,6 +1198,18 @@ function sectionedList(list){
   }
   return h || '<div class="empty">該当なし。</div>';
 }
+/* 検索窓に打ったら語の画面を出す(2026-09-26)。空にしたら、テーマで絞っていないかぎり観察へ戻る。 */
+function searchFromBar(){
+  const q = ($("q").value||"").trim();
+  if(q){
+    if(curTab !== "Words") showTab("Words", true);
+    else renderWords();
+  }else if(curTab === "Words" && !themeFilter){
+    showTab("Collections");
+  }else{
+    renderWords();
+  }
+}
 function renderWords(){
   const q = ($("q").value||"").trim().toLowerCase();
 
@@ -1195,7 +1219,7 @@ function renderWords(){
   if(!themeFilter && !q){
     $("wordList").innerHTML =
       '<div class="empty">' + db.senses.length + ' の意味があります。<br>'
-      + '上の欄で探すか、「テーマ」タブから開いてください。</div>'
+      + '上の検索窓で探すか、「テーマ」タブから開いてください。</div>'
       // + riftCardHtml();   // ズレの候補の入口は観察タブへ移した(2026-09-26。Mayの依頼)。戻すならこの行を復活させる
       + "";
     return;
