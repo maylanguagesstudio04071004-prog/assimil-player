@@ -638,7 +638,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-25a";
+const BUILD = "2026-09-27a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1244,7 +1244,21 @@ function basesForToken(lang, token){
   if(!baseTokenIndex) baseTokenIndex = buildBaseTokenIndex();
   const m = baseTokenIndex[lang];
   if(!m) return [];
-  return m.get(baseWordKey(token)) || [];
+  const k = baseWordKey(token);
+  const hit = m.get(k);
+  if(hit || lang !== "Bahasa Indonesia") return hit || [];
+  // 完全一致が無いときだけ、後ろに付く -nya -lah -kah -pun -ku -mu と重複形(petani-petani)を外して引き直す
+  // (2026-09-27 Mayの依頼。melihatnya → melihat。登録済みの語のリンクは変わらない)
+  const tries = [];
+  const red = /^([a-z]+)-\1$/.exec(k);
+  if(red) tries.push(red[1]);
+  [k].concat(tries).forEach(x=>{
+    ["nya","lah","kah","pun","ku","mu"].forEach(c=>{
+      if(x.length - c.length >= 3 && x.endsWith(c)) tries.push(x.slice(0, -c.length));
+    });
+  });
+  for(const x of tries){ const h = m.get(x); if(h) return h; }
+  return [];
 }
 // 本文を空白で分け、語根または基語が登録済みの語だけリンクにする(表記はそのまま)
 function phraseHtml(lang, p){
