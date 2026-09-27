@@ -638,7 +638,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-28a";
+const BUILD = "2026-09-28b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3335,7 +3335,10 @@ function importData(raw, msgEl){
       const lang = toNative(String(n.lang)), lesson = Number(n.lesson), text = String(n.text);
       const fields = {};
       Object.keys(n).forEach(k=>{ if(!["lang","lesson","text","delete"].includes(k)) fields[k] = String(n[k]); });
-      const i = db.notes.findIndex(x=>x.lang===lang && x.lesson===lesson && x.text===text);
+      // type も照合に入れる(2026-09-28)。入れないと、題が本文の1行と同じ文字列の課(越L1「Cô tìm ai ?」など)で
+      // 題の訳を送ると本文の行の訳に上書きされ、その行が「題」扱いになっていた。type の無い古いJSONは今までどおり本文の訳
+      const ntype = n.type ? String(n.type) : "phrase";
+      const i = db.notes.findIndex(x=>x.lang===lang && x.lesson===lesson && x.text===text && (x.type||"phrase")===ntype);
       // "delete":true は掃除用。本体テキストが書き換わって迷子になった訳を消せる
       if(n.delete === true){ if(i>=0){ db.notes.splice(i,1); notesDeleted++; } return; }
       if(i>=0){ Object.assign(db.notes[i], fields, {updated:Date.now()}); notesUpdated++; }
