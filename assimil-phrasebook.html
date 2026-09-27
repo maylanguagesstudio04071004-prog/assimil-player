@@ -638,7 +638,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-27a";
+const BUILD = "2026-09-28a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4933,10 +4933,14 @@ function markLine(lang, lesson, i, noEl){
   if(i > 0 && t.spans[i-1][1] > start) t.spans[i-1][1] = Math.round((start - 0.05) * 100) / 100;
   t.src = (t.src || "") + (t.src && t.src.indexOf("手で直した") < 0 ? " / 手で直した" : "");
   save();
+  lastMark = {lang, lesson, i};
   noEl.classList.add("marked");
   noEl.title = fmtTime(t.spans[i][0]) + " から";
   showMarkHint("行 " + (i+1) + " を " + fmtTime(t.spans[i][0]) + " からにしました。");
 }
+// 最後に番号を押した行。「このフレーズの位置を消す」で1行だけやり直すため(2026-09-28 Mayの依頼)
+var lastMark = null;   // var: 起動時の描画がこの行より先に走っても参照できるように
+var pendingMarkMsg = "";   // 描き直し(updatePlayBtn)の後に出したい知らせ
 function showMarkHint(extra){
   const h = $("markHint");
   if(!timeEdit){ h.style.display = "none"; return; }
@@ -4945,6 +4949,9 @@ function showMarkHint(extra){
     + "（押す遅れぶん 0.35秒 戻します）。終わりは自動で決めます ── いまの終わりが使えればそのまま、使えなければ次の行の直前までです。"
     + (extra ? '<br><b>' + esc(extra) + '</b>' : "");
   // 最後の行は「次の行」が無いので、終わりが音声の最後のままになる。ここで閉じられるようにする(2026-09-22)
+  // 2026-09-28 にボタンを外した(Mayの依頼。使わない。最後の行の終わりはClaude側で声の終わりに詰める)。
+  // 戻すなら、下の if(false) を外す。
+  if(false){
   const e = document.createElement("button");
   e.textContent = "いまの位置を最後の行の終わりにする";
   e.style.color = "var(--accent)";
@@ -4961,6 +4968,27 @@ function showMarkHint(extra){
     showMarkHint("最後の行を " + fmtTime(end) + " までにしました。");
   };
   h.appendChild(e);
+  }
+  // このフレーズ(最後に番号を押した行)の位置だけ消す。押すのが遅れた1行を、課ごと消さずにやり直せる(2026-09-28)
+  if(lastMark && lastMark.lang === currentLang && lastMark.lesson === currentNo){
+    const f = document.createElement("button");
+    const li = lastMark.i;
+    f.textContent = "このフレーズ(行 " + (li+1) + ")の位置を消す";
+    f.style.color = "var(--accent)";
+    f.onclick = ()=>{
+      const t = db.times.find(x=>x.lang===currentLang && x.lesson===currentNo);
+      if(!t || !t.spans[li]) return;
+      const old = t.spans[li][0];
+      t.spans[li] = [0,0];
+      save();
+      lastMark = null;
+      // やり直しやすいように、消した行の少し前へ戻す
+      if(AP.key === currentLang + "|" + currentNo && AP.audio.duration) AP.audio.currentTime = Math.max(0, old - 2);
+      pendingMarkMsg = "行 " + (li+1) + " の位置を消しました。2秒前に戻したので、その行の頭でもう一度番号を押してください。";
+      renderLesson();
+    };
+    h.appendChild(f);
+  }
   const b = document.createElement("button");
   b.style.marginLeft = "8px";
   b.textContent = "この課の位置を消す";
@@ -5055,7 +5083,7 @@ async function updatePlayBtn(){
   if(my !== playToken) return;
   $("content").classList.toggle("has-audio", !!rec);
   $("content").classList.toggle("time-edit", timeEdit && !!rec);
-  showMarkHint("");
+  showMarkHint(pendingMarkMsg); pendingMarkMsg = "";   // 描き直しの後にも知らせを残す
   if(!rec){ setAudioVisible(false); return; }
   setAudioVisible(true);
   $("spdBtn").textContent = speedLabel(currentSpeed());
