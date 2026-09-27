@@ -638,7 +638,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-28b";
+const BUILD = "2026-09-28c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2376,7 +2376,10 @@ function appendLessonBody(box, nodes){
   const pb = document.createElement("div");
   nodes.forEach(n=>pb.appendChild(n));
   appendObsCard(pb);
-  const gs = db.grammar.filter(g=>g.lang===currentLang && g.lesson===currentNo);
+  // タブは §(課ごとの文法解説)があるときだけ出す(2026-09-28 Mayの依頼)。◇(言語横断の軸)だけの課
+  // (越L5「名前」など63課)は復習回でもないのにタブが出ていた。◇は行の §ボタンと §タブから引ける。
+  // 戻すなら && 以降を外す
+  const gs = db.grammar.filter(g=>g.lang===currentLang && g.lesson===currentNo && (g.type||"grammar")==="grammar");
   if(!gs.length){ box.appendChild(pb); return; }
   const gb = document.createElement("div");
   appendGrammarCard(gb);
@@ -4912,6 +4915,7 @@ function spansOf(lang, no){
 let timeEdit = false;
 const MARK_LAG = 0.35;      // 押すのは聞こえてからになるので、その分だけ戻す
 function markLine(lang, lesson, i, noEl){
+  if(clearArm){ clearLine(lang, lesson, i); return; }
   const L = findLesson(lang, lesson);
   const n = L && L.phrases ? L.phrases.length : 0;
   if(!n) return;
@@ -4944,6 +4948,21 @@ function markLine(lang, lesson, i, noEl){
 // 最後に番号を押した行。「このフレーズの位置を消す」で1行だけやり直すため(2026-09-28 Mayの依頼)
 var lastMark = null;   // var: 起動時の描画がこの行より先に走っても参照できるように
 var pendingMarkMsg = "";   // 描き直し(updatePlayBtn)の後に出したい知らせ
+var clearArm = false;       // 「このフレーズの位置を消す」を押して、行の番号を待っている間 true
+function clearLine(lang, lesson, i){
+  clearArm = false;
+  const t = db.times.find(x=>x.lang===lang && x.lesson===lesson);
+  if(!t || !t.spans[i] || !(t.spans[i][1] > t.spans[i][0])){
+    showMarkHint("行 " + (i+1) + " にはまだ位置がありません。"); return;
+  }
+  const old = t.spans[i][0];
+  t.spans[i] = [0,0];
+  save();
+  // やり直しやすいように、消した行の少し前へ戻す
+  if(AP.key === lang + "|" + lesson && AP.audio.duration) AP.audio.currentTime = Math.max(0, old - 2);
+  pendingMarkMsg = "行 " + (i+1) + " の位置を消しました。" + (AP.key === lang + "|" + lesson ? "2秒前に戻したので、その行の頭でもう一度番号を押してください。" : "▶ で鳴らし、その行の頭でもう一度番号を押してください。");
+  renderLesson();
+}
 function showMarkHint(extra){
   const h = $("markHint");
   if(!timeEdit){ h.style.display = "none"; return; }
@@ -4972,23 +4991,16 @@ function showMarkHint(extra){
   };
   h.appendChild(e);
   }
-  // このフレーズ(最後に番号を押した行)の位置だけ消す。押すのが遅れた1行を、課ごと消さずにやり直せる(2026-09-28)
-  if(lastMark && lastMark.lang === currentLang && lastMark.lesson === currentNo){
+  // このフレーズの位置だけ消す(2026-09-28 Mayの依頼)。押すのが遅れた1行を、課ごと消さずにやり直せる。
+  // はじめは「最後に押した行」を消す作りにしたが、課を開いた直後はボタンが出ず分からなかったので、
+  // 「ボタン → 消したい行の番号」の順に押す形にした(同日)。
+  if(rawSpans(currentLang, currentNo)){
     const f = document.createElement("button");
-    const li = lastMark.i;
-    f.textContent = "このフレーズ(行 " + (li+1) + ")の位置を消す";
+    f.textContent = clearArm ? "やめる(行の番号を押すと、その行の位置を消します)" : "このフレーズの位置を消す";
     f.style.color = "var(--accent)";
     f.onclick = ()=>{
-      const t = db.times.find(x=>x.lang===currentLang && x.lesson===currentNo);
-      if(!t || !t.spans[li]) return;
-      const old = t.spans[li][0];
-      t.spans[li] = [0,0];
-      save();
-      lastMark = null;
-      // やり直しやすいように、消した行の少し前へ戻す
-      if(AP.key === currentLang + "|" + currentNo && AP.audio.duration) AP.audio.currentTime = Math.max(0, old - 2);
-      pendingMarkMsg = "行 " + (li+1) + " の位置を消しました。2秒前に戻したので、その行の頭でもう一度番号を押してください。";
-      renderLesson();
+      clearArm = !clearArm;
+      showMarkHint(clearArm ? "位置を消したい行の番号を押してください。" : "");
     };
     h.appendChild(f);
   }
@@ -5004,6 +5016,7 @@ function showMarkHint(extra){
 }
 $("markBtn").onclick = ()=>{
   timeEdit = !timeEdit;
+  clearArm = false;
   $("markBtn").classList.toggle("on", timeEdit);
   AP.span = null; clearPlaying();
   renderLesson();
