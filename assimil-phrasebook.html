@@ -334,7 +334,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <button id="tabLesson" class="on">レッスン</button>
   <button id="tabSearch">検索</button>
   <button id="tabFav">§</button>
-  <button id="tabImport">取込</button>
+  <!-- 「取込」タブは2026-09-29に設定の中へ移した(Mayの依頼。全言語の取り込みが終わり、あまり使わないため)。
+       ボタンは隠しただけで、画面(pageImport)と切り替えの仕組みはそのまま。戻すなら style を外す -->
+  <button id="tabImport" style="display:none">取込</button>
   <button id="tabSettings">設定</button>
 </div>
 
@@ -543,6 +545,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <!-- 取り込み -->
 <section id="pageImport" style="display:none">
+  <button class="btn soft" id="importBack" style="margin-bottom:10px">← 設定へ戻る</button>
   <div class="card">
     <h2>JSONを貼り付けて取り込み</h2>
     <textarea id="importBox" placeholder='{"lessons":[...]}'></textarea>
@@ -566,6 +569,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <button class="btn full" id="exportBtn">JSONを書き出す(お気に入り含む)</button>
     <button class="btn soft full" id="fileImportBtn">ファイルから読み込む</button>
     <input type="file" id="fileInput" accept=".json" style="display:none">
+    <button class="btn soft full" id="openImportBtn">JSONを貼り付けて取り込む(取込画面)</button>
     <div class="msg" id="settingsMsg"></div>
     <div class="small-note">データはこの端末のブラウザ内に保存されます。定期的に書き出しておくと安心です。</div>
   </div>
@@ -638,7 +642,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-28c";
+const BUILD = "2026-09-29a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1803,6 +1807,9 @@ function showTab(t){
   if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); }
 }
 Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
+// 取込画面は設定から開く(2026-09-29)。開いている間もタブは「設定」を光らせておく
+$("openImportBtn").onclick = ()=>{ showTab("tabImport"); $("tabSettings").classList.add("on"); window.scrollTo(0,0); };
+$("importBack").onclick = ()=>showTab("tabSettings");
 // レッスン画面から語根/接辞を開く。タブの見た目は「レッスン」のまま
 function openSubPage(id){
   Object.keys(pages).forEach(k=>{
