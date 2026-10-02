@@ -305,6 +305,11 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   border:1px solid var(--border); border-radius:14px; padding:12px;
   box-shadow:0 10px 28px rgba(0,0,0,.28); font-size:14px; line-height:1.55; max-height:70vh; overflow:auto}
 .tr-pop .tr-src{font-size:13px; color:var(--sub); margin-bottom:10px; overflow-wrap:anywhere}
+/* 右上の ✕(2026-10-03 Mayの依頼)。画面の下の語から開くと下の「閉じる」が端に隠れて押しにくかった。
+   ポップアップの中をスクロールしても上に残る */
+.tr-pop .tr-x{position:sticky; top:-6px; float:right; margin:-4px -4px 4px 10px; width:38px; height:38px;
+  border-radius:19px; border:1px solid var(--border); background:var(--bg); color:var(--text);
+  font-size:17px; line-height:1; padding:0; z-index:2}
 .tr-pop .tr-field{margin-bottom:10px}
 .tr-pop .tr-label{font-size:11px; color:var(--sub); font-weight:600; margin-bottom:4px}
 .tr-pop .tr-input{width:100%; min-height:56px; padding:8px; border:1px solid var(--border);
@@ -642,7 +647,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-09-29a";
+const BUILD = "2026-10-03a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3987,7 +3992,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   type = type || "phrase";
   const rect = anchorEl.getBoundingClientRect();
   const note = getNote(lang, lesson, text, type) || {};
-  let html = '<div class="tr-src">' + esc(text) + '</div>';
+  let html = '<button class="tr-x" aria-label="閉じる">✕</button><div class="tr-src">' + esc(text) + '</div>';
   fieldsFor(lang, type).forEach(f=>{
     html += '<div class="tr-field"><div class="tr-label">' + esc(f.label) + '</div>'
       + '<textarea class="tr-input" dir="auto" data-field="' + f.key + '" placeholder="未入力">' + esc(note[f.key]||"") + '</textarea></div>';
@@ -4007,6 +4012,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
   setTimeout(()=>{ trJustOpened = false; }, 700);
 
   trPop.querySelector(".tr-close").onclick = hideTrPop;
+  trPop.querySelector(".tr-x").onclick = hideTrPop;
 
   // 保存ボタンの代わり。閉じる/外をタップ/別のポップアップを開く、のどれでも書き込まれる
   trCommit = ()=>{
