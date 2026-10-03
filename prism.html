@@ -298,7 +298,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-10-04a";
+const BUILD = "2026-10-04b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -1432,23 +1432,18 @@ function riftVisible(k){
 }
 /* 観察タブの直下に置く入口(2026-09-26。Mayの依頼で「語」タブから移した)。
    「一語で複数の意味」「1つの意味を言い分け」は多言語観察には効かないという判断で画面から外した（関数は残してある）。 */
+/* 観察タブの中に、候補の一覧をそのまま出す(2026-10-04。Mayの依頼で「押してから出る」のをやめた)。
+   中身は renderRift() が #colRift に書く。 */
 function riftEntryHtml(){
   if(!db.entries.length) return "";
-  const na = [...axisMap().keys()].filter(a => a !== "男女の別（要確認）").length;
-  const ns = soundList().length;
-  return '<div class="ghead">データから拾った候補</div>'
-    + '<div class="sub" style="margin:-4px 2px 7px">機械的に拾ったもの。<b>ズレかどうかは見て判断する。</b></div>'
-    + '<div class="card tap" onclick="openRiftMode(\'axis\')"><b>何で形が変わるか</b>'
-    + '<div class="sub">日本語では言わなくていいのに、その言語では言い分けていること。軸 '+na+'</div></div>'
-    + '<div class="card tap" onclick="openRiftMode(\'sound\')"><b>音が似ている</b>'
-    + '<div class="sub">読みの音のつづきが近いもの。項目ごとにまとめてある。'+ns+'件</div></div>';
+  return '<div class="ghead">データから拾った候補</div><div id="colRift"></div>';
 }
 function openRiftMode(mode){ riftMode = mode; riftLang = ""; riftAx = null; openRift(); }
 function riftCardHtml(){
   if(!db.entries.length) return "";
   const nm = riftMany().filter(x => !x.weak).length, ns = riftSplit().length;
   const na = [...axisMap().keys()].filter(a => a !== "男女の別（要確認）").length;
-  return '<div class="card tap" onclick="openRift()"><b>ズレの候補</b>'
+  return '<div class="card tap" onclick="openRift()"><b>データから拾った候補</b>'
     + '<div class="sub">一語で複数の意味 '+nm+' ／ 1つの意味を言い分けている '+ns
     + ' ／ 言い分けの軸 '+na+'</div></div>';
 }
@@ -1641,14 +1636,14 @@ function riftLensTitle(){
   if(riftMode === "split") return "1つの意味を言い分け"+lang;
   if(riftMode === "sound") return "音が似ている"+lang;
   if(riftMode === "axis" && riftAx) return riftAx[0]+"（"+riftAx[1]+"）";
-  return "ズレの候補";
+  return "データから拾った候補";
 }
 function riftMakeLens(){
   const ids = riftNowSenses(60);
   if(!ids.length){ alert("いま出ている候補がありません。"); return; }
   const src = riftMode === "axis" && riftAx ? riftAx[0]+" ／ "+riftAx[1] : riftLensTitle();
   colFromCandidates(riftLensTitle(), ids,
-    "Prismの「ズレの候補 → "+src+"」から作った観察の軸。"
+    "Prismの候補（"+src+"）から作った観察の軸。"
     + "機械が拾った候補なので、面白いかどうかは見て決める。上から"+ids.length+"件。");
 }
 function riftLensBtn(){
@@ -1658,6 +1653,13 @@ function riftLensBtn(){
 }
 function riftAxis(ax, lang){ riftAx = [ax, lang]; renderRift();
   const el = document.querySelector("#riftBody h2"); if(el) el.scrollIntoView({block:"start"}); }
+/* 書き込み先(2026-10-04)。観察タブを開いた時点で一覧を出すようにしたので、
+   ふだんは観察タブの中（#colRift）に書く。語を見て戻る途中などでサブ画面が出ているときだけ #riftBody。 */
+function riftTarget(){
+  const sub = $("pageRift");
+  if(sub && sub.classList.contains("on")) return $("riftBody");
+  return $("colRift") || $("riftBody");
+}
 function renderRift(){
   /* 「一語で複数の意味」「1つの意味を言い分け」は2026-09-26に画面から外した（Mayの判断）。
      計算する関数は残してあるので、戻すなら下のボタン2つと、この寄せを消す。 */
@@ -1665,8 +1667,8 @@ function renderRift(){
   const many = riftMany(), split = riftSplit();
   const cand = many.filter(x => !x.weak), weak = many.filter(x => x.weak);
   const order = l => { const i = db.langs.indexOf(l); return i < 0 ? 999 : i; };
-  let h = '<h2 style="margin:0 0 6px">ズレの候補</h2>'
-    + '<div class="sub" style="margin-bottom:10px">データから機械的に拾ったもの。'
+  /* 見出し「ズレの候補」は2026-10-04に外した（Mayの依頼）。説明の一文だけ残す */
+  let h = '<div class="sub" style="margin-bottom:10px">データから機械的に拾ったもの。'
     + '<b>ズレかどうかは見て判断する。</b>何も統合・削除していない。</div>'
     + '<div class="row" style="margin-bottom:10px">'
     /* 外した2つ(2026-09-26)。戻すならこの2行のコメントを外す
@@ -1675,8 +1677,8 @@ function renderRift(){
     + '<button class="btn'+(riftMode==="axis"?" pri":"")+'" onclick="riftSet(\'axis\',\'\')">何で形が変わるか</button>'
     + '<button class="btn'+(riftMode==="sound"?" pri":"")+'" onclick="riftSet(\'sound\',\'\')">音が似ている '+soundList().length+'</button>'
     + '</div>';
-  if(riftMode === "axis"){ $("riftBody").innerHTML = h + axisViewHtml(); return; }
-  if(riftMode === "sound"){ $("riftBody").innerHTML = h + soundViewHtml(); return; }
+  if(riftMode === "axis"){ riftTarget().innerHTML = h + axisViewHtml(); return; }
+  if(riftMode === "sound"){ riftTarget().innerHTML = h + soundViewHtml(); return; }
   /* いま出ている候補から、そのまま観察の軸を作る(2026-09-13f)。
      **機械が拾った候補**なので、origin に残して画面にも断る。 */
   const counts = new Map();
@@ -1722,7 +1724,7 @@ function renderRift(){
         || (a.s.order==null?1e9:a.s.order) - (b.s.order==null?1e9:b.s.order));
     h += list.length ? list.map(riftSplitCard).join("") : '<div class="empty">該当なし。</div>';
   }
-  $("riftBody").innerHTML = h;
+  riftTarget().innerHTML = h;
 }
 
 /* ---------- 本 ---------- */
@@ -1978,7 +1980,7 @@ function colCardHtml(c){
     + '<div class="sub">'+esc(fmtDate(c.date))+'</div>'
     /* 一覧では注を3行までにする(2026-09-14)。ChatGPTの観察候補は注が10行ほどあり、14件並ぶと一覧が長くなりすぎる。全文は詳細に出る */
     + (c.note ? '<div class="sub" style="margin-top:3px; white-space:pre-wrap; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden">'+esc(c.note)+'</div>' : '')
-    + (c.origin === "candidate" ? '<div class="sub">ズレの候補から作った（機械が拾ったもの）</div>' : '')
+    + (c.origin === "candidate" ? '<div class="sub">候補から作った（機械が拾ったもの）</div>' : '')
     + (c.origin === "chatgpt" ? '<div class="sub">ChatGPTの観察候補（Mayが確かめる前のもの）</div>' : '')
     + '</div>';
 }
@@ -2020,7 +2022,10 @@ function renderCols(){
       + '<div class="empty">気になったことばを集めてみましょう。<br>'
       + '本のテーマをまたいで、<b>問い</b>や<b>観察の軸</b>で束ねられます。語は複製されません。</div>'
       + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">観察を作る</button>';
-    el.innerHTML = h; return;
+    el.innerHTML = h;
+    if($("colRift")) renderRift();
+    riftRestoreScroll();
+    return;
   }
   h += '<div class="row" style="margin-bottom:9px">'
     + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">観察を作る</button></div>';
@@ -2050,7 +2055,15 @@ function renderCols(){
     ? '<div class="colgrid">' + shown.sort(colSort).map(colCardHtml).join("") + '</div>'
     : '<div class="empty">この絞り込みに当てはまる観察はありません。</div>';
   el.innerHTML = h;
+  if($("colRift")) renderRift();
+  riftRestoreScroll();
   if(colFormOpen && $("colFTitle")) $("colFTitle").focus();
+}
+/* 語を見て戻ってきたとき、元の位置に戻す(2026-10-04)。goBack() が先頭へ飛ばすので1コマ遅らせる */
+function riftRestoreScroll(){
+  if(!riftScroll) return;
+  const y = riftScroll; riftScroll = 0;
+  requestAnimationFrame(()=>window.scrollTo(0, y));
 }
 
 /* チェック済み／未チェックを切り替える(2026-09-16)。残さないものは今までどおり「この観察を消す」で消す */
@@ -2159,7 +2172,7 @@ function renderCol(id){
       + '<div class="sub"><span class="tag plain">'+esc(colKindLabel(c))+'</span> '
       + esc(fmtDate(c.date))+' ／ '+items.length+'項目</div>'
       + (c.origin === "candidate" ? '<div class="sub" style="margin-top:4px">'
-          + 'ズレの候補から作ったもの。<b>機械が拾った候補で、断定ではない。</b></div>' : '')
+          + '候補から作ったもの。<b>機械が拾った候補で、断定ではない。</b></div>' : '')
       /* ChatGPTが記事と書き出しを読んで出した候補(2026-09-14)。Mayが立てた問いと見分ける */
       + (c.origin === "chatgpt" ? '<div class="sub" style="margin-top:4px">'
           + 'ChatGPTの観察候補。<b>Mayが確かめる前のもので、断定ではない。</b>要らなければ下の「この観察を消す」で消せる。</div>' : '')
