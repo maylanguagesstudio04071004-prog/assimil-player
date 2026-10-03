@@ -298,7 +298,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-10-04d";
+const BUILD = "2026-10-04e";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -2039,7 +2039,6 @@ function renderCols(){
   h += '<div class="row" style="margin-bottom:9px">'
     + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">観察を作る</button></div>';
   if(colFormOpen) h += colFormHtml();
-  h += riftEntryHtml();
   const cnt = k => db.collections.filter(c => colKind(c)===k).length;
   h += '<div style="margin-bottom:6px">'
     + '<button class="chip'+(colFilter?"":" on")+'" onclick="colFilter=\'\';renderCols()">すべて '
@@ -2063,6 +2062,8 @@ function renderCols(){
   h += shown.length
     ? '<div class="colgrid">' + shown.sort(colSort).map(colCardHtml).join("") + '</div>'
     : '<div class="empty">この絞り込みに当てはまる観察はありません。</div>';
+  /* 候補は観察の下に置く(2026-10-04)。候補の一覧が長いので、上に置くと自分の観察が埋もれる */
+  h += riftEntryHtml();
   el.innerHTML = h;
   if($("colRift")) renderRift();
   riftRestoreScroll();
