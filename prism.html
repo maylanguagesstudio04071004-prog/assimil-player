@@ -298,7 +298,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-10-04e";
+const BUILD = "2026-10-04f";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -343,7 +343,8 @@ const THEME_GROUPS = [
 /* Atlasに◇概念として実在するtopic（2026-09-06時点）。
    ここに一致する共通テーマ名だけ、Atlasへのリンクを出す。 */
 const ATLAS_CONCEPTS = ["-ment","ことわざ","なまり","丁寧さ","句動詞","名前","場所と方向",
-                        "家族","接続法","数","時間","曜日","月","過去","遠さ"];
+                        "家族","接続法","数","時間","曜日","月","過去","遠さ",
+                        "進行形","未来","複数形"];   /* 2026-10-04 Atlasに◇を3つ足した */
 const ATLAS_URL = "./assimil-phrasebook.html";
 
 /* ---------- データの形 ----------

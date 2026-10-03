@@ -647,7 +647,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-04a";
+const BUILD = "2026-10-04b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2834,7 +2834,7 @@ function openTopicPage(topic){
   /* 文法の分かれ目(wakareme.html)へのボタン(2026-10-04、Mayの依頼)。
      ◇のうち、向こうに同じ項目があるものだけ見出しの横に出す。項目を足したら WAKAREME にも足す。
      戻すなら wk を "" にする。 */
-  const WAKAREME = {"過去":"past"};
+  const WAKAREME = {"過去":"past", "進行形":"prog", "未来":"fut", "複数形":"plural"};
   const wk = (entries[0].type === "concept" && WAKAREME[topic])
     ? '<a href="./wakareme.html#' + WAKAREME[topic] + '" style="font-size:13px; color:var(--accent); text-decoration:none;'
       + 'border:1px solid var(--border); border-radius:8px; padding:7px 10px; white-space:nowrap">🪾文法の分かれ目</a>'
