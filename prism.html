@@ -298,7 +298,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-09-26b";
+const BUILD = "2026-10-04a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -2014,7 +2014,10 @@ function renderCols(){
   const el = $("colList");
   let h = "";
   if(!db.collections.length && !colFormOpen){
-    h = '<div class="empty">気になったことばを集めてみましょう。<br>'
+    /* 観察が0件でも「データから拾った候補」は出す(2026-10-04。Mayが6件を消して候補だけ残す形にした)。
+       前は早く return していて、候補のカードまで消えていた。 */
+    h = riftEntryHtml()
+      + '<div class="empty">気になったことばを集めてみましょう。<br>'
       + '本のテーマをまたいで、<b>問い</b>や<b>観察の軸</b>で束ねられます。語は複製されません。</div>'
       + '<button class="btn pri" onclick="colFormOpen=true;renderCols()">観察を作る</button>';
     el.innerHTML = h; return;
