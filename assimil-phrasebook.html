@@ -647,7 +647,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-03a";
+const BUILD = "2026-10-04a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2831,7 +2831,15 @@ function openTopicPage(topic){
     .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || (a.lesson||0)-(b.lesson||0));
   if(!entries.length) return;
   const panel = $("mapPanel");
-  panel.innerHTML = '<div class="map-head"><b>' + gMark(entries[0]) + ' ' + esc(topic) + '</b>'
+  /* 文法の分かれ目(wakareme.html)へのボタン(2026-10-04、Mayの依頼)。
+     ◇のうち、向こうに同じ項目があるものだけ見出しの横に出す。項目を足したら WAKAREME にも足す。
+     戻すなら wk を "" にする。 */
+  const WAKAREME = {"過去":"past"};
+  const wk = (entries[0].type === "concept" && WAKAREME[topic])
+    ? '<a href="./wakareme.html#' + WAKAREME[topic] + '" style="font-size:13px; color:var(--accent); text-decoration:none;'
+      + 'border:1px solid var(--border); border-radius:8px; padding:7px 10px; white-space:nowrap">🪾文法の分かれ目</a>'
+    : "";
+  panel.innerHTML = '<div class="map-head"><b>' + gMark(entries[0]) + ' ' + esc(topic) + '</b>' + wk
     + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
   /* 別アプリ Prism(身近な単語の比較)の同名テーマへ渡す(2026-09-06)。
      ◇のときだけ出す。Prism側にそのテーマが無ければ、向こうで一覧に落ちる。

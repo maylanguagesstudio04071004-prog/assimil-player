@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>文法の分かれ目</title>
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<!--
+  文法の分かれ目（2026-10-04）。Atlas の ◇過去 の見出し横「🪾文法の分かれ目」から開く。
+  同じ文を15言語で並べ、どこで言い方が分かれるかを見る。Atlas のデータ（IndexedDB）には触らない。
+  #past / #neg / #exist で項目を選ぶ。例文はClaudeの作例で、Assimilの本文ではない。
+-->
+<style>
+/* 色は Atlas(assimil-phrasebook.html) の :root と同じ値にそろえている */
+:root{
+  --bg:#f5f4f0; --card:#ffffff; --text:#2a2723; --sub:#8a857c;
+  --accent:#7a6ff0; --accent-soft:#edebfd; --border:#e4e1da;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#17161a; --card:#211f26; --text:#eceae6; --sub:#8f8a94;
+    --accent:#9a90ff; --accent-soft:#2e2a44; --border:#37343e; color-scheme:dark }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
+  background:var(--bg); color:var(--text); font-size:15px; line-height:1.7;
+  padding-bottom:calc(32px + env(safe-area-inset-bottom))}
+.wrap{max-width:960px; margin:0 auto; padding-inline:16px}
+header{padding-top:calc(14px + env(safe-area-inset-top)); display:flex; align-items:center; gap:10px}
+header h1{flex:1; margin:0; font-size:18px; font-weight:700; min-width:0}
+.back{font-size:13px; color:var(--accent); text-decoration:none; border:1px solid var(--border);
+  border-radius:8px; padding:7px 11px; background:var(--card); white-space:nowrap}
+nav{position:sticky; top:0; z-index:2; background:var(--bg); display:flex; gap:6px; flex-wrap:wrap;
+  padding-top:calc(10px + env(safe-area-inset-top)); padding-bottom:10px; margin-top:-4px; border-bottom:1px solid var(--border)}
+nav a{font-size:14px; color:var(--sub); text-decoration:none; padding:5px 13px; border-radius:999px;
+  border:1px solid var(--border); background:var(--card)}
+nav a[aria-current="true"]{color:var(--accent); border-color:var(--accent); background:var(--accent-soft)}
+section{padding-top:18px}
+section h2{font-size:20px; margin:0}
+.q{color:var(--sub); margin:2px 0 0; font-size:14px}
+.ex{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+.ex span{font-size:13px; background:var(--card); border:1px solid var(--border); border-radius:6px; padding:2px 10px}
+.box{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-top:14px}
+.box h3{font-size:15px; margin:0 0 6px}
+.box p{margin:0; font-size:14px}
+.box p + p{margin-top:8px}
+.box ol{margin:0; padding-left:1.3em; font-size:14px}
+.box li + li{margin-top:8px}
+.box li b{font-weight:600}
+.mx{overflow-x:auto; margin-top:10px}
+.mx table{border-collapse:collapse; font-size:12.5px; width:100%; table-layout:fixed}
+.mx col.l{width:7.5em}
+.mx th,.mx td{border-bottom:1px solid var(--border); padding:5px 2px; text-align:center; white-space:nowrap}
+.mx th{font-weight:500; color:var(--sub); font-size:11.5px; vertical-align:bottom; white-space:normal; line-height:1.35}
+.mx td:first-child,.mx th:first-child{text-align:left}
+.mx tr.sep td{border-top:2px solid var(--border)}
+.dot{display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--accent)}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:16px}
+.chip{font:inherit; font-size:13px; padding:5px 12px; border-radius:999px; border:1px solid var(--border);
+  background:var(--card); color:var(--sub); cursor:pointer}
+.chip b{font-weight:500; font-size:12px; margin-left:5px; opacity:.8}
+.chip[aria-pressed="true"]{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
+.grp{font-size:13px; color:var(--sub); margin:20px 0 8px; display:flex; align-items:center; gap:10px}
+.grp::after{content:""; flex:1; height:1px; background:var(--border)}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px}
+.card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:11px 13px; min-width:0; transition:opacity .2s}
+.card.dim{opacity:.28}
+.card summary{list-style:none; cursor:pointer}
+.card summary::-webkit-details-marker{display:none}
+.name{display:flex; justify-content:space-between; align-items:baseline; font-weight:600; font-size:14px}
+.name::after{content:"＋"; color:var(--sub); font-weight:400; font-size:13px}
+details[open] .name::after{content:"－"}
+.ln{font-size:16px; line-height:1.55; margin-top:5px; overflow-wrap:anywhere}
+.tr{display:block; font-size:12px; color:var(--sub)}
+.mk{background:var(--accent-soft); color:var(--accent); border-radius:4px; padding:0 3px}
+.tags{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px}
+.tag{font-size:11px; padding:1px 8px; border-radius:999px; background:var(--bg); color:var(--sub)}
+.var{font-size:13px; border-top:1px solid var(--border); margin-top:9px; padding-top:7px; line-height:1.65}
+.var div + div{margin-top:3px}
+.var .f{font-weight:600}
+.var .t{color:var(--sub)}
+.var .x{color:var(--sub); margin-top:6px; font-style:italic}
+footer{margin-top:36px; color:var(--sub); font-size:12px}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🪾 文法の分かれ目</h1>
+  <a class="back" id="back" href="./assimil-phrasebook.html">← Atlas</a>
+</header>
+<nav id="nav" aria-label="項目"></nav>
+<main id="topics"></main>
+<footer>例文はClaudeの作例で、Assimilの本文ではありません（2026-10-04）。</footer>
+</div>
+
+<script>
+const mk=s=>`<span class="mk">${s}</span>`;
+const tr=s=>`<span class="tr">${s}</span>`;
+const ar=s=>`<bdi dir="rtl" lang="ar">${s}</bdi>`;
+
+/* 項目ごとに: atlas = Atlas の ◇topic名（戻るリンク用。無ければ null）
+   D = チップ（分かれ目）, G = 並べ方の群, L = 言語カード, note = 分かれ目の説明, matrix = 表を出すか */
+const TOPICS=[
+{id:"past",atlas:"過去",title:"過去",q:"「過去」と言うたびに、何を決めなきゃいけない？",ex:["昨日、彼女は手紙を書いた"],matrix:{know:"知り方",asp:"終わり<br>／途中",now:"今との<br>つながり",reg:"話す<br>／書く",gen:"性別"},
+ D:{know:"どうやって知ったか",asp:"終わったか・途中か",now:"今とつながるか",reg:"話し言葉か書き言葉か",gen:"性別",none:"何も決めなくていい"},
+ G:["動詞の形が変わる","動詞は変わらない（語を添える／添えない）"],
+ note:`<ol>
+  <li><b>1つ目の分かれ目は、動詞の形が変わるかどうか。</b>15言語のうち11言語は動詞そのものが変わり、中国語・タイ語・ベトナム語・インドネシア語の4言語は変わらない。変わらない側では、過去を言うかどうか自体が話し手しだいで、「昨日」と言えばそれで足りる。</li>
+  <li><b>2つ目の分かれ目は、過去と一緒に何を言わされるか。</b>動詞が変わる言語は、過去の印にほかの情報も混ぜて持たせている。その混ぜ物が言語ごとに違う。
+   トルコ語は<b>どうやって知ったか</b>、イタリア語・スペイン語・フランス語・ロシア語・アラビア語は<b>終わったか途中か</b>、英語とスペイン語は<b>今とつながるか</b>、イタリア語・フランス語・ドイツ語・オランダ語は<b>話すか書くか</b>、ロシア語・アラビア語・ヒンディー語は<b>性別</b>。</li>
+  <li><b>同じ「性別」でも、誰の性かが違う。</b>ロシア語とアラビア語は主語の性。ヒンディー語は他動詞の過去で、主語ではなく目的語（例文なら「手紙」）の性に合わせる。</li>
+  <li><b>日本語は形は変わるが、何も混ぜない。</b>「た」は一つだけで、知り方も性も言わない。「あ、ここにあった」「着いたら電話する」のように、過去でないところにも出てくる。</li>
+ </ol>`,
+ L:[
+ {g:0,n:"日本語",s:[`昨日、彼女は手紙を書い${mk("た")}。`],d:["none"],v:[["書いた","形は一つ。人称も性も知り方も言わない"],["書いていた","途中だったことを言いたいときだけ足す"],["あ、あった","見つけた瞬間にも「た」を使う。過去だけの印ではない"]]},
+ {g:0,n:"トルコ語",s:[`Dün mektup ${mk("yazdı")}.`],d:["know"],v:[["yazdı","自分で見た・確かに知っている"],["yazmış","人から聞いた／跡を見て推した（書いたらしい）"]],x:"過去を言うと、情報の出どころも一緒に言ってしまう"},
+ {g:0,n:"イタリア語",s:[`Ieri ${mk("ha scritto")} una lettera.`],d:["asp","reg"],v:[["ha scritto","passato prossimo。終わった出来事、話し言葉の基本"],["scrisse","passato remoto。遠い過去・物語（南部では会話でも）"],["scriveva","imperfetto。書いていた・よく書いていた（背景や習慣）"]]},
+ {g:0,n:"スペイン語",s:[`Ayer ${mk("escribió")} una carta.`],d:["asp","now"],v:[["escribió","一回の出来事"],["escribía","背景・習慣"],["ha escrito","今日のこと・今につながる（スペインで）"]]},
+ {g:0,n:"フランス語",s:[`Hier, elle ${mk("a écrit")} une lettre.`],d:["asp","reg"],v:[["a écrit","passé composé。話し言葉の基本"],["écrivait","imparfait。背景・習慣"],["écrivit","passé simple。書き言葉・物語だけ"]]},
+ {g:0,n:"ドイツ語",s:[`Gestern ${mk("hat")} sie einen Brief ${mk("geschrieben")}.`],d:["reg"],v:[["hat … geschrieben","Perfekt。話し言葉"],["schrieb","Präteritum。書き言葉・物語"],["war / hatte","sein・haben・助動詞は会話でもこちら"]]},
+ {g:0,n:"オランダ語",s:[`Gisteren ${mk("heeft")} ze een brief ${mk("geschreven")}.`],d:["reg"],v:[["heeft … geschreven","現在完了。話し言葉の基本"],["schreef","過去形。物語や、続けて語るとき"],["is gegaan","移動や変化の動詞は zijn を使う"]]},
+ {g:0,n:"英語",s:[`Yesterday she ${mk("wrote")} a letter.`],d:["now"],v:[["wrote","過去の一点"],["has written","今につながる（yesterday とは一緒に使えない）"]]},
+ {g:0,n:"ロシア語",s:[`Вчера она ${mk("написала")} письмо.`],d:["asp","gen"],v:[["написала","完了体。書き上げた"],["писала","不完了体。書いていた・書いたことがある"],["он написал","男性なら -л。過去形は人称ではなく性で変わる"]]},
+ {g:0,n:"アラビア語",s:[`${ar(mk("كتبتْ")+" رسالةً أمس")}${tr("katab-at risālatan ams")}`],d:["gen","asp"],v:[["katab-at","彼女が書いた（-at が「彼女」）"],["katab-a","彼が書いた"],["kānat taktubu","書いていた（kāna＋現在形）"]]},
+ {g:0,n:"ヒンディー語",s:[`${mk("उसने")} कल एक चिट्ठी ${mk("लिखी")}।${tr("usne kal ek chiṭṭhī likhī")}`],d:["gen"],v:[["likhī","手紙（女性名詞）に合わせて -ī。主語ではなく目的語に一致"],["usne","他動詞の過去では主語に ne が付く"],["vah gayā / gaī","自動詞なら主語の性に一致"]]},
+ {g:1,n:"中国語",s:[`她昨天写${mk("了")}一封信。`],d:["asp"],v:[["写了","「起きた・終わった」。過去ではない（未来にも使える）"],["写过","経験"],["是昨天写的","いつ書いたかに焦点"]]},
+ {g:1,n:"タイ語",s:[`เมื่อวาน เธอเขียนจดหมาย${mk("แล้ว")}${tr("mʉ̂awaan thəə khǐan jòtmǎai lɛ́ɛw")}`],d:["none"],v:[["แล้ว lɛ́ɛw","もう〜した"],["เคย khəəi","〜したことがある"],["เมื่อวาน","「昨日」だけで十分。แล้ว は無くてもいい"]]},
+ {g:1,n:"ベトナム語",s:[`Hôm qua cô ấy ${mk("đã")} viết thư.`],d:["none"],v:[["đã","〜した。付けなくてもいい"],["rồi","もう〜した"],["từng","〜したことがある"],["vừa","たった今〜した"]]},
+ {g:1,n:"インドネシア語",s:[`${mk("Kemarin")} dia menulis surat.`],d:["none"],v:[["menulis","今日も明日も同じ形"],["sudah","〜し終えた"],["pernah","〜したことがある"]]}
+ ]},
+{id:"neg",atlas:null,title:"否定",q:"否定の言い方が分かれるのは、どんなとき？",ex:["私は肉を食べない"],
+ D:{noun:"名詞の否定は別の語",time:"「まだ」や過去で否定語が変わる",dbl:"否定を重ねる",imp:"「〜するな」は別の言い方"},
+ G:["動詞の中に入る","動詞の前に置く","はさむ・名詞に付ける"],
+ note:`<ol>
+  <li><b>置き場所で3つに分かれる。</b>動詞の中に入る（日本語・トルコ語）、動詞の前に置く（10言語）、動詞をはさむか名詞に付ける（フランス語・ドイツ語・オランダ語）。</li>
+  <li><b>タイ語・ベトナム語・インドネシア語は、否定の型がほぼ同じ。</b>ふつうの否定、名詞の否定、「まだ〜ない」、禁止に、それぞれ別の語がある。過去では何も決めなくてよかった3言語が、否定では細かく分ける。</li>
+  <li><b>アラビア語は、否定語のほうが時で変わる。</b>今は lā、過去は lam、未来は lan。</li>
+ </ol>`,
+ L:[
+ {g:0,n:"日本語",s:[`私は肉を食べ${mk("ない")}。`],d:["imp"],v:[["食べない","「ない」は形容詞と同じ活用。食べなかった＝高かったと同じ型"],["食べません","丁寧にすると別の形"],["食べるな","禁止は「ない」を使わない"]]},
+ {g:0,n:"トルコ語",s:[`Et ye${mk("mem")}.`],d:["noun"],v:[["yemem","習慣として食べない（-me- が動詞の中に入る）"],["yemiyorum","今は食べていない"],["öğrenci değilim","名詞の否定は別の語 değil"]]},
+ {g:1,n:"英語",s:[`I ${mk("don't")} eat meat.`],d:[],v:[["don't eat","否定のために do を呼んでくる"],["I'm not","be 動詞なら do は要らない"],["Don't eat","禁止も同じ形"]],x:"否定するために、意味のない動詞を一つ足す"},
+ {g:1,n:"イタリア語",s:[`${mk("Non")} mangio carne.`],d:["dbl","imp"],v:[["non mangio","動詞の前に non"],["non mangio niente","「何も」も否定形。否定を重ねる"],["Non mangiare!","禁止は不定詞（tu のとき）"]]},
+ {g:1,n:"スペイン語",s:[`${mk("No")} como carne.`],d:["dbl","imp"],v:[["no como","動詞の前に no"],["no como nada","否定を重ねる"],["¡No comas!","禁止は接続法"]]},
+ {g:1,n:"ロシア語",s:[`Я ${mk("не")} ем мясо.`],d:["dbl"],v:[["не ем","動詞の前に не"],["ничего не ем","否定を重ねる"],["не ем мяса","否定だと目的語が生格になることがある"]]},
+ {g:1,n:"ヒンディー語",s:[`मैं मांस ${mk("नहीं")} खाता।${tr("main māṃs nahīṃ khātā")}`],d:["imp"],v:[["nahīṃ","ふつうの否定"],["mat khāo","禁止は mat"],["khātā / khātī","話し手の性で動詞が変わる（否定でも同じ）"]]},
+ {g:1,n:"アラビア語",s:[`${ar(mk("لا")+" آكلُ اللحمَ")}${tr("lā ākulu al-laḥm")}`],d:["time","noun","imp"],v:[["lā ākulu","今・習慣"],["lam ākul","食べなかった（lam＋動詞の別の形）"],["lan ākula","食べないだろう"],["laysa","名詞の否定"],["lā ta'kul","禁止"]]},
+ {g:1,n:"中国語",s:[`我${mk("不")}吃肉。`],d:["time","imp"],v:[["不吃","習慣・意志として食べない"],["没吃 / 还没吃","食べなかった／まだ食べていない"],["别吃","禁止"]]},
+ {g:1,n:"タイ語",s:[`ฉัน${mk("ไม่")}กินเนื้อ${tr("chǎn mâi kin núea")}`],d:["noun","time","imp"],v:[["ไม่ mâi","ふつうの否定"],["ไม่ใช่ mâi châi","名詞の否定"],["ยังไม่ yang mâi","まだ〜ない"],["อย่า yàa","禁止"]]},
+ {g:1,n:"ベトナム語",s:[`Tôi ${mk("không")} ăn thịt.`],d:["noun","time","imp"],v:[["không","ふつうの否定"],["không phải là","名詞の否定"],["chưa","まだ〜ない"],["đừng","禁止"]]},
+ {g:1,n:"インドネシア語",s:[`Saya ${mk("tidak")} makan daging.`],d:["noun","time","imp"],v:[["tidak","ふつうの否定"],["bukan","名詞の否定"],["belum","まだ〜ない"],["jangan","禁止"]]},
+ {g:2,n:"フランス語",s:[`Je ${mk("ne")} mange ${mk("pas")} de viande.`],d:["dbl"],v:[["ne … pas","動詞をはさむ"],["Je mange pas","会話では ne が落ち、pas だけが残る"],["de viande","否定だと du が de になる"],["ne … rien / jamais","pas の位置に別の語"]]},
+ {g:2,n:"ドイツ語",s:[`Ich esse ${mk("kein")} Fleisch.`],d:["noun"],v:[["kein Fleisch","名詞を否定（不定冠詞のように変化）"],["Ich esse nicht","動詞を否定"],["Ich esse das Fleisch nicht","特定のものなら nicht が後ろへ"]]},
+ {g:2,n:"オランダ語",s:[`Ik eet ${mk("geen")} vlees.`],d:["noun"],v:[["geen vlees","名詞を否定（ドイツ語の kein と同じ）"],["Ik eet niet","動詞を否定"],["Ik eet het vlees niet","特定のものなら niet が後ろへ"]]}
+ ]},
+{id:"exist",atlas:null,title:"存在と所有",q:"「ある」と「持っている」は、どこで分かれる？",ex:["上：机の上に本がある","下：私は車を持っている"],
+ D:{same:"「ある」と「持つ」が同じ語",loc:"「私のところに」で持つ",have:"「持つ」動詞を使う",post:"置き方（立つ・横たわる）で言う",alive:"生き物かどうかで変わる"},
+ G:["「ある」で持つ","「私のところに〜がある」で持つ","「持つ」動詞で持つ"],
+ note:`<ol>
+  <li><b>「車を持つ」の言い方で3つに分かれる。</b>「ある」で持つ（日本語・トルコ語・中国語・タイ語・ベトナム語）、「私のところにある」で持つ（ロシア語・ヒンディー語・アラビア語）、「持つ」動詞で持つ（ヨーロッパの6言語とインドネシア語）。</li>
+  <li><b>オランダ語・ドイツ語・ロシア語は、本の置き方を言う。</b>横たわる・立つ・（中に）座る。</li>
+  <li><b>生き物かどうかで「いる／ある」を分けるのは、15言語の中で日本語だけ。</b></li>
+ </ol>`,
+ L:[
+ {g:0,n:"日本語",s:[`机の上に本が${mk("ある")}。`,`私には車が${mk("ある")}。`],d:["same","loc","alive"],v:[["猫がいる","生き物は「いる」、物は「ある」"],["私には","「私に」と場所のように言う"],["持っている","「持つ」でも言える"]]},
+ {g:0,n:"トルコ語",s:[`Masada bir kitap ${mk("var")}.`,`Araba${mk("m var")}.`],d:["same"],v:[["var","ある"],["arabam var","「私の車がある」＝持っている"],["yok","「ない」は別の語"]]},
+ {g:0,n:"中国語",s:[`桌子上${mk("有")}一本书。`,`我${mk("有")}车。`],d:["same"],v:[["有","ある・持つ"],["书在桌子上","特定の本の居場所は「在」"],["没有","否定は「不」ではなく「没」"]]},
+ {g:0,n:"タイ語",s:[`บนโต๊ะ${mk("มี")}หนังสือ${tr("bon tó mii nǎngsʉ̌ʉ")}`,`ฉัน${mk("มี")}รถ${tr("chǎn mii rót")}`],d:["same"],v:[["มี mii","ある・持つ"],["อยู่ yùu","特定のものの居場所"]]},
+ {g:0,n:"ベトナム語",s:[`Trên bàn ${mk("có")} một quyển sách.`,`Tôi ${mk("có")} xe hơi.`],d:["same"],v:[["có","ある・持つ"],["ở","特定のものの居場所"]]},
+ {g:1,n:"ロシア語",s:[`На столе ${mk("лежит")} книга.`,`${mk("У меня есть")} машина.`],d:["loc","post"],v:[["лежит / стоит","本は「横たわる」、瓶は「立つ」"],["у меня есть","「私のもとに、ある」"],["нет + 生格","「ない」は別の語、名詞の格も変わる"]]},
+ {g:1,n:"ヒンディー語",s:[`मेज़ पर एक किताब ${mk("है")}।${tr("mez par ek kitāb hai")}`,`${mk("मेरे पास")} गाड़ी है।${tr("mere pās gāṛī hai")}`],d:["loc"],v:[["mere pās","「私のそばに」＝持ち物"],["mere do bhāī haiṃ","家族なら mere（私の）だけ。pās は使わない"]]},
+ {g:1,n:"アラビア語",s:[`${ar(mk("هناك")+" كتابٌ على الطاولة")}${tr("hunāka kitābun ʿalā aṭ-ṭāwila")}`,`${ar(mk("عندي")+" سيارةٌ")}${tr("ʿindī sayyāra")}`],d:["loc"],v:[["hunāka","「あそこに」がそのまま「ある」の意味に"],["ʿindī","「私のもとに」＝持っている"],["maʿī","「私と一緒に」＝今手元にある"]],x:"今のことを言う文には「ある」にあたる動詞がない"},
+ {g:2,n:"英語",s:[`There ${mk("is")} a book on the table.`,`I ${mk("have")} a car.`],d:["have"],v:[["there is","「そこに」を前に出す"],["have got","イギリスでは会話でこちらも"]]},
+ {g:2,n:"フランス語",s:[`${mk("Il y a")} un livre sur la table.`,`J'${mk("ai")} une voiture.`],d:["have"],v:[["il y a","「それがそこに持つ」。存在も avoir で言う"],["avoir","持つ"]]},
+ {g:2,n:"スペイン語",s:[`${mk("Hay")} un libro en la mesa.`,`${mk("Tengo")} un coche.`],d:["have"],v:[["hay","haber の特別な形"],["el libro está","特定の本の居場所は estar"],["tener","持つ"]]},
+ {g:2,n:"イタリア語",s:[`${mk("C'è")} un libro sul tavolo.`,`${mk("Ho")} una macchina.`],d:["have"],v:[["c'è / ci sono","「そこに、ある」。複数で形が変わる"],["avere","持つ"]]},
+ {g:2,n:"ドイツ語",s:[`Auf dem Tisch ${mk("liegt")} ein Buch.`,`Ich ${mk("habe")} ein Auto.`],d:["have","post"],v:[["liegt / steht","置き方で言う"],["es gibt","「それが与える」＝世の中にある"],["haben","持つ"]]},
+ {g:2,n:"オランダ語",s:[`Er ${mk("ligt")} een boek op de tafel.`,`Ik ${mk("heb")} een auto.`],d:["have","post"],v:[["ligt / staat / zit","平たいものは横たわる、立つものは立つ、中に入っているものは座る"],["er is","置き方を言わない言い方もある"],["hebben","持つ"]]},
+ {g:2,n:"インドネシア語",s:[`${mk("Ada")} buku di atas meja.`,`Saya ${mk("punya")} mobil.`],d:["have"],v:[["ada","ある"],["punya","持つ"],["saya ada mobil","会話では ada で持つこともある"]]}
+ ]}
+];
+
+const nav=document.getElementById("nav"), root=document.getElementById("topics"), back=document.getElementById("back");
+TOPICS.forEach(T=>{
+  const a=document.createElement("a");
+  a.href="#"+T.id; a.textContent=T.title; a.dataset.id=T.id;
+  nav.appendChild(a);
+
+  const sec=document.createElement("section");
+  sec.id="s-"+T.id; sec.hidden=true;
+  const count=k=>T.L.filter(l=>l.d.includes(k)).length;
+  const keys=T.matrix?Object.keys(T.matrix):[];
+  const matrix=T.matrix?`<div class="mx"><table><colgroup><col class="l">${keys.map(()=>"<col>").join("")}</colgroup><thead><tr><th>言語</th>${keys.map(k=>`<th>${T.matrix[k]}</th>`).join("")}</tr></thead><tbody>${
+    T.L.map((l,i)=>`<tr${i>0&&T.L[i-1].g!==l.g?' class="sep"':""}><td>${l.n}</td>${keys.map(k=>`<td>${l.d.includes(k)?'<span class="dot" aria-label="あり"></span>':""}</td>`).join("")}</tr>`).join("")
+  }</tbody></table></div>`:"";
+  sec.innerHTML=`<h2>${T.title}</h2><p class="q">${T.q}</p>
+  <div class="ex">${T.ex.map(e=>`<span>${e}</span>`).join("")}</div>
+  <div class="box"><h3>分かれ目はどこにあるか</h3>${T.note}${matrix}</div>
+  <div class="chips" role="group" aria-label="${T.title}の分かれ目で絞る">${Object.entries(T.D).map(([k,t])=>`<button type="button" class="chip" data-k="${k}" aria-pressed="false">${t}<b>${count(k)}</b></button>`).join("")}</div>
+  ${T.G.map((g,gi)=>`<div class="grp">${g}</div><div class="grid">${T.L.filter(l=>l.g===gi).map(l=>`
+    <details class="card" data-d="${l.d.join(" ")}"><summary><div class="name">${l.n}</div>${l.s.map(s=>`<div class="ln">${s}</div>`).join("")}
+    <div class="tags">${l.d.map(k=>`<span class="tag">${T.D[k]}</span>`).join("")}</div></summary>
+    <div class="var">${l.v.map(([f,t])=>`<div><span class="f">${f}</span> <span class="t">— ${t}</span></div>`).join("")}${l.x?`<div class="x">${l.x}</div>`:""}</div></details>`).join("")}</div>`).join("")}`;
+  root.appendChild(sec);
+
+  const chips=[...sec.querySelectorAll(".chip")];
+  chips.forEach(c=>c.addEventListener("click",()=>{
+    const on=c.getAttribute("aria-pressed")!=="true";
+    chips.forEach(x=>x.setAttribute("aria-pressed","false"));
+    if(on)c.setAttribute("aria-pressed","true");
+    const k=on?c.dataset.k:null;
+    sec.querySelectorAll(".card").forEach(card=>card.classList.toggle("dim",!!k&&!card.dataset.d.split(" ").includes(k)));
+  }));
+});
+
+/* #past などで項目を選ぶ。知らない値なら先頭。戻るリンクは、Atlasに同名の◇があればそこへ */
+function show(){
+  const id=(location.hash||"").slice(1);
+  const T=TOPICS.find(t=>t.id===id)||TOPICS[0];
+  TOPICS.forEach(t=>{document.getElementById("s-"+t.id).hidden=(t!==T)});
+  nav.querySelectorAll("a").forEach(a=>a.setAttribute("aria-current",a.dataset.id===T.id?"true":"false"));
+  back.href="./assimil-phrasebook.html"+(T.atlas?"#con="+encodeURIComponent(T.atlas):"");
+  back.textContent=T.atlas?"← ◇"+T.atlas:"← Atlas";
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",show);
+show();
+</script>
+</body>
+</html>
