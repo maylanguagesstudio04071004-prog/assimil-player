@@ -9,7 +9,7 @@
 <!--
   文法の分かれ目（2026-10-04）。Atlas の ◇過去 の見出し横「🪾文法の分かれ目」から開く。
   同じ文を15言語で並べ、どこで言い方が分かれるかを見る。Atlas のデータ（IndexedDB）には触らない。
-  #past / #neg / #exist で項目を選ぶ。例文はClaudeの作例で、Assimilの本文ではない。
+  #past / #prog / #fut / #neg / #exist で項目を選ぶ。例文はClaudeの作例で、Assimilの本文ではない。
 -->
 <style>
 /* 色は Atlas(assimil-phrasebook.html) の :root と同じ値にそろえている */
@@ -129,6 +129,60 @@ const TOPICS=[
  {g:1,n:"タイ語",s:[`เมื่อวาน เธอเขียนจดหมาย${mk("แล้ว")}${tr("mʉ̂awaan thəə khǐan jòtmǎai lɛ́ɛw")}`],d:["none"],v:[["แล้ว lɛ́ɛw","もう〜した"],["เคย khəəi","〜したことがある"],["เมื่อวาน","「昨日」だけで十分。แล้ว は無くてもいい"]]},
  {g:1,n:"ベトナム語",s:[`Hôm qua cô ấy ${mk("đã")} viết thư.`],d:["none"],v:[["đã","〜した。付けなくてもいい"],["rồi","もう〜した"],["từng","〜したことがある"],["vừa","たった今〜した"]]},
  {g:1,n:"インドネシア語",s:[`${mk("Kemarin")} dia menulis surat.`],d:["none"],v:[["menulis","今日も明日も同じ形"],["sudah","〜し終えた"],["pernah","〜したことがある"]]}
+ ]},
+{id:"prog",atlas:null,title:"進行形",q:"「今〜している」は、どこで言い分けが分かれる？",ex:["彼女は今、手紙を書いている"],matrix:{must:"使わない<br>と変",loc:"「いる」<br>から",fut:"予定<br>にも"},
+ D:{must:"進行形を使わないと変",opt:"ふつうの現在形で足りる",loc:"「〜にいる」から来た形",fut:"予定（未来）にも使う"},
+ G:["動詞に付ける","補助の動詞を足す","前に一語を足す","ふつうの現在形のまま"],
+ note:`<ol>
+  <li><b>1つ目の分かれ目は、進行形を使わないと変になるかどうか。</b>日本語・トルコ語・ヒンディー語・英語は、使わないと「今」の意味にならず、習慣や予定に聞こえる。残りの11言語は、ふつうの現在形でも今のことが言える。</li>
+  <li><b>形の出どころは「〜にいる」が多い。</b>日本語の「ている」の「いる」、スペイン語 estar・イタリア語 stare（いる）、中国語「在」、タイ語 อยู่（いる）、ヒンディー語 rahnā（とどまる）、オランダ語 aan het・ドイツ語 am（〜のところに）。「書いているところにいる」と、場所のように言っている。</li>
+  <li><b>オランダ語は姿勢まで言える。</b>zit te schrijven（座って書いている）、ligt te slapen（横になって寝ている）。存在と所有の「置き方」と同じ発想。</li>
+  <li><b>進行形のほかの使い道が分かれる。</b>英語・トルコ語・ヒンディー語は予定（明日行く）にも使う。日本語の「ている」は代わりに結果の状態（結婚している、窓が開いている）にも使う。</li>
+  <li><b>ロシア語とアラビア語には進行形が無い。</b>動詞がもともと「終わったか・途中か」を持っていて、途中の側の現在形がそのまま進行になる。</li>
+ </ol>`,
+ L:[
+ {g:0,n:"日本語",s:[`彼女は今、手紙を書い${mk("ている")}。`],d:["must","loc"],v:[["書いている","今していること。「いる」が付いている"],["書く","今の意味にならない（予定か習慣）"],["結婚している","結果の状態も同じ形"]]},
+ {g:0,n:"トルコ語",s:[`Şu an mektup yaz${mk("ıyor")}.`],d:["must","fut"],v:[["yazıyor","今書いている。会話の現在形の標準"],["yazar","習慣・性質（よく書く人だ）"],["yarın gidiyorum","明日行く。予定にも使う"]]},
+ {g:0,n:"ヒンディー語",s:[`वह अभी चिट्ठी लिख ${mk("रही है")}।${tr("vah abhī chiṭṭhī likh rahī hai")}`],d:["must","loc","fut"],v:[["likh rahī hai","rahnā（とどまる）を足す。主語が男性なら rahā"],["likhtī hai","習慣（よく書く）"],["kal jā rahī hūṃ","明日行く。予定にも使う"]]},
+ {g:1,n:"英語",s:[`She ${mk("is writing")} a letter now.`],d:["must","fut"],v:[["is writing","今していること"],["writes","習慣になる"],["I'm leaving tomorrow","確定した予定にも使う"],["I know","know・like は進行形にしにくい"]]},
+ {g:1,n:"スペイン語",s:[`Ahora ${mk("está escribiendo")} una carta.`],d:["opt","loc"],v:[["está escribiendo","estar（いる）＋現在分詞"],["escribe","現在形でも今のことが言える"],["sigue escribiendo","まだ書き続けている"]]},
+ {g:1,n:"イタリア語",s:[`Adesso ${mk("sta scrivendo")} una lettera.`],d:["opt","loc"],v:[["sta scrivendo","stare（いる）＋gerundio"],["scrive","現在形で足りる"],["stava scrivendo","過去の進行"]]},
+ {g:1,n:"フランス語",s:[`Elle ${mk("est en train d'écrire")} une lettre.`],d:["opt"],v:[["est en train de","「〜の最中だ」。強調したいときだけ"],["écrit","ふつうはこれで足りる"]]},
+ {g:1,n:"オランダ語",s:[`Ze ${mk("is")} een brief ${mk("aan het schrijven")}.`],d:["opt","loc"],v:[["is aan het schrijven","「書くことのところにいる」"],["zit te schrijven","座って書いている。staat te koken（立って料理している）、ligt te slapen（横になって寝ている）"],["schrijft","現在形でも言える"]]},
+ {g:2,n:"中国語",s:[`她${mk("正在")}写信。`],d:["opt","loc"],v:[["在 / 正在","「〜にいる」の「在」"],["写着","「着」は状態が続いている"],["她写信呢","文末の「呢」だけでも"]]},
+ {g:2,n:"タイ語",s:[`เธอ${mk("กำลัง")}เขียนจดหมาย${mk("อยู่")}${tr("thəə kamlang khǐan jòtmǎai yùu")}`],d:["opt","loc"],v:[["กำลัง kamlang","前に付ける（もとは「力」）"],["อยู่ yùu","後ろに「いる」を付ける"],["片方だけ","どちらか一方でも、無くても言える"]]},
+ {g:2,n:"ベトナム語",s:[`Cô ấy ${mk("đang")} viết thư.`],d:["opt"],v:[["đang","今〜している"],["vẫn","まだ〜している"]]},
+ {g:2,n:"インドネシア語",s:[`Dia ${mk("sedang")} menulis surat.`],d:["opt"],v:[["sedang","今〜している"],["lagi","会話ではこちら"],["masih","まだ〜している"]]},
+ {g:3,n:"ドイツ語",s:[`Sie ${mk("schreibt")} gerade einen Brief.`],d:["opt","loc"],v:[["schreibt gerade","「ちょうど今」を足すだけ"],["ist am Schreiben","会話で「書くところにいる」（西部で特に）"]]},
+ {g:3,n:"ロシア語",s:[`Сейчас она ${mk("пишет")} письмо.`],d:["opt"],v:[["пишет","不完了体の現在形がそのまま進行"],["напишет","完了体の現在形は未来になる"]]},
+ {g:3,n:"アラビア語",s:[`${ar("هي "+mk("تكتبُ")+" رسالةً الآن")}${tr("hiya taktubu risālatan al-ān")}`],d:["opt"],v:[["taktubu","未完了形が今のことも習慣も表す"],["kānat taktubu","過去の進行（書いていた）"]]}
+ ]},
+{id:"fut",atlas:null,title:"未来",q:"「これから」を言うのに、専用の形は要る？",ex:["明日、彼女は手紙を書く"],matrix:{own:"専用の<br>形",pres:"現在形<br>で可",go:"行く",guess:"今の<br>推量",gen:"性別"},
+ D:{own:"専用の未来形がある",pres:"現在形のままで言える",go:"「行く」で近い未来",guess:"未来形で今の推量も言う",gen:"性別"},
+ G:["専用の未来形","前に一語を足す","現在形のまま"],
+ note:`<ol>
+  <li><b>1つ目の分かれ目は、未来に専用の形があるかどうか。</b>フランス語・スペイン語・イタリア語・トルコ語・アラビア語・ヒンディー語は、動詞そのものが未来の形になる。日本語・ドイツ語・オランダ語・ロシア語は、現在形のまま「明日」と言えば未来になる。英語・中国語・タイ語・ベトナム語・インドネシア語は前に一語（will／会／จะ／sẽ／akan）を足す。英語以外は、その語が無くても通じる。</li>
+  <li><b>専用の形がある言語ほど、会話では別の言い方を使う。</b>フランス語・スペイン語・英語・オランダ語は「行く」で近い未来を言う（va écrire／va a escribir／is going to／gaat schrijven）。イタリア語は現在形で済ませることが多い。</li>
+  <li><b>未来形は「たぶん今〜だろう」にも使う。</b>イタリア語 Sarà a casa、スペイン語 Estará en casa、ドイツ語 Er wird zu Hause sein、オランダ語 Hij zal wel thuis zijn、英語 That'll be the postman。日本語の「だろう」と同じ役目。</li>
+  <li><b>ロシア語は形と意味がずれている。</b>完了体（書き上げる）の現在形 напишет が、そのまま未来になる。書き上げるのは、まだ先のことだから。</li>
+  <li><b>ヒンディー語とアラビア語は、未来でも性別を言う。</b>ヒンディー語 likhegī（女性）／likhegā（男性）、アラビア語は頭の ta-（彼女）／ya-（彼）。ヒンディー語の -gā は、もとは「行った（gayā）」。</li>
+ </ol>`,
+ L:[
+ {g:0,n:"フランス語",s:[`Demain, elle ${mk("écrira")} une lettre.`],d:["own","go"],v:[["écrira","futur simple"],["va écrire","aller（行く）で近い未来。会話の標準"],["écrit demain","現在形でも言える"]]},
+ {g:0,n:"スペイン語",s:[`Mañana ${mk("escribirá")} una carta.`],d:["own","go","guess"],v:[["escribirá","futuro"],["va a escribir","ir a（行く）。会話で多い"],["Estará en casa","たぶん家にいる（今の推量）"]]},
+ {g:0,n:"イタリア語",s:[`Domani ${mk("scriverà")} una lettera.`],d:["own","pres","guess"],v:[["scriverà","futuro semplice"],["domani scrive","会話では現在形が多い"],["Sarà a casa","たぶん家にいる（今の推量）"]]},
+ {g:0,n:"トルコ語",s:[`Yarın mektup ${mk("yazacak")}.`],d:["own"],v:[["yazacak","-acak の未来形"],["yazar","「書くだろう・書きますよ」推量や申し出"],["yazıyor","進行形で確定した予定"]]},
+ {g:0,n:"アラビア語",s:[`${ar(mk("ستكتبُ")+" رسالةً غدًا")}${tr("sa-taktubu risālatan ghadan")}`],d:["own","gen"],v:[["sa-taktubu","現在形の頭に sa- を付ける"],["sawfa taktubu","少し先・書き言葉"],["ta- / ya-","頭の文字が「彼女」「彼」"]]},
+ {g:0,n:"ヒンディー語",s:[`वह कल चिट्ठी ${mk("लिखेगी")}।${tr("vah kal chiṭṭhī likhegī")}`],d:["own","gen"],v:[["likhegī","-gī は女性。男性なら likhegā"],["-gā","もとは「行った（gayā）」"]]},
+ {g:1,n:"英語",s:[`Tomorrow she ${mk("will write")} a letter.`],d:["go","guess"],v:[["will write","will を前に足す"],["is going to write","「行く」で予定・兆し"],["is writing tomorrow","進行形で確定した予定"],["That'll be the postman","今の推量"]]},
+ {g:1,n:"中国語",s:[`她明天${mk("会")}写信。`],d:["pres"],v:[["会写","「そうなるだろう」"],["要写","「書くつもり・書かなきゃ」"],["明天写","時の語だけでも"],["快要…了","もうすぐ"]]},
+ {g:1,n:"タイ語",s:[`พรุ่งนี้เธอ${mk("จะ")}เขียนจดหมาย${tr("phrûngníi thəə ca khǐan jòtmǎai")}`],d:["pres"],v:[["จะ ca","前に足す。無くても通じる"],["ใกล้จะ","もうすぐ"]]},
+ {g:1,n:"ベトナム語",s:[`Ngày mai cô ấy ${mk("sẽ")} viết thư.`],d:["pres"],v:[["sẽ","前に足す。無くても通じる"],["sắp","もうすぐ"]]},
+ {g:1,n:"インドネシア語",s:[`Besok dia ${mk("akan")} menulis surat.`],d:["pres"],v:[["akan","書き言葉寄り"],["mau","「〜するつもり」。会話の未来"],["besok","時の語だけでも"]]},
+ {g:2,n:"日本語",s:[`明日、彼女は手紙を${mk("書く")}。`],d:["pres"],v:[["書く","現在形がそのまま未来"],["書くだろう","推量は別に足す"],["書くつもり","意志"]]},
+ {g:2,n:"ドイツ語",s:[`Morgen ${mk("schreibt")} sie einen Brief.`],d:["pres","guess"],v:[["schreibt","現在形で十分"],["wird schreiben","werden（なる）＋不定詞"],["Er wird zu Hause sein","たぶん家にいる（今の推量）"]]},
+ {g:2,n:"オランダ語",s:[`Morgen ${mk("schrijft")} ze een brief.`],d:["pres","go","guess"],v:[["schrijft","現在形で十分"],["gaat schrijven","gaan（行く）で近い未来"],["zal schrijven","約束・推量"],["Hij zal wel thuis zijn","たぶん家にいる（今の推量）"]]},
+ {g:2,n:"ロシア語",s:[`Завтра она ${mk("напишет")} письмо.`],d:["pres"],v:[["напишет","完了体は、現在形の形のまま意味は未来"],["будет писать","不完了体は быть（ある）を足す"]]}
  ]},
 {id:"neg",atlas:null,title:"否定",q:"否定の言い方が分かれるのは、どんなとき？",ex:["私は肉を食べない"],
  D:{noun:"名詞の否定は別の語",time:"「まだ」や過去で否定語が変わる",dbl:"否定を重ねる",imp:"「〜するな」は別の言い方"},
