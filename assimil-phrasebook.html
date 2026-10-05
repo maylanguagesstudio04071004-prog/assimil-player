@@ -647,7 +647,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-04b";
+const BUILD = "2026-10-05a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4965,6 +4965,98 @@ function markLine(lang, lesson, i, noEl){
   noEl.classList.add("marked");
   noEl.title = fmtTime(t.spans[i][0]) + " から";
   showMarkHint("行 " + (i+1) + " を " + fmtTime(t.spans[i][0]) + " からにしました。");
+  // 最後の行は「次の行」が無いので終わりが音声の最後になり、演習まで鳴っていた(2026-10-05 Mayの依頼)。
+  // 音声の音量から、最後の行の声の終わりを探して止める
+  if(i === n - 1 && t.spans[i][1] >= AP.audio.duration - 0.5) fixLastEnd(lang, lesson, t, i, L);
+}
+// 音量の包絡(20ミリ秒ごとの大きさ)。課ごとに1度だけ作る
+const VOICE_ENV = {};
+async function voiceEnvelope(lang, lesson){
+  const key = lang + "|" + lesson;
+  if(VOICE_ENV[key]) return VOICE_ENV[key];
+  const rec = await getTrack(lang, lesson);
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!rec || !rec.blob || !AC) return null;
+  const ctx = new AC();
+  try{
+    const ab = await rec.blob.arrayBuffer();
+    const buf = await new Promise((res, rej)=>{
+      const p = ctx.decodeAudioData(ab, res, rej);
+      if(p && p.then) p.then(res, rej);
+    });
+    VOICE_ENV[key] = envelopeOf(buf);
+    return VOICE_ENV[key];
+  }catch(e){ return null; }
+  finally{ try{ ctx.close(); }catch(e){} }
+}
+function envelopeOf(buf){
+  const win = Math.round(buf.sampleRate * 0.02), chs = [];
+  for(let c = 0; c < buf.numberOfChannels; c++) chs.push(buf.getChannelData(c));
+  const env = [];
+  for(let s = 0; s + win <= buf.length; s += win){
+    let sum = 0;
+    for(const d of chs) for(let k = s; k < s + win; k++){ const v = d[k]; sum += v * v; }
+    env.push(Math.sqrt(sum / (win * chs.length)));
+  }
+  return env;
+}
+// 声の固まり。Claude側の道具(pick2.py の chunks)と同じ決め方:
+// いちばん大きい所(上から2%)の5%より大きければ声。0.25秒以上の沈黙で区切り、0.08秒未満は捨てる
+function voicePieces(env, gap = 0.25, minlen = 0.08){
+  const peak = env.slice().sort((a,b)=>a-b)[Math.floor(env.length * 0.98)] || 0, th = peak * 0.05;
+  const out = []; let start = null, sil = 0;
+  env.forEach((e, i)=>{
+    if(e > th){ if(start === null) start = i; sil = 0; }
+    else if(start !== null){
+      sil++;
+      if(sil * 0.02 >= gap){
+        const a = start * 0.02, b = (i - sil) * 0.02;
+        if(b - a >= minlen) out.push([a, b]);
+        start = null;
+      }
+    }
+  });
+  if(start !== null) out.push([start * 0.02, env.length * 0.02]);
+  return out;
+}
+function speechIn(ps, a, b){ return ps.reduce((s, [x, y])=>s + Math.max(0, Math.min(y, b) - Math.max(x, a)), 0); }
+// 最後の行の声の終わり。行の頭から声の固まりをたどり、
+// 2.5秒以上の沈黙か、「この課の話す速さで見込んだ長さ(字数×1字あたりの秒の中央値)」を話し終えた後の0.8秒以上の沈黙で止める。
+// 2.5秒だけだと、演習が間を置かずに始まる録音(露L66など)で演習まで入ってしまう
+function lastLineEnd(env, spans, phrases, i){
+  const ps = voicePieces(env), s = spans[i][0];
+  const txt = p => typeof p === "string" ? p : ((p && p.text) || "");
+  const rates = [];
+  for(let j = 0; j < i; j++){
+    const a = spans[j], b = spans[j+1];
+    if(a && b && a[1] > a[0] && b[1] > b[0] && b[0] > a[0]) rates.push(speechIn(ps, a[0], b[0]) / Math.max(2, txt(phrases[j]).length));
+  }
+  rates.sort((a,b)=>a-b);
+  const med = rates.length ? (rates.length % 2 ? rates[(rates.length-1)/2] : (rates[rates.length/2-1] + rates[rates.length/2]) / 2) : 0;
+  const want = med ? Math.max(2, txt(phrases[i]).length) * med : Infinity;
+  const run = ps.filter(p=>p[1] > s);
+  if(!run.length) return null;
+  let said = run[0][1] - Math.max(run[0][0], s), end = run[0][1];
+  for(let k = 1; k < run.length; k++){
+    const gap = run[k][0] - run[k-1][1];
+    if(gap >= 2.5 || (gap >= 0.8 && said >= want)) break;
+    said += run[k][1] - run[k][0]; end = run[k][1];
+  }
+  return end + 0.3;
+}
+async function fixLastEnd(lang, lesson, t, i, L){
+  const start = t.spans[i][0];
+  showMarkHint("行 " + (i+1) + " を " + fmtTime(start) + " からにしました。最後の行なので、声の終わりを探しています…");
+  const env = await voiceEnvelope(lang, lesson);
+  if(t.spans[i][0] !== start) return;      // 探している間に押し直された
+  const end = env ? lastLineEnd(env, t.spans, L.phrases, i) : null;
+  if(!end || end <= start + 0.2){
+    showMarkHint("行 " + (i+1) + " を " + fmtTime(start) + " からにしました。声の終わりが見つからなかったので、終わりは音声の最後のままです。");
+    return;
+  }
+  t.spans[i][1] = Math.round(Math.min(end, AP.audio.duration || end) * 100) / 100;
+  save();
+  showMarkHint("行 " + (i+1) + " を " + fmtTime(start) + " からにしました。最後の行なので、声の終わり(" + fmtTime(t.spans[i][1]) + ")で止めます。");
 }
 // 最後に番号を押した行。「このフレーズの位置を消す」で1行だけやり直すため(2026-09-28 Mayの依頼)
 var lastMark = null;   // var: 起動時の描画がこの行より先に走っても参照できるように
@@ -4989,7 +5081,7 @@ function showMarkHint(extra){
   if(!timeEdit){ h.style.display = "none"; return; }
   h.style.display = "";
   h.innerHTML = "▶ で鳴らしながら、行が始まったところで<b>その行の番号</b>を押してください"
-    + "（押す遅れぶん 0.35秒 戻します）。終わりは自動で決めます ── いまの終わりが使えればそのまま、使えなければ次の行の直前までです。"
+    + "（押す遅れぶん 0.35秒 戻します）。終わりは自動で決めます ── いまの終わりが使えればそのまま、使えなければ次の行の直前までです。最後の行は、声の終わりを探してそこで止めます。"
     + (extra ? '<br><b>' + esc(extra) + '</b>' : "");
   // 最後の行は「次の行」が無いので、終わりが音声の最後のままになる。ここで閉じられるようにする(2026-09-22)
   // 2026-09-28 にボタンを外した(Mayの依頼。使わない。最後の行の終わりはClaude側で声の終わりに詰める)。
