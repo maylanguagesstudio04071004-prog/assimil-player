@@ -313,7 +313,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 .tr-pop .tr-field{margin-bottom:10px}
 .tr-pop .tr-label{font-size:11px; color:var(--sub); font-weight:600; margin-bottom:4px}
 .tr-pop .tr-input{width:100%; min-height:56px; padding:8px; border:1px solid var(--border);
-  border-radius:8px; background:var(--bg); color:var(--text); font-size:14px; resize:vertical; line-height:1.6}
+  border-radius:8px; background:var(--bg); color:var(--text); font-size:16px; resize:vertical; line-height:1.6}
+/* 2026-10-07: 14px → 16px。iPhoneのSafariは16px未満の入力欄に触れると画面を拡大し、
+   ポップアップが左へはみ出して読みの欄が入力できなかった(Mayが独L42で気づいた) */
 .tr-pop .tr-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:2px}
 .tr-pop .tr-actions button{padding:11px 15px; border-radius:10px; font-size:14px; font-weight:600}
 .tr-pop .tr-actions .btn{background:var(--accent); color:#fff}
@@ -647,7 +649,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-05a";
+const BUILD = "2026-10-07a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
