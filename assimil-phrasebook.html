@@ -649,7 +649,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-09a";
+const BUILD = "2026-10-09b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3663,6 +3663,11 @@ function renameLang(oldName, newName){
   });
   db.roots.forEach(r=>{ if(r.lang===oldName) r.lang = newName; });
   (db.dict || []).forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
+  // 言語固有レイヤーも付け替える(2026-10-09。英語を Advanced English に改名するときに、
+  // adds / profiles / times が置き去りになるのを防ぐ。§2.4 の「2回目が来たら直す」)
+  ["times","bases","suffixes","suffixChains","parts","classifiers","adds","prefixes","cases","stacks","profiles"].forEach(k=>{
+    (db[k] || []).forEach(x=>{ if(x.lang===oldName) x.lang = newName; });
+  });
   const spd = localStorage.getItem(KEY + ".spd." + oldName);
   if(spd!=null){ lsSet(KEY + ".spd." + newName, spd); localStorage.removeItem(KEY + ".spd." + oldName); }
   if(currentLang===oldName){ currentLang = newName; lsSet(KEY + ".lang", newName); }
@@ -3697,7 +3702,7 @@ $("fileInput").onchange = e=>{
 /* ---------- フレーズごとの日本語訳(タップ/長押しでその場にポップアップ表示) ---------- */
 // 自動翻訳サジェスト用の言語コード表(Google翻訳の無料エンドポイントに渡す)
 const LANGCODE = {
-  "English":"en", "中文":"zh-CN", "Italiano":"it", "Español":"es", "Français":"fr",
+  "English":"en", "Advanced English":"en", "中文":"zh-CN", "Italiano":"it", "Español":"es", "Français":"fr",
   "Deutsch":"de", "Türkçe":"tr", "العربية":"ar", "हिन्दी":"hi", "Bahasa Indonesia":"id",
   "ไทย":"th", "Русский":"ru", "Nederlands":"nl", "Tiếng Việt":"vi", "Português":"pt", "한국어":"ko"
 };
