@@ -246,7 +246,7 @@ input,textarea,select{font-family:inherit}
   padding:8px 0; border-top:1px solid var(--border); background:none; color:var(--text)}
 .rocc-l{flex:none; font-size:11.5px; color:var(--sub); font-weight:700; padding-top:3px; min-width:32px}
 .rocc-t{font-size:14.5px; line-height:1.55; overflow-wrap:anywhere; unicode-bidi:plaintext}
-.phrase .txt .rtok{border-bottom:1px dashed var(--accent); cursor:pointer}
+.phrase .txt .rtok, .lesson-title-txt .rtok{border-bottom:1px dashed var(--accent); cursor:pointer}
 /* forms */
 textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--border);
   border-radius:12px; background:var(--bg); color:var(--text); font-size:14px; resize:vertical; line-height:1.7}
@@ -649,7 +649,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-07a";
+const BUILD = "2026-10-09a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2549,7 +2549,12 @@ function renderLesson(){
     const wrap = document.createElement("div");
     wrap.style.cssText = "display:flex; align-items:flex-start; gap:8px";
     const t = document.createElement("span");
-    t.textContent = L.title;
+    // 題も本文と同じに: なぞると訳が出て、語根・基語の語には下線(2026-10-09 Mayの依頼)。
+    // 前は textContent で、題の語は引けなかった
+    t.className = "lesson-title-txt";
+    t.dataset.lang = currentLang;
+    t.innerHTML = phraseHtml(currentLang, L.title);
+    bindRootTokens(t, currentLang);
     t.style.flex = "1";
     const note = getNote(currentLang, currentNo, L.title, "title");
     const nbtn = document.createElement("button");
@@ -4809,7 +4814,8 @@ document.addEventListener("selectionchange", ()=>{
     const el = anchor && (anchor.nodeType === 1 ? anchor : anchor.parentElement);
     // 入力欄・編集フォーム・訳ポップアップ内の選択は無視
     if(el && el.closest("textarea,input,#pageEdit,#pageImport,.tr-pop,.sel-pop")) return;
-    const phraseHost = el && el.closest(".phrase");
+    // 題(.lesson-title-txt)も本文と同じに引く(2026-10-09)
+    const phraseHost = el && el.closest(".phrase, .lesson-title-txt");
     if(!phraseHost){ hideSelPop(); return; }
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
