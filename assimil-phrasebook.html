@@ -649,7 +649,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-09c";
+const BUILD = "2026-10-09d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4754,12 +4754,20 @@ function lookupWordNote(lang, text){
   const q = selNorm(text, lang);
   if(!q) return null;
   let exact = null, near = null, nearLen = 0, head = null, headLen = 0, headRank = 0;
+  // 単語登録も辞書と同じく共有する(2026-10-09 Mayの依頼)。English(WITH EASE)は
+  // Advanced English で登録した語も引く。自分の言語の登録が完全一致すればそちらが勝つ
+  const share = DICT_SHARE[lang];
+  let sharedExact = null;
   for(const n of db.notes){
-    if(n.lang !== lang || (n.type || "phrase") !== "word") continue;
+    if((n.lang !== lang && n.lang !== share) || (n.type || "phrase") !== "word") continue;
     if(!String(n.ja || "").trim()) continue;
     const k = selNorm(n.text, lang);
     if(!k) continue;
-    if(k === q){ exact = n; break; }
+    if(k === q){
+      if(n.lang === lang){ exact = n; break; }
+      if(!sharedExact) sharedExact = n;
+      continue;
+    }
     let c = 0;
     while(c < k.length && c < q.length && k[c] === q[c]) c++;
     if(c >= 4 && c >= Math.min(k.length, q.length) - 3 && c > nearLen){ near = n; nearLen = c; }
@@ -4767,6 +4775,7 @@ function lookupWordNote(lang, text){
       if(hm && (!head || hm > headRank || (hm === headRank && k.length < headLen))){ head = n; headLen = k.length; headRank = hm; } }
   }
   if(!near && head) near = head;
+  if(!exact) exact = sharedExact;
   // 完全一致はどの出典でも前方一致より確かなので、先に全部の完全一致を見る
   const wf = wfLookup(lang, q), dc = dictLookup(lang, q);
   const exacts = [];
