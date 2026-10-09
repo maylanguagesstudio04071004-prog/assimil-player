@@ -649,7 +649,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-09d";
+const BUILD = "2026-10-10a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4644,6 +4644,9 @@ function selNorm(s, lang){
     // これを落とさないと「गई।」が「गई」と別物になって引けない(2026-08-24)
     // \u00BF\u00A1 = スペイン語の前置きの ¿ ¡。! ? は落としていたのにこの2つが漏れていて、
     // 疑問文・感嘆文の先頭の語(¿Qué など)が213語ぶん引けなかった(2026-09-05)
+    // 丸いアポストロフィ(’ U+2019・ʼ U+02BC)はまっすぐな ' にそろえる。English(WITH EASE)の本文は I’m・can’t、
+    // 辞書は wasn't と書き方が違い、短縮形が引けなかった(2026-10-10。他の言語で引ける語は減らないのを確認)
+    .replace(/[’ʼ]/g, "'")
     .replace(/^[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u00BF\u00A1\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+/, "")
     .replace(/[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u00BF\u00A1\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+$/, "")
     .replace(/\s+/g, " ").trim();
