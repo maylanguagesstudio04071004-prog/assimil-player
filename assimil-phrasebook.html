@@ -649,7 +649,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-09b";
+const BUILD = "2026-10-09c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4694,6 +4694,8 @@ function headMatch(lang, k, q){
   if(k.slice(k.length - q.length) === q) return 1;      // 末尾に一致
   return 0;
 }
+// 共有先 → 共有元。共有先の言語は、自分に無い語を共有元の辞書から引く
+const DICT_SHARE = {"English":"Advanced English"};
 let dictIndex = null;
 function buildDictIndex(){
   const d = {};
@@ -4704,6 +4706,12 @@ function buildDictIndex(){
     if(!k) return;
     (d[lang] || (d[lang] = {}));
     if(!d[lang][k]) d[lang][k] = x;
+  });
+  // 辞書を共有する言語(2026-10-09)。English(WITH EASE)は Advanced English の辞書を引く。
+  // 自分の辞書に同じ語があればそちらが勝つ。データは複製しないので、片方で直せば両方に効く
+  Object.keys(DICT_SHARE).forEach(lang=>{
+    const src = d[DICT_SHARE[lang]];
+    if(src) d[lang] = Object.assign({}, src, d[lang] || {});
   });
   return d;
 }
