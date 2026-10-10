@@ -651,7 +651,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-11a";
+const BUILD = "2026-10-11b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -924,6 +924,15 @@ async function bootStorage(){
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function findLesson(lang, no){ return db.lessons.find(x=>x.lang===lang && x.lesson===no); }
 function langOrder(l){ const i = db.langs.indexOf(l); return i<0 ? 999 : i; }
+/* ◇概念だけの言語の並び(2026-10-11、Mayの依頼)。日本語を先頭に、文法の作りが日本語に近い順。
+   トルコ語(語順SOV・語尾を積む・後置詞)→ ヒンディー語(SOV・後置詞)→ 中国語(漢字・助数詞・時制の語尾なし)
+   → ベトナム語・タイ語・インドネシア語(類別詞・動詞が変わらない)→ ロシア語(冠詞なし・格)
+   → ドイツ語・オランダ語(副文で動詞が文末)→ フランス語・イタリア語・スペイン語 → English → Advanced English
+   → アラビア語(動詞が文頭・語根と型)。English(WITH EASE)を Advanced English より先に置く。
+   ここに無い言語は後ろに、設定の言語順で並ぶ。戻すなら conLangOrder の中身を langOrder(l) だけにする。 */
+const CON_LANG_ORDER = ["日本語", "Türkçe", "हिन्दी", "中文", "Tiếng Việt", "ไทย", "Bahasa Indonesia",
+  "Русский", "Deutsch", "Nederlands", "Français", "Italiano", "Español", "English", "Advanced English", "العربية"];
+function conLangOrder(l){ const i = CON_LANG_ORDER.indexOf(l); return i<0 ? 100 + langOrder(l) : i; }
 
 /* ---------- roots(語根索引) ----------
    lessons / grammar とは独立したデータ。構造は
@@ -2735,7 +2744,7 @@ function openGramMatrix(){
     const lab = document.createElement("button");
     lab.className = "mx-lab";
     lab.textContent = gMark(first) + " " + t;
-    lab.onclick = ()=>openTopicPage(t);
+    lab.onclick = ()=>openTopicPage(t, first.type || "grammar");
     grid.appendChild(lab);
     langsWith.forEach(l=>{
       const e = gm.find(g=>g.topic===t && g.lang===l);
@@ -2835,9 +2844,14 @@ function openTagPage(tag){
   $("mapClose").onclick = closeMap;
   panel.scrollTop = 0;
 }
-function openTopicPage(topic){
-  const entries = db.grammar.filter(g=>g.topic===topic)
-    .sort((a,b)=>langOrder(a.lang)-langOrder(b.lang) || (a.lesson||0)-(b.lesson||0));
+function openTopicPage(topic, type){
+  // ◇のページは日本語から始めて、日本語に近い順に並べる(conLangOrder)。§は前のまま設定の言語順(2026-10-11)
+  // ◇と§は別のページにする。前は同じ名前の◇と§(数詞・曜日・月・複数形・家族)が1ページに混ざっていた。
+  // type は呼んだ側のカード(◇か§か)。無ければ、その名前の◇があれば◇。戻すなら filter の「&& …」を外す
+  const isCon = type ? type === "concept" : db.grammar.some(g=>g.topic===topic && g.type==="concept");
+  const order = isCon ? conLangOrder : langOrder;
+  const entries = db.grammar.filter(g=>g.topic===topic && ((g.type==="concept") === isCon))
+    .sort((a,b)=>order(a.lang)-order(b.lang) || (a.lesson||0)-(b.lesson||0));
   if(!entries.length) return;
   const panel = $("mapPanel");
   /* 文法の分かれ目(wakareme.html)へのボタン(2026-10-04、Mayの依頼)。
@@ -3090,15 +3104,15 @@ function renderFavs(){
         box.appendChild(h);
         topics.forEach(topic=>{
           const list = byTopic.get(topic);
-          const langs = [...new Set(list.map(g=>g.lang))];
-          const miss = db.langs.filter(l=>!langs.includes(l));
+          const langs = [...new Set(list.map(g=>g.lang))].sort((a,b)=>conLangOrder(a)-conLangOrder(b));
+          const miss = db.langs.filter(l=>!langs.includes(l)).sort((a,b)=>conLangOrder(a)-conLangOrder(b));
           const b = document.createElement("button");
           b.className = "con-row";
           b.innerHTML = '<div class="con-top"><span class="con-name">◇ ' + esc(topic) + '</span>'
             + '<span class="con-n">' + langs.length + ' 言語</span></div>'
             + '<div class="con-langs">' + langs.map(esc).join(" · ") + '</div>'
             + (miss.length ? '<div class="con-miss">まだ: ' + miss.map(esc).join(" · ") + '</div>' : '');
-          b.onclick = ()=>openTopicPage(topic);
+          b.onclick = ()=>openTopicPage(topic, "concept");
           box.appendChild(b);
         });
       });
@@ -3161,7 +3175,7 @@ function renderFavs(){
         h.className = "lesson-head";
         h.textContent = gMark(g) + " " + g.topic + " »";
         h.style.cursor = "pointer";
-        h.onclick = ()=>openTopicPage(g.topic);
+        h.onclick = ()=>openTopicPage(g.topic, g.type || "grammar");
         box.appendChild(h);
       }
       const row = document.createElement("div");
@@ -4549,7 +4563,7 @@ function openGrammarPopup(g, anchorRect){
   trJustOpened = true;
   setTimeout(()=>{ trJustOpened = false; }, 700);
   trPop.querySelector(".g-close").onclick = hideTrPop;
-  trPop.querySelector(".g-page").onclick = ()=>{ hideTrPop(); openTopicPage(g.topic); };
+  trPop.querySelector(".g-page").onclick = ()=>{ hideTrPop(); openTopicPage(g.topic, g.type || "grammar"); };
   trPop.querySelector(".g-del").onclick = ()=>{
     if(!confirm("§ " + g.topic + "(" + g.lang + ")を削除しますか?")) return;
     db.grammar = db.grammar.filter(x=>x!==g);
@@ -5390,7 +5404,7 @@ function openFromHash(){
   favView = "con";
   renderFavs();
   if(db.grammar.some(g => g.type === "concept" && g.topic === topic)){
-    openTopicPage(topic);
+    openTopicPage(topic, "concept");
   }else{
     const box = $("favList");
     if(box){
