@@ -263,6 +263,8 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .con-n{font-size:12px; color:var(--accent); font-weight:600; white-space:nowrap}
 .con-langs{font-size:12px; color:var(--sub); margin-top:6px; line-height:1.7}
 .con-miss{font-size:11px; color:var(--sub); opacity:.6; margin-top:4px; line-height:1.7}
+/* ◇の組の見出し(2026-10-10) */
+.con-group{font-size:13px; font-weight:700; color:var(--accent); margin:18px 4px 8px; letter-spacing:.04em}
 /* 単語をまとめて登録(2026-08-15) */
 .wd-head{font-size:11px; color:var(--sub); font-weight:700; letter-spacing:.04em;
   margin:14px 4px 6px}
@@ -649,7 +651,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-10a";
+const BUILD = "2026-10-10b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3063,19 +3065,42 @@ function renderFavs(){
     head.style.cssText = "margin:2px 4px 12px";
     head.textContent = "同じことを、各言語がどう扱うか。" + byTopic.size + " の軸";
     box.appendChild(head);
-    [...byTopic.entries()]
-      .sort((a,b)=>b[1].length - a[1].length || a[0].localeCompare(b[0], "ja"))
-      .forEach(([topic, list])=>{
-        const langs = [...new Set(list.map(g=>g.lang))];
-        const miss = db.langs.filter(l=>!langs.includes(l));
-        const b = document.createElement("button");
-        b.className = "con-row";
-        b.innerHTML = '<div class="con-top"><span class="con-name">◇ ' + esc(topic) + '</span>'
-          + '<span class="con-n">' + langs.length + ' 言語</span></div>'
-          + '<div class="con-langs">' + langs.map(esc).join(" · ") + '</div>'
-          + (miss.length ? '<div class="con-miss">まだ: ' + miss.map(esc).join(" · ") + '</div>' : '');
-        b.onclick = ()=>openTopicPage(topic);
-        box.appendChild(b);
+    /* テーマごとにまとめて並べる(2026-10-10、Mayの依頼)。
+       前は全部を「言語の数が多い順→名前順」で1列に並べていて、題材が散らばって見えた。
+       その並べ方は、どの組にも入っていない題材(「その他」)にだけ残してある。
+       ◇を新しく作ったら、ここにも足す。戻すなら CON_GROUPS を [] にする(全部「その他」になり、前と同じ並びに戻る)。 */
+    const CON_GROUPS = [
+      ["時と暦",     ["時間", "曜日", "月", "季節"]],
+      ["数",         ["数詞", "数", "単数形", "複数形"]],
+      ["動詞の時",   ["現在", "進行形", "過去", "未来", "接続法", "遠さ"]],
+      ["人と場所",   ["名前", "家族", "丁寧さ", "場所と方向"]],
+      ["語のしくみ", ["-ment", "句動詞"]],
+      ["言い回し",   ["ことわざ", "なまり"]]
+    ];
+    const grouped = new Set(CON_GROUPS.flatMap(g=>g[1]));
+    const rest = [...byTopic.keys()].filter(t=>!grouped.has(t))
+      .sort((a,b)=>byTopic.get(b).length - byTopic.get(a).length || a.localeCompare(b, "ja"));
+    CON_GROUPS.map(([name, topics])=>[name, topics.filter(t=>byTopic.has(t))])
+      .concat([["その他", rest]])
+      .filter(([, topics])=>topics.length)
+      .forEach(([name, topics])=>{
+        const h = document.createElement("div");
+        h.className = "con-group";
+        h.textContent = name;
+        box.appendChild(h);
+        topics.forEach(topic=>{
+          const list = byTopic.get(topic);
+          const langs = [...new Set(list.map(g=>g.lang))];
+          const miss = db.langs.filter(l=>!langs.includes(l));
+          const b = document.createElement("button");
+          b.className = "con-row";
+          b.innerHTML = '<div class="con-top"><span class="con-name">◇ ' + esc(topic) + '</span>'
+            + '<span class="con-n">' + langs.length + ' 言語</span></div>'
+            + '<div class="con-langs">' + langs.map(esc).join(" · ") + '</div>'
+            + (miss.length ? '<div class="con-miss">まだ: ' + miss.map(esc).join(" · ") + '</div>' : '');
+          b.onclick = ()=>openTopicPage(topic);
+          box.appendChild(b);
+        });
       });
     return;
   }
