@@ -239,6 +239,8 @@ input,textarea,select{font-family:inherit}
 .rchip{font-size:11px; padding:3px 9px; border-radius:12px; background:var(--accent-soft);
   color:var(--accent); font-weight:600}
 .rchip.warn{background:transparent; border:1px dashed var(--danger); color:var(--danger)}
+/* 語根の子音のローマ字(2026-10-13)。アラビア文字の右→左の中でも、左→右で k-t-b と並ぶように isolate */
+.rroman{font-size:14px; color:var(--sub); direction:ltr; unicode-bidi:isolate; letter-spacing:.03em}
 .rform{margin-top:10px; padding:10px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--border)}
 .rform-head{margin-bottom:6px}
 .rsurface{font-size:18px; font-weight:600; unicode-bidi:plaintext}
@@ -651,7 +653,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-11b";
+const BUILD = "2026-10-13a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1114,6 +1116,18 @@ function importRoots(list){
 }
 
 function rootCount(lang){ return db.roots.filter(r=>!lang || r.lang === lang).length; }
+/* 語根の子音のローマ字(2026-10-13、Mayの依頼)。データには持たず、letters から表示のたびに作る。
+   書き方は Atlas の亜の読みと同じ(atlas-roman-rules §9): 強勢音は大文字 S D T Z H、ع は 3、ハムザは '。
+   表に無い文字が1つでもあれば出さない(半端なローマ字を出さない)。戻すなら rootRoman が "" を返すようにする。 */
+const AR_ROOT_ROMAN = {"ء":"'", "أ":"'", "إ":"'", "آ":"'", "ؤ":"'", "ئ":"'", "ب":"b", "ت":"t", "ث":"th", "ج":"j",
+  "ح":"H", "خ":"kh", "د":"d", "ذ":"dh", "ر":"r", "ز":"z", "س":"s", "ش":"sh", "ص":"S", "ض":"D", "ط":"T", "ظ":"Z",
+  "ع":"3", "غ":"gh", "ف":"f", "ق":"q", "ك":"k", "ل":"l", "م":"m", "ن":"n", "ه":"h", "و":"w", "ي":"y", "ى":"y", "ة":"t"};
+function rootRoman(r){
+  if(r.lang !== "العربية") return "";
+  const ls = (r.letters||[]).map(s=>String(s).trim());
+  if(!ls.length || ls.some(s=>!(s in AR_ROOT_ROMAN))) return "";
+  return ls.map(s=>AR_ROOT_ROMAN[s]).join("-");
+}
 
 /* ---------- 言語に紐づくデータの削除 ----------
    単一言語のデータは削除、複数言語を参照する項目は参照だけ外す、
@@ -1372,6 +1386,7 @@ function renderRoots(){
   if(q){
     list = list.filter(r=>
       mkRoot(r).includes(nq) || r.root.includes(q) || (r.meaning||"").includes(q)
+      || (q.length >= 2 && rootRoman(r).replace(/-/g, "").includes(q.replace(/-/g, "")))   // ktb や k-t-b でも探せる
       || (r.words||[]).some(w=>mkLemma(w).includes(nq) || w.lemma.includes(q)
            || (w.meaning||"").includes(q) || (w.lemmaRoman||"").toLowerCase().includes(q.toLowerCase())));
   }
@@ -1392,6 +1407,7 @@ function renderRoots(){
     row.dataset.lang = r.lang;
     row.innerHTML = '<div class="body">'
       + '<div class="txt"><b>' + esc(r.root) + '</b>'
+      + (rootRoman(r) ? ' <span class="rroman">' + esc(rootRoman(r)) + '</span>' : "")
       + (r.meaning ? ' <span style="font-size:14px; color:var(--sub)">' + esc(r.meaning) + '</span>' : "")
       + '</div>'
       + '<div class="rchips">' + featureChips(r)
@@ -1415,6 +1431,7 @@ function openRootDetail(r){
   let html = '<button class="btn soft" id="rootBack" style="margin-bottom:10px">← 語根一覧へ</button>'
     + '<div class="card"><div style="font-size:26px; font-weight:700; line-height:1.4; unicode-bidi:plaintext">'
     + esc(r.root) + '</div>'
+    + (rootRoman(r) ? '<div class="rroman" style="display:block; text-align:right; font-size:17px; margin-top:2px">' + esc(rootRoman(r)) + '</div>' : "")
     + '<div class="meta" style="margin-top:4px">' + esc(r.lang)
     + (r.normalizedRoot ? ' · 照合キー ' + esc(mkRoot(r)) : "") + ' · ' + esc(r.id) + '</div>'
     + '<div class="rchips">' + featureChips(r)
