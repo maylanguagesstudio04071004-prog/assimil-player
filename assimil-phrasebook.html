@@ -138,6 +138,8 @@ input,textarea,select{font-family:inherit}
 #content.has-audio .phrase .no.no-play{background:var(--accent-soft); color:var(--accent);
   border-radius:7px; width:24px; padding:4px 0 3px; text-align:center; cursor:pointer}
 .phrase.playing{background:var(--accent-soft); border-radius:8px}
+/* 例文などから飛んできた行(2026-10-16)。2秒ほど縁取りして、どの行か分かるようにする */
+.phrase.jumped{box-shadow:0 0 0 2px var(--accent) inset; border-radius:8px; transition:box-shadow .6s}
 #markBtn{padding:7px 12px; border-radius:11px; background:var(--accent-soft); color:var(--accent);
   font-size:13px; font-weight:700; white-space:nowrap}
 #markBtn.on{background:var(--accent); color:#fff}
@@ -653,7 +655,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-13a";
+const BUILD = "2026-10-16a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1481,7 +1483,7 @@ function openRootDetail(r){
   box.querySelectorAll(".rocc").forEach(b=>{
     b.onclick = ()=>{
       const o = words[Number(b.dataset.w)].forms[Number(b.dataset.f)].occurrences[Number(b.dataset.o)];
-      if(o.lesson != null) jumpTo(r.lang, o.lesson);
+      if(o.lesson != null) jumpTo(r.lang, o.lesson, o.text);
     };
   });
 }
@@ -1781,7 +1783,7 @@ function renderCmp(lang){
         b.innerHTML = '<div style="font-size:15px">' + esc(e.text) + '</div>'
           + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
           + '<div style="font-size:11px; color:var(--sub); margin-top:2px">L' + e.lesson + '</div>';
-        b.onclick = ()=>jumpTo(cl.lang, e.lesson);
+        b.onclick = ()=>jumpTo(cl.lang, e.lesson, e.text);
         c.appendChild(b);
       });
       box.appendChild(c);
@@ -1876,7 +1878,7 @@ function clsCard(cl){
       + (e.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
       + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
       + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
-    b.onclick = ()=>jumpTo(cl.lang, e.lesson);
+    b.onclick = ()=>jumpTo(cl.lang, e.lesson, e.text);
     c.appendChild(b);
   });
   return c;
@@ -1932,7 +1934,7 @@ function renderAdd(lang){
         + (e.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
         + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
         + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
-      b.onclick = ()=>jumpTo(a.lang, e.lesson);
+      b.onclick = ()=>jumpTo(a.lang, e.lesson, e.text);
       c.appendChild(b);
     });
     box.appendChild(c);
@@ -1994,7 +1996,7 @@ function renderStack(){
         + (s.example.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(s.example.roman) + '</div>' : '')
         + (s.example.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(s.example.ja) + '</div>' : '')
         + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + s.example.lesson + '</div>';
-      b.onclick = ()=>jumpTo(s.lang, s.example.lesson);
+      b.onclick = ()=>jumpTo(s.lang, s.example.lesson, s.example.text);
       c.appendChild(b);
     }
     box.appendChild(c);
@@ -2060,7 +2062,7 @@ function renderCase(){
         + (g.text ? '<div style="font-size:13.5px; margin-top:4px; line-height:1.5">' + esc(g.text) + '</div>' : '')
         + (g.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(g.ja) + '</div>' : '')
         + (g.lesson != null ? '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + g.lesson + '</div>' : '');
-      if(g.lesson != null) b.onclick = ()=>jumpTo(c.lang, g.lesson);
+      if(g.lesson != null) b.onclick = ()=>jumpTo(c.lang, g.lesson, g.text);
       else b.style.cursor = "default";
       card.appendChild(b);
     });
@@ -2118,7 +2120,7 @@ function renderPre(){
         + (v.text ? '<div style="font-size:13px; color:var(--sub); margin-top:3px; line-height:1.5">' + esc(v.text) + '</div>' : '')
         + (v.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(v.ja) + '</div>' : '')
         + (v.lesson != null ? '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + v.lesson + '</div>' : '');
-      if(v.lesson != null) b.onclick = ()=>jumpTo(p.lang, v.lesson);
+      if(v.lesson != null) b.onclick = ()=>jumpTo(p.lang, v.lesson, v.text);
       else b.style.cursor = "default";
       c.appendChild(b);
     });
@@ -2335,13 +2337,41 @@ $("wfQ").oninput = ()=>renderWf();
     renderRoots();
   };
 });
-function jumpTo(lang, no){
+function jumpTo(lang, no, text){
   currentLang = lang; currentNo = no; compareMode = false;
   // 例文・検索・語根などから飛ぶ先は本文の行なので、文法解説のタブを開いたままにしない(2026-09-21)
   lessonTab = "phrase";
   lsSet(KEY + ".lang", lang);
   if(typeof closeMap === "function") closeMap(); // マトリクス/マップ経由のジャンプ時に重なりを残さない
   showTab("tabLesson");
+  if(text) focusPhrase(lang, no, text);
+}
+/* 例文から原文へ(2026-10-16、Mayの依頼)。◇・§・語根などの例文を押すと、課を開くだけでなく
+   その行まで動かして縁取りし、行の位置があればその行だけ鳴らす。
+   行は本文と完全一致で探し、無ければ「片方がもう片方を含む」行。見つからなければ課を開くだけ(前と同じ)。
+   戻すなら jumpTo の最後の1行(focusPhrase)を消す。 */
+function phraseIndex(lang, no, text){
+  const L = db.lessons.find(x=>x.lang===lang && x.lesson===no);
+  if(!L || !text) return -1;
+  const t = String(text).trim();
+  let i = L.phrases.indexOf(t);
+  if(i < 0 && t.length >= 4) i = L.phrases.findIndex(p=>p.includes(t) || t.includes(p));
+  return i;
+}
+function focusPhrase(lang, no, text){
+  const i = phraseIndex(lang, no, text);
+  if(i < 0) return;
+  let tries = 0;
+  const go = ()=>{
+    const row = $("content").querySelector('.phrase[data-i="' + i + '"]');
+    if(!row){ if(++tries < 20) setTimeout(go, 50); return; }
+    row.scrollIntoView({block:"center", behavior:"smooth"});
+    row.classList.add("jumped");
+    setTimeout(()=>row.classList.remove("jumped"), 2200);
+    const sp = spansOf(lang, no);
+    if(sp && sp[i]) playSpan(lang, no, i, row);   // 位置が無い行は縁取りだけ
+  };
+  setTimeout(go, 30);
 }
 
 /* ---------- lesson view ---------- */
@@ -2361,6 +2391,7 @@ function phraseRow(lang, lesson, p, i){
   const row = document.createElement("div");
   row.className = "phrase";
   row.dataset.lang = lang;
+  row.dataset.i = i;   // 例文から飛ぶとき、この行を探す(focusPhrase)
   const note = getNote(lang, lesson, p);
   row.innerHTML = '<span class="no">' + (i+1) + '</span>'
     + '<div style="flex:1; min-width:0"><span class="txt">' + phraseHtml(lang, p) + '</span>'
@@ -2824,7 +2855,7 @@ function openTagPage(tag){
       b.innerHTML = '<span dir="auto" style="unicode-bidi:plaintext">' + esc(p) + '</span>'
         + (n && n.roman ? '<div style="color:var(--sub); font-size:11.5px; font-style:italic; margin-top:2px">' + esc(n.roman) + '</div>' : '')
         + (n && n.ja ? '<div style="color:var(--sub); font-size:12px; margin-top:2px">' + esc(n.ja) + '</div>' : '');
-      b.onclick = ()=>{ closeMap(); jumpTo(L.lang, L.lesson); };
+      b.onclick = ()=>{ closeMap(); jumpTo(L.lang, L.lesson, p); };
       c.appendChild(b);
     });
     const more = (L.phrases||[]).length - 3;
@@ -2904,7 +2935,7 @@ function openTopicPage(topic, type){
         + "border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--text);"
         + "font-size:14px; line-height:1.5";
       b.innerHTML = esc(e.text) + '<span style="color:var(--sub); font-size:11.5px"> — L' + e.lesson + '</span>';
-      b.onclick = ()=>{ closeMap(); jumpTo(e.lang, e.lesson); };
+      b.onclick = ()=>{ closeMap(); jumpTo(e.lang, e.lesson, e.text); };
       c.appendChild(b);
     });
     panel.appendChild(c);
@@ -2951,7 +2982,7 @@ function resultRow(r, q){
   row.onclick = ()=>{
     if(r.type==="grammar") openGrammarPopup(r.g, row.getBoundingClientRect());
     else if(r.type==="obs") openObsPopup(r.o, row.getBoundingClientRect());
-    else jumpTo(r.lang, r.lesson);
+    else jumpTo(r.lang, r.lesson, r.type==="phrase" ? r.text : null);
   };
   return row;
 }
@@ -4592,7 +4623,7 @@ function openGrammarPopup(g, anchorRect){
     b.onclick = ()=>{
       const e = g.examples[Number(b.dataset.i)];
       hideTrPop();
-      jumpTo(e.lang, e.lesson);
+      jumpTo(e.lang, e.lesson, e.text);
     };
   });
   trPop.querySelectorAll(".gsib").forEach(b=>{
