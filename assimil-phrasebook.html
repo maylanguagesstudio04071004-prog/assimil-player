@@ -54,6 +54,7 @@ html.pwa header .hlink{top:max(calc(8px + env(safe-area-inset-top)), 58px)}
 .tabs button{flex:1; padding:13px 2px; border:1px solid var(--border); background:var(--card);
   color:var(--sub); border-radius:12px; font-size:14px; font-weight:600; white-space:nowrap}
 .tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff}
+.tabs .tab-n{font-size:10px; margin-left:2px; vertical-align:super}
 main{padding:0 16px 40px; max-width:560px; margin:0 auto}
 .card{background:var(--card); border:1px solid var(--border); border-radius:16px;
   padding:16px; margin-bottom:14px}
@@ -173,7 +174,7 @@ input,textarea,select{font-family:inherit}
 .study-card{padding:18px 16px}
 .study-sen{font-size:21px; line-height:1.7; margin:10px 0 6px; unicode-bidi:plaintext}
 .study-sen mark{background:var(--accent-soft); color:var(--text); border-radius:4px; padding:0 2px}
-.study-gap{color:var(--accent); letter-spacing:.05em}
+.study-gap{color:var(--accent); letter-spacing:.05em; white-space:nowrap}
 .study-ja{font-size:14px; color:var(--sub); line-height:1.6}
 .study-mean{font-size:15px; margin-top:10px}
 .study-ans{font-size:20px; font-weight:700; margin-top:8px; unicode-bidi:plaintext}
@@ -359,6 +360,8 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <header>Language Atlas<small>レッスンのフレーズと単語を呼び出す</small><a class="hlink" href="./index.html">▶ Player</a></header>
 
 <div class="tabs">
+  <!-- 「思い出す」は2026-10-16bでは§タブの中にあったが、使いにくいので独立したタブにした(Mayの依頼、16c) -->
+  <button id="tabStudy">思い出す<span class="tab-n" id="tabStudyN"></span></button>
   <button id="tabLesson" class="on">レッスン</button>
   <button id="tabSearch">検索</button>
   <button id="tabFav">§</button>
@@ -430,6 +433,11 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div id="results"></div>
 </section>
 
+<!-- 単語を思い出す(2026-10-16c) -->
+<section id="pageStudy" style="display:none">
+  <div id="studyList"></div>
+</section>
+
 <!-- ◇概念 / §文法 -->
 <section id="pageFav" style="display:none">
   <!-- ★お気に入りと✎気づきは2026-08-09に撤去。
@@ -439,7 +447,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div class="filterbar" style="margin-top:2px">
     <button id="fmCon" class="on">◇ 概念</button>
     <button id="fmGram">§ 文法</button>
-    <button id="fmStudy">↺ 思い出す</button>
+    <!-- 「↺ 思い出す」はタブへ移した(2026-10-16c) -->
   </div>
   <div class="langbar" id="favLangbar"></div>
   <div id="favList"></div>
@@ -671,7 +679,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-16b";
+const BUILD = "2026-10-16c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1847,7 +1855,7 @@ function renderCmp(lang){
 }
 
 /* ---------- tabs ---------- */
-const pages = {tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
+const pages = {tabStudy:"pageStudy", tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings"};
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
@@ -1861,6 +1869,7 @@ function showTab(t){
   if(t==="tabLesson") renderLesson();
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
+  if(t==="tabStudy"){ studyQueue = null; studyShown = 0; renderStudy(); window.scrollTo(0,0); }
   if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); }
 }
 Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
@@ -4692,7 +4701,8 @@ function openGrammarPopup(g, anchorRect){
    手がかり: 隠した一文 + その文の訳(最初から見せる)。足りなければ単語の意味。
    答え: 隠した語を出し、その行に位置があればその行だけ鳴らす。文字は入れない(口で言えばよい)。
    次に出す日: 思い出せた → 1→3→7→14→30日→以後2倍 / あやふや → 少しだけ延ばす / 出なかった → その場でもう一度・翌日も。
-   戻すなら #fmStudy のボタンと単語の小窓の .tr-learn を消す(db.study は残っても害はない)。 */
+   2026-10-16c から独立した「思い出す」タブ(#tabStudy / #pageStudy)。§の中の #fmStudy は撤去済み。
+   戻すなら #tabStudy のボタンと単語の小窓の .tr-learn を消す(db.study は残っても害はない)。 */
 let studyQueue = null, studyShown = 0;   // shown: 0=問題 1=意味も 2=答え
 function studyRec(lang, lesson, text){ return (db.study||[]).find(x=>x.lang===lang && x.lesson===lesson && x.text===text); }
 function studyToday(d){ const t = d || new Date();
@@ -4704,7 +4714,11 @@ function toggleStudy(lang, lesson, text){
   if(i >= 0) db.study.splice(i, 1);
   else db.study.push({lang, lesson, text, due: studyToday(), interval: 0, reps: 0, lapses: 0, added: Date.now(), last: 0});
   save();
+  updateStudyTab();
 }
+// 起動時と、日付が変わってから戻ってきたときにも数を出す
+setTimeout(updateStudyTab, 0);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) updateStudyTab(); });
 const STUDY_STEPS = [1, 3, 7, 14, 30];
 function studyNext(iv, grade){
   if(grade === "again") return 0;
@@ -4733,8 +4747,13 @@ function studySentence(x){
   }
   return null;
 }
+function updateStudyTab(){
+  const el = $("tabStudyN"); if(!el) return;
+  const n = studyDue().length; el.textContent = n ? String(n) : "";
+}
 function renderStudy(){
-  const box = $("favList");
+  updateStudyTab();
+  const box = $("studyList");
   box.innerHTML = "";
   if(!db.study.length){
     box.innerHTML = '<div class="empty-msg">覚えたい単語はまだありません。<br>レッスンの下の単語を押して、小窓の「☆ 覚えたい」を押すと、ここに出ます。</div>';
@@ -4819,12 +4838,12 @@ function renderStudy(){
       if(g === "again") studyQueue.push(k);      // その場でもう一度
       studyShown = 0;
       save();
-      renderFavs();
+      renderStudy();
     };
   });
   q(".st-drop").onclick = ()=>{
     if(!confirm("「" + word + "」を覚えたいから外しますか?(練習の記録も消えます)")) return;
-    toggleStudy(lang, lesson, word); studyQueue.shift(); studyShown = 0; renderFavs();
+    toggleStudy(lang, lesson, word); studyQueue.shift(); studyShown = 0; renderStudy();
   };
 }
 
