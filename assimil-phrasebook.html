@@ -679,7 +679,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-16c";
+const BUILD = "2026-10-18a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4807,6 +4807,9 @@ function renderStudy(){
   }
   html += '<div class="study-acts">';
   if(studyShown < 2){
+    // 答える前にも文を聞ける(2026-10-18、Mayの依頼)。耳で拾えたら、それも思い出せたうちに入れてよい
+    const sp0 = sen ? spansOf(lang, lesson) : null;
+    if(sp0 && sp0[sen.i]) html += '<button class="btn soft st-play">▶ 文を聞く</button>';
     if(studyShown < 1 && sen) html += '<button class="btn soft st-mean">意味を見る</button>';
     html += '<button class="btn st-show">答えを見る</button>';
   } else {
