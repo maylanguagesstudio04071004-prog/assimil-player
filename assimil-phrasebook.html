@@ -175,6 +175,8 @@ input,textarea,select{font-family:inherit}
 .study-sen{font-size:21px; line-height:1.7; margin:10px 0 6px; unicode-bidi:plaintext}
 .study-sen mark{background:var(--accent-soft); color:var(--text); border-radius:4px; padding:0 2px}
 .study-gap{color:var(--accent); letter-spacing:.05em; white-space:nowrap}
+.study-sroman{font-size:14px; color:var(--sub); font-style:italic; line-height:1.6; margin:-2px 0 6px; overflow-wrap:anywhere}
+.study-sroman mark{background:var(--accent-soft); color:var(--text); border-radius:4px; padding:0 2px}
 .study-ja{font-size:14px; color:var(--sub); line-height:1.6}
 .study-mean{font-size:15px; margin-top:10px}
 .study-ans{font-size:20px; font-weight:700; margin-top:8px; unicode-bidi:plaintext}
@@ -680,7 +682,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-22a";
+const BUILD = "2026-10-24a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4783,6 +4785,25 @@ function updateStudyTab(){
   const el = $("tabStudyN"); if(!el) return;
   const n = studyDue().length; el.textContent = n ? String(n) : "";
 }
+// 文の読みを、隠した語の分だけ伏せて(hide)、または印を付けて返す(2026-10-24、Mayの依頼)。
+// 本文と読みの空白区切りの数がそろうときだけ語の位置が分かる。そろわない(中・泰・亜の一部)ときは null
+function studyRoman(roman, sen, hide){
+  const toks = [], re = /\S+/g; let m;
+  while((m = re.exec(sen.text))) toks.push([m.index, m.index + m[0].length]);
+  const parts = String(roman).trim().split(/(\s+)/);
+  const rt = parts.filter((_, i)=>i % 2 === 0);
+  if(rt.length !== toks.length) return null;
+  let k = 0;
+  return parts.map((p, i)=>{
+    if(i % 2) return esc(p);
+    const [a, b] = toks[k++];
+    if(b <= sen.start || a >= sen.end) return esc(p);
+    // 前後の記号は残し、文字の部分だけ伏せる
+    const c = /^([^\p{L}\p{N}]*)(.*?)([^\p{L}\p{N}~'’ʼ]*)$/u.exec(p);
+    if(!c[2]) return esc(p);
+    return esc(c[1]) + (hide ? '<span class="study-gap">＿＿＿</span>' : '<mark>' + esc(c[2]) + '</mark>') + esc(c[3]);
+  }).join("").replace(/(<span class="study-gap">＿＿＿<\/span>)\s+<span class="study-gap">＿＿＿<\/span>/g, "$1");   // 2語にまたがる語も、本文と同じく1つの＿＿＿に
+}
 function renderStudy(){
   updateStudyTab();
   const box = $("studyList");
@@ -4827,8 +4848,14 @@ function renderStudy(){
     const a = sen.text.slice(0, sen.start), w = sen.text.slice(sen.start, sen.end), b = sen.text.slice(sen.end);
     html += '<div class="study-sen" dir="auto">' + esc(a)
       + (studyShown >= 2 ? '<mark>' + esc(w) + '</mark>' : '<span class="study-gap">＿＿＿</span>') + esc(b) + '</div>';
-    const pj = (getNote(lang, lesson, sen.text) || {}).ja;
-    if(pj) html += '<div class="study-ja">' + esc(pj) + '</div>';
+    const pn = getNote(lang, lesson, sen.text) || {};
+    if(pn.roman){
+      // 語の位置が分からない読みは、答えを見るまで出さない(そのまま出すと答えが見えてしまう)
+      const rh = studyRoman(pn.roman, sen, studyShown < 2);
+      if(rh !== null) html += '<div class="study-sroman" dir="auto">' + rh + '</div>';
+      else if(studyShown >= 2) html += '<div class="study-sroman" dir="auto">' + esc(pn.roman) + '</div>';
+    }
+    if(pn.ja) html += '<div class="study-ja">' + esc(pn.ja) + '</div>';
   } else {
     html += '<div class="study-ja">(この語は本文に同じ形で出てこないので、意味から思い出します)</div>';
   }
