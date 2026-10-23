@@ -682,7 +682,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-24a";
+const BUILD = "2026-10-24b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3973,8 +3973,32 @@ function nlRomanWord(tok){
 function nlRoman(text){
   return String(text || "").trim().split(/\s+/).filter(Boolean).map(nlRomanWord).join(" ");
 }
-/* 規則で読みを作る言語(2026-09-16)。通信しない。ここに無い言語は今までどおり */
-const RULE_ROMAN = {"Tiếng Việt": viRoman, "Nederlands": nlRoman};
+/* トルコ語の読み(2026-10-24。Mayの依頼「単語を登録した際にローマ字読みを自動で」)。
+   atlas-roman-rules の §5 のとおり: ş→sh ç→ch c→j j→zh ı→ə、ö ü はそのまま、â î û は伸ばす(hâlâ→haalaa)。
+   ğ は前の母音を伸ばす(değil→deeil、ağrı→aarə)。ただし後ろが同じ母音なら足さない(değer→deer、sağa→saa)。
+   小文字にする。İ は toLowerCase だと i+上の点 になるので tr の規則で下げ、残った点も外す。
+   これまでの読み(辞書1,443語・本文215行)と、İ の点の誤りと綴りの誤り1語を除いて一致した */
+function trRomanWord(tok){
+  const s = Array.from(String(tok).normalize("NFC").toLocaleLowerCase("tr").replace(/\u0307/g, ""));
+  const MAP = {"ş":"sh", "ç":"ch", "c":"j", "j":"zh", "ı":"ə", "â":"aa", "î":"ii", "û":"uu"};
+  let out = "", prevV = "";
+  s.forEach((ch, i)=>{
+    if(ch === "ğ"){
+      const nx = MAP[s[i + 1]] || s[i + 1] || "";
+      if(prevV && nx[0] !== prevV) out += prevV;
+      return;
+    }
+    const r = MAP[ch] || ch;
+    out += r;
+    if(/[aeiouöüıâîû]/.test(ch)) prevV = r[0];
+  });
+  return out;
+}
+function trRoman(text){
+  return String(text || "").trim().split(/\s+/).filter(Boolean).map(trRomanWord).join(" ");
+}
+/* 規則で読みを作る言語(2026-09-16)。通信しない。ここに無い言語は今までどおり。Türkçe は 2026-10-24 から */
+const RULE_ROMAN = {"Tiếng Việt": viRoman, "Nederlands": nlRoman, "Türkçe": trRoman};
 async function fetchRoman(text, lang){
   /* 読みを Google から取るのを外した(2026-10-22。Mayの依頼「翻訳のAPIを外してください」)。
      押せるボタンは2か所とも外したので、ここには来ない。
@@ -4263,7 +4287,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
       }
     }
   }
-  /* ベトナム語・オランダ語は、読みの欄がまだ空なら規則で入れる(2026-09-16。Mayの依頼)。
+  /* ベトナム語・オランダ語・トルコ語(10-24から)は、読みの欄がまだ空なら規則で入れる(2026-09-16。Mayの依頼)。
      単語だけでなくダイアログの行・タイトル・例文も（Mayが「ダイアログと単語の両方に」）。
      辞書・他の課の単語登録から読みが入っていれば、そちらのまま（上の lookupWordNote が先に入れる）。
      近い語の候補の「入れる」は、読みが空のときしか読みを入れないので、ここで入れた読みは上書きされない。 */
