@@ -682,7 +682,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-24b";
+const BUILD = "2026-10-26a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3997,8 +3997,33 @@ function trRomanWord(tok){
 function trRoman(text){
   return String(text || "").trim().split(/\s+/).filter(Boolean).map(trRomanWord).join(" ");
 }
-/* 規則で読みを作る言語(2026-09-16)。通信しない。ここに無い言語は今までどおり。Türkçe は 2026-10-24 から */
-const RULE_ROMAN = {"Tiếng Việt": viRoman, "Nederlands": nlRoman, "Türkçe": trRoman};
+/* ロシア語の読み(2026-10-26。Mayの依頼「ロシア語も登録時に読みが自動で入るように」)。
+   atlas-roman-rules の §6 の翻字(道具_読み/ru-roman.py と同じ)。辞書3,000語と、頭の大小と ё を е と書いた語を除いて一致した。
+   ё と書かれていない ё は綴りから分からないので、辞書や他の課の登録に読みがあればそちらが先に入る(この関数は読みが空のときだけ)。
+   е は語頭・母音の後ろ・ь ъ の後ろで ye。ь は語中で ' 、語末では書かない。
+   Assimil の本文は強勢をラテン文字の á é ó ú(=и) ý(=у) や結合アクセントで示すので、先に外す */
+const RU_MAP = {"а":"a","б":"b","в":"v","г":"g","д":"d","ж":"zh","з":"z","и":"i","й":"y","к":"k","л":"l","м":"m","н":"n",
+  "о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"kh","ц":"ts","ч":"ch","ш":"sh","щ":"shch","ы":"y",
+  "э":"e","ю":"yu","я":"ya","ё":"yo","ъ":'"'};
+const RU_STRESS = {"á":"а","é":"е","ó":"о","ú":"и","ý":"у","Á":"А","É":"Е","Ó":"О","Ú":"И","Ý":"У"};
+function ruRomanWord(tok){
+  const w = Array.from(String(tok).replace(/\u0301/g, "")).map(c=>RU_STRESS[c] || c);
+  const low = w.map(c=>c.toLowerCase());
+  return low.map((ch, i)=>{
+    const prev = i > 0 ? low[i - 1] : "";
+    let r;
+    if(ch === "е") r = (!prev || !/\p{L}/u.test(prev) || /[аеёиоуыэюяaeiouьъ]/.test(prev)) ? "ye" : "e";
+    else if(ch === "ь") r = /\p{L}/u.test(low[i + 1] || "") ? "'" : "";
+    else r = RU_MAP[ch] || ch;
+    if(w[i] !== ch && r) r = r[0].toUpperCase() + r.slice(1);
+    return r;
+  }).join("");
+}
+function ruRoman(text){
+  return String(text || "").trim().split(/\s+/).filter(Boolean).map(ruRomanWord).join(" ");
+}
+/* 規則で読みを作る言語(2026-09-16)。通信しない。ここに無い言語は今までどおり。Türkçe は 2026-10-24、Русский は 10-26 から */
+const RULE_ROMAN = {"Tiếng Việt": viRoman, "Nederlands": nlRoman, "Türkçe": trRoman, "Русский": ruRoman};
 async function fetchRoman(text, lang){
   /* 読みを Google から取るのを外した(2026-10-22。Mayの依頼「翻訳のAPIを外してください」)。
      押せるボタンは2か所とも外したので、ここには来ない。
@@ -4287,7 +4312,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
       }
     }
   }
-  /* ベトナム語・オランダ語・トルコ語(10-24から)は、読みの欄がまだ空なら規則で入れる(2026-09-16。Mayの依頼)。
+  /* ベトナム語・オランダ語・トルコ語(10-24から)・ロシア語(10-26から)は、読みの欄がまだ空なら規則で入れる(2026-09-16。Mayの依頼)。
      単語だけでなくダイアログの行・タイトル・例文も（Mayが「ダイアログと単語の両方に」）。
      辞書・他の課の単語登録から読みが入っていれば、そちらのまま（上の lookupWordNote が先に入れる）。
      近い語の候補の「入れる」は、読みが空のときしか読みを入れないので、ここで入れた読みは上書きされない。 */
@@ -4301,6 +4326,7 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
         const hint = document.createElement("div");
         hint.className = "tr-hint";
         hint.textContent = (lang === "Tiếng Việt" ? "読みは北部の発音の規則で入れました。" : "読みは規則で入れました。")
+          + (lang === "Русский" ? "ё が е と書かれた語(rebenok→rebyonok)は読みが違うので、" : "")
           + "違っていれば直してください";
         rmTa.parentNode.appendChild(hint);
       }
