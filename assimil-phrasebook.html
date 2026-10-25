@@ -682,7 +682,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-26a";
+const BUILD = "2026-10-26b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4810,14 +4810,17 @@ function studyNext(iv, grade){
   const k = STUDY_STEPS.findIndex(x=>x > iv);
   return k >= 0 ? STUDY_STEPS[k] : Math.round(iv * 2);
 }
-// その語が出てくる本文の行を探す。分かち書きの言語は語の境目で、泰・中などは文字列で。無ければ境目を見ずに
+// その語が出てくる本文の行を探す。まず語の境目で(全言語)、無ければ境目を見ずに文字列で。
+// 2026-10-26: 泰も本文は語ごとに空白で区切ってあるので、境目で探すのを泰・中にも広げた。
+// 以前は泰・中は文字列だけで探していて、泰L24「โท」(2)が5行目の「โทรศัพท์」の頭に当たっていた(Mayの指摘)。正しくは6行目の単独の โท
 function studySentence(x){
   const L = db.lessons.find(y=>y.lang===x.lang && y.lesson===x.lesson);
   const w = String(x.text || "").trim();
   if(!L || !w) return null;
   const q = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const spaced = !/[฀-๿぀-ヿ㐀-鿿]/.test(w);
-  if(spaced){
+  // const spaced = !/[฀-๿぀-ヿ㐀-鿿]/.test(w);
+  // if(spaced){
+  {
     const re = new RegExp("(^|[^\\p{L}\\p{M}\\p{N}])(" + q + ")(?=$|[^\\p{L}\\p{M}\\p{N}])", "iu");
     for(let i = 0; i < L.phrases.length; i++){
       const m = re.exec(L.phrases[i]);
