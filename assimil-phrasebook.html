@@ -183,6 +183,7 @@ input,textarea,select{font-family:inherit}
 .study-roman{font-size:14px; font-weight:400; color:var(--sub); font-style:italic}
 .study-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
 .study-acts .btn{flex:1; min-width:96px}
+.study-acts .st-spd{flex:0 0 auto; min-width:64px; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
 .study-grade .btn{min-height:46px}
 .st-drop{display:block; margin:16px auto 0; background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline}
 .tr-learn.on{background:var(--accent); color:#fff}
@@ -682,7 +683,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-10-26b";
+const BUILD = "2026-11-01a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4921,12 +4922,14 @@ function renderStudy(){
   if(studyShown < 2){
     // 答える前にも文を聞ける(2026-10-18、Mayの依頼)。耳で拾えたら、それも思い出せたうちに入れてよい
     const sp0 = sen ? spansOf(lang, lesson) : null;
-    if(sp0 && sp0[sen.i]) html += '<button class="btn soft st-play">▶ 文を聞く</button>';
+    if(sp0 && sp0[sen.i]) html += '<button class="btn soft st-play">▶ 文を聞く</button>'
+      + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(lang)) + '</button>';   // 速度(2026-11-01、Mayの依頼)。課の画面のその言語の速度と同じもの
     if(studyShown < 1 && sen) html += '<button class="btn soft st-mean">意味を見る</button>';
     html += '<button class="btn st-show">答えを見る</button>';
   } else {
     const sp = sen ? spansOf(lang, lesson) : null;
-    if(sp && sp[sen.i]) html += '<button class="btn soft st-play">▶ もう一度聞く</button>';
+    if(sp && sp[sen.i]) html += '<button class="btn soft st-play">▶ もう一度聞く</button>'
+      + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(lang)) + '</button>';
     if(sen) html += '<button class="btn soft st-go">原文へ</button>';
     html += '</div><div class="study-acts study-grade">'
       + '<button class="btn st-g" data-g="good">思い出せた</button>'
@@ -4941,6 +4944,7 @@ function renderStudy(){
   if(q(".st-mean")) q(".st-mean").onclick = ()=>{ studyShown = 1; renderStudy(); };
   if(q(".st-show")) q(".st-show").onclick = ()=>{ studyShown = 2; renderStudy(); play(); };
   if(q(".st-play")) q(".st-play").onclick = play;
+  if(q(".st-spd")){ const b = q(".st-spd"); bindSpeedBtn(b, d=>{ b.textContent = speedLabel(speedStep(d, lang)); }); }
   if(q(".st-go")) q(".st-go").onclick = ()=>jumpTo(lang, lesson, sen.text);
   card.querySelectorAll(".st-g").forEach(b=>{
     b.onclick = ()=>{
@@ -5334,34 +5338,35 @@ async function getTrack(lang, no){
 }
 // 再生速度(言語ごとに記憶。初期値はプレーヤー側の言語別設定を引き継ぐ)
 const SPEEDS = [0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.5, 2];
-function currentSpeed(){
-  const v = parseFloat(localStorage.getItem(KEY + ".spd." + currentLang));
+// lang を渡すと、開いている課と別の言語の速度も引ける(「思い出す」のカード用、2026-11-01)
+function currentSpeed(lang = currentLang){
+  const v = parseFloat(localStorage.getItem(KEY + ".spd." + lang));
   if(!isNaN(v)) return v;
   try{
     const ls = JSON.parse(localStorage.getItem("langs") || "[]");
-    const s = ls.find(x=>canonLang(x.name)===canonLang(currentLang));
+    const s = ls.find(x=>canonLang(x.name)===canonLang(lang));
     if(s && s.speed) return s.speed;
   }catch(e){}
   return 1;
 }
 function speedLabel(v){ return (Math.round(v*100) % 10 === 0 ? v.toFixed(1) : v.toFixed(2)) + "×"; }
-function speedStep(dir){
-  const cur = currentSpeed();
+function speedStep(dir, lang = currentLang){
+  const cur = currentSpeed(lang);
   // 現在値に一番近いプリセットから前後へ
   let i = 0, best = Infinity;
   SPEEDS.forEach((s,k)=>{ const d = Math.abs(s-cur); if(d<best){ best = d; i = k; } });
   const v = SPEEDS[(i + dir + SPEEDS.length) % SPEEDS.length];
-  lsSet(KEY + ".spd." + currentLang, v);
-  $("spdBtn").textContent = speedLabel(v);
-  if(AP.key && AP.key.slice(0, AP.key.lastIndexOf("|"))===currentLang) AP.audio.playbackRate = v;
+  lsSet(KEY + ".spd." + lang, v);
+  if(lang === currentLang) $("spdBtn").textContent = speedLabel(v);
+  if(AP.key && AP.key.slice(0, AP.key.lastIndexOf("|"))===lang) AP.audio.playbackRate = v;
+  return v;
 }
-// タップで次へ、長押し(0.5秒)で逆回り
-(function(){
-  const b = $("spdBtn");
+// タップで次へ、長押し(0.5秒)で逆回り。課の画面と「思い出す」のカードで同じ動き
+function bindSpeedBtn(b, step){
   let timer = null, longPressed = false;
   b.addEventListener("pointerdown", ()=>{
     longPressed = false;
-    timer = setTimeout(()=>{ longPressed = true; speedStep(-1); }, 500);
+    timer = setTimeout(()=>{ longPressed = true; step(-1); }, 500);
   });
   const cancel = ()=>clearTimeout(timer);
   b.addEventListener("pointerup", cancel);
@@ -5369,10 +5374,11 @@ function speedStep(dir){
   b.addEventListener("pointerleave", cancel);
   b.addEventListener("click", ()=>{
     if(longPressed){ longPressed = false; return; } // 長押し後のclickは無視
-    speedStep(1);
+    step(1);
   });
   b.addEventListener("contextmenu", e=>e.preventDefault()); // 長押しメニュー抑止
-})();
+}
+bindSpeedBtn($("spdBtn"), d=>speedStep(d));
 function rawSpans(lang, no){
   const t = db.times.find(x=>x.lang===lang && x.lesson===no);
   return t && Array.isArray(t.spans) ? t.spans : null;
@@ -5606,7 +5612,7 @@ async function playSpan(lang, lesson, i, row){
       setTimeout(res, 3000);               // 読めないまま待ち続けない
     });
   }
-  AP.audio.playbackRate = currentSpeed();
+  AP.audio.playbackRate = currentSpeed(lang);   // 開いている課ではなく、鳴らす文の言語の速度(「思い出す」で別の言語を鳴らすとき、2026-11-01)
   AP.audio.loop = false;                   // 行のくり返しは下の timeupdate で面倒を見る
   AP.span = {start: sp[i][0], end: sp[i][1]};
   watchSpan(true);                         // 再生中に別の行を押したときは play が来ないので、ここで始める
