@@ -152,6 +152,14 @@ input,textarea,select{font-family:inherit}
 #content.time-edit .phrase .no{background:var(--card); border:1px dashed var(--accent); color:var(--accent);
   border-radius:7px; width:26px; padding:3px 0 2px; text-align:center; cursor:pointer}
 #content.time-edit .phrase .no.marked{border-style:solid; background:var(--accent-soft)}
+/* 題の声(2026-11-02)。音声のある課だけ、行の番号と同じように押せる */
+.title-no{display:none; flex:none; font-size:12px; font-weight:600; padding:4px 7px 3px; margin-top:2px; border-radius:7px;
+  background:var(--accent-soft); color:var(--accent); cursor:pointer}
+#content.has-audio .title-no{display:block}
+#content.time-edit .title-no{background:var(--card); border:1px dashed var(--accent)}
+#content.time-edit .title-no.marked{border-style:solid; background:var(--accent-soft)}
+.lesson-heading.playing{background:var(--accent-soft); border-radius:8px}
+.lesson-heading.jumped{box-shadow:0 0 0 2px var(--accent) inset; border-radius:8px; transition:box-shadow .6s}
 .phrase .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
@@ -683,7 +691,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-01a";
+const BUILD = "2026-11-02a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2406,6 +2414,19 @@ function focusPhrase(lang, no, text){
   };
   setTimeout(go, 30);
 }
+// 「思い出す」の題の語から原文へ(2026-11-02)。focusPhrase の題の版
+function focusTitle(lang, no){
+  let tries = 0;
+  const go = ()=>{
+    const h = $("content").querySelector(".lesson-heading");
+    if(!h){ if(++tries < 20) setTimeout(go, 50); return; }
+    h.scrollIntoView({block:"center", behavior:"smooth"});
+    h.classList.add("jumped");
+    setTimeout(()=>h.classList.remove("jumped"), 2200);
+    if(titleSpan(lang, no)) playSpan(lang, no, "title", h);
+  };
+  setTimeout(go, 30);
+}
 
 /* ---------- lesson view ---------- */
 function renderLangbar(){
@@ -2656,6 +2677,22 @@ function renderLesson(){
     nbtn.className = "note-btn" + (note && note.ja ? " on" : "");
     nbtn.textContent = "訳";
     nbtn.onclick = (ev)=>{ ev.stopPropagation(); openNotePopup(currentLang, currentNo, L.title, nbtn, "title"); };
+    // 題の声(2026-11-02、Mayの依頼)。行の番号と同じ: 押すと題だけ鳴る。⏱ の間は「題はここから」の印
+    const tsp = titleSpan(currentLang, currentNo);
+    if(timeEdit || tsp){
+      const no = document.createElement("button");
+      no.className = "title-no";
+      no.textContent = "題";
+      const lang = currentLang, lesson = currentNo;
+      if(timeEdit){
+        if(tsp){ no.classList.add("marked"); no.title = fmtTime(tsp[0]) + " から"; }
+        no.onclick = (ev)=>{ ev.stopPropagation(); markTitle(lang, lesson, no); };
+      } else {
+        no.title = "題だけ鳴らす";
+        no.onclick = (ev)=>{ ev.stopPropagation(); playSpan(lang, lesson, "title", h); };
+      }
+      wrap.append(no);
+    }
     wrap.append(t, nbtn);
     h.appendChild(wrap);
     if(note && note.roman){
@@ -3460,8 +3497,18 @@ function importData(raw, msgEl){
   let timesAdded = 0, timesUpdated = 0, timesDeleted = 0;
   if(Array.isArray(data.times)){
     data.times.forEach(t=>{
-      if(!t || !t.lang || t.lesson==null || (!Array.isArray(t.spans) && t.delete !== true)) return;
+      if(!t || !t.lang || t.lesson==null || (!Array.isArray(t.spans) && t.delete !== true && !Array.isArray(t.title))) return;
       const lang = toNative(String(t.lang)), lesson = Number(t.lesson);
+      // 題の声だけの更新(2026-11-02)。spans の無い記録は行の位置に触らない。位置の無い課には足さない
+      if(!Array.isArray(t.spans) && t.delete !== true){
+        const old = db.times.find(x=>x.lang===lang && x.lesson===lesson);
+        const a = Number(t.title[0]), b = Number(t.title[1]);
+        if(!old || !isFinite(a) || !isFinite(b) || b <= a) return;
+        old.title = [a, b];
+        if(t.titleSrc) old.titleSrc = String(t.titleSrc);
+        timesUpdated++;
+        return;
+      }
       // "delete":true は掃除用。当てにならない位置を引き上げられる(2026-09-22)
       if(t.delete === true){
         const j = db.times.findIndex(x=>x.lang===lang && x.lesson===lesson);
@@ -3473,6 +3520,10 @@ function importData(raw, msgEl){
       if(t.src) rec.src = String(t.src);
       if(!rec.spans.length) return;
       const i = db.times.findIndex(x=>x.lang===rec.lang && x.lesson===rec.lesson);
+      // 行の位置を差し替えても、題の声は残す(送られてきたらそちらを使う)
+      const prev = i>=0 ? db.times[i] : null;
+      if(Array.isArray(t.title)){ rec.title = [Number(t.title[0]), Number(t.title[1])]; if(t.titleSrc) rec.titleSrc = String(t.titleSrc); }
+      else if(prev && prev.title){ rec.title = prev.title; if(prev.titleSrc) rec.titleSrc = prev.titleSrc; }
       if(i>=0){ db.times[i] = rec; timesUpdated++; }
       else { db.times.push(rec); timesAdded++; }
     });
@@ -4821,18 +4872,25 @@ function studySentence(x){
   const q = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // const spaced = !/[฀-๿぀-ヿ㐀-鿿]/.test(w);
   // if(spaced){
+  // 題も文として出す(2026-11-02、Mayの依頼)。順は 本文の語 → 題の語 → 本文の中の部分 → 題の中の部分。i は "title"
+  const title = L.title ? String(L.title) : "";
+  const hitT = (st, len)=>({i: "title", title: true, text: title, start: st, end: st + len});
   {
     const re = new RegExp("(^|[^\\p{L}\\p{M}\\p{N}])(" + q + ")(?=$|[^\\p{L}\\p{M}\\p{N}])", "iu");
     for(let i = 0; i < L.phrases.length; i++){
       const m = re.exec(L.phrases[i]);
       if(m){ const st = m.index + m[1].length; return {i, text: L.phrases[i], start: st, end: st + m[2].length}; }
     }
+    const m = re.exec(title);
+    if(m) return hitT(m.index + m[1].length, m[2].length);
   }
   const lw = w.toLowerCase();
   for(let i = 0; i < L.phrases.length; i++){
     const st = L.phrases[i].toLowerCase().indexOf(lw);
     if(st >= 0) return {i, text: L.phrases[i], start: st, end: st + w.length};
   }
+  const st = title.toLowerCase().indexOf(lw);
+  if(st >= 0) return hitT(st, w.length);
   return null;
 }
 function updateStudyTab(){
@@ -4897,12 +4955,14 @@ function renderStudy(){
   const sen = studySentence(rec);
   const card = document.createElement("div");
   card.className = "card study-card";
-  let html = '<div class="meta">' + esc(lang) + ' · L' + lesson + '</div>';
+  let html = '<div class="meta">' + esc(lang) + ' · L' + lesson + (sen && sen.title ? ' · 題' : '') + '</div>';
+  // この文の声の位置。題は記録の title、本文は行の位置
+  const hasVoice = !!sen && !!(sen.title ? titleSpan(lang, lesson) : (spansOf(lang, lesson) || [])[sen.i]);
   if(sen){
     const a = sen.text.slice(0, sen.start), w = sen.text.slice(sen.start, sen.end), b = sen.text.slice(sen.end);
     html += '<div class="study-sen" dir="auto">' + esc(a)
       + (studyShown >= 2 ? '<mark>' + esc(w) + '</mark>' : '<span class="study-gap">＿＿＿</span>') + esc(b) + '</div>';
-    const pn = getNote(lang, lesson, sen.text) || {};
+    const pn = getNote(lang, lesson, sen.text, sen.title ? "title" : undefined) || {};
     if(pn.roman){
       // 語の位置が分からない読みは、答えを見るまで出さない(そのまま出すと答えが見えてしまう)
       const rh = studyRoman(pn.roman, sen, studyShown < 2);
@@ -4911,7 +4971,7 @@ function renderStudy(){
     }
     if(pn.ja) html += '<div class="study-ja">' + esc(pn.ja) + '</div>';
   } else {
-    html += '<div class="study-ja">(この語は本文に同じ形で出てこないので、意味から思い出します)</div>';
+    html += '<div class="study-ja">(この語は本文にも題にも同じ形で出てこないので、意味から思い出します)</div>';
   }
   if(studyShown >= 1 || !sen) html += '<div class="study-mean">意味: ' + esc(wn.ja || "(訳が未入力)") + '</div>';
   if(studyShown >= 2){
@@ -4921,14 +4981,12 @@ function renderStudy(){
   html += '<div class="study-acts">';
   if(studyShown < 2){
     // 答える前にも文を聞ける(2026-10-18、Mayの依頼)。耳で拾えたら、それも思い出せたうちに入れてよい
-    const sp0 = sen ? spansOf(lang, lesson) : null;
-    if(sp0 && sp0[sen.i]) html += '<button class="btn soft st-play">▶ 文を聞く</button>'
+    if(hasVoice) html += '<button class="btn soft st-play">▶ 文を聞く</button>'
       + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(lang)) + '</button>';   // 速度(2026-11-01、Mayの依頼)。課の画面のその言語の速度と同じもの
     if(studyShown < 1 && sen) html += '<button class="btn soft st-mean">意味を見る</button>';
     html += '<button class="btn st-show">答えを見る</button>';
   } else {
-    const sp = sen ? spansOf(lang, lesson) : null;
-    if(sp && sp[sen.i]) html += '<button class="btn soft st-play">▶ もう一度聞く</button>'
+    if(hasVoice) html += '<button class="btn soft st-play">▶ もう一度聞く</button>'
       + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(lang)) + '</button>';
     if(sen) html += '<button class="btn soft st-go">原文へ</button>';
     html += '</div><div class="study-acts study-grade">'
@@ -4939,13 +4997,13 @@ function renderStudy(){
   html += '</div><button class="st-drop">覚えたいから外す</button>';
   card.innerHTML = html;
   box.appendChild(card);
-  const play = ()=>{ const sp = spansOf(lang, lesson); if(sen && sp && sp[sen.i]) playSpan(lang, lesson, sen.i, null); };
+  const play = ()=>{ if(hasVoice) playSpan(lang, lesson, sen.i, null); };
   const q = c=>card.querySelector(c);
   if(q(".st-mean")) q(".st-mean").onclick = ()=>{ studyShown = 1; renderStudy(); };
   if(q(".st-show")) q(".st-show").onclick = ()=>{ studyShown = 2; renderStudy(); play(); };
   if(q(".st-play")) q(".st-play").onclick = play;
   if(q(".st-spd")){ const b = q(".st-spd"); bindSpeedBtn(b, d=>{ b.textContent = speedLabel(speedStep(d, lang)); }); }
-  if(q(".st-go")) q(".st-go").onclick = ()=>jumpTo(lang, lesson, sen.text);
+  if(q(".st-go")) q(".st-go").onclick = ()=>{ if(sen.title){ jumpTo(lang, lesson); focusTitle(lang, lesson); } else jumpTo(lang, lesson, sen.text); };
   card.querySelectorAll(".st-g").forEach(b=>{
     b.onclick = ()=>{
       const g = b.dataset.g;
@@ -5389,9 +5447,57 @@ function spansOf(lang, no){
   // 長さの無い行(まだ位置を決めていない行)は鳴らせない
   return sp.map(x=>(x && x[1] > x[0]) ? x : null);
 }
+// 題の声の位置(2026-11-02)。行の位置の記録に title:[開始,終了] として持つ。行の位置が無い課には無い
+function titleSpan(lang, no){
+  const t = db.times.find(x=>x.lang===lang && x.lesson===no);
+  const s = t && t.title;
+  return Array.isArray(s) && s[1] > s[0] ? s : null;
+}
 // 位置を直す(2026-09-21)。鳴らしながら番号を押すと、その行の開始をいまの位置にする
 let timeEdit = false;
 const MARK_LAG = 0.35;      // 押すのは聞こえてからになるので、その分だけ戻す
+// 題の印(2026-11-02)。⏱ の間に「題」を押すと、題の開始をいまの位置にする。終わりは声の切れ目で閉じる
+function markTitle(lang, lesson, el){
+  let t = db.times.find(x=>x.lang===lang && x.lesson===lesson);
+  if(clearArm){
+    clearArm = false;
+    if(!titleSpan(lang, lesson)){ showMarkHint("題にはまだ位置がありません。"); return; }
+    delete t.title; delete t.titleSrc;
+    save();
+    pendingMarkMsg = "題の位置を消しました。";
+    renderLesson();
+    return;
+  }
+  const L = findLesson(lang, lesson);
+  const n = L && L.phrases ? L.phrases.length : 0;
+  if(!n) return;
+  if(AP.key !== lang + "|" + lesson || !AP.audio.duration){
+    showMarkHint("先に ▶ でこの課を鳴らしてから、題の頭で「題」を押してください。");
+    return;
+  }
+  if(!t){ t = {lang, lesson, spans: Array.from({length:n}, ()=>[0,0]), src:"手で付けた"}; db.times.push(t); }
+  const start = Math.round(Math.max(0, AP.audio.currentTime - MARK_LAG) * 100) / 100;
+  // まずは1行目の直前まで(1行目がまだ無ければ5秒)。声が分かったら詰める
+  const first = t.spans[0] && t.spans[0][1] > t.spans[0][0] && t.spans[0][0] > start ? t.spans[0][0] : null;
+  t.title = [start, Math.round((first ? first - 0.05 : Math.min(start + 5, AP.audio.duration)) * 100) / 100];
+  t.titleSrc = "手で付けた";
+  save();
+  el.classList.add("marked");
+  el.title = fmtTime(start) + " から";
+  showMarkHint("題を " + fmtTime(start) + " からにしました。");
+  fixTitleEnd(lang, lesson, t, start);
+}
+async function fixTitleEnd(lang, lesson, t, start){
+  const env = await voiceEnvelope(lang, lesson);
+  if(!env || !t.title || t.title[0] !== start) return;
+  // 題の頭から声をたどり、1.6秒以上の沈黙で止める(題と1行目の間はそれより長い。土は題の中にも1秒ほどの間がある)
+  const run = voicePieces(env).filter(p=>p[1] > start);
+  if(!run.length) return;
+  let end = run[0][1];
+  for(let k = 1; k < run.length && run[k][0] - run[k-1][1] < 1.6; k++) end = run[k][1];
+  const e = Math.round((end + 0.3) * 100) / 100;
+  if(e > start + 0.2 && e < t.title[1]){ t.title[1] = e; save(); }
+}
 function markLine(lang, lesson, i, noEl){
   if(clearArm){ clearLine(lang, lesson, i); return; }
   const L = findLesson(lang, lesson);
@@ -5538,7 +5644,7 @@ function showMarkHint(extra){
   if(!timeEdit){ h.style.display = "none"; return; }
   h.style.display = "";
   h.innerHTML = "▶ で鳴らしながら、行が始まったところで<b>その行の番号</b>を押してください"
-    + "（押す遅れぶん 0.35秒 戻します）。終わりは自動で決めます ── いまの終わりが使えればそのまま、使えなければ次の行の直前までです。最後の行は、声の終わりを探してそこで止めます。"
+    + "（押す遅れぶん 0.35秒 戻します）。終わりは自動で決めます ── いまの終わりが使えればそのまま、使えなければ次の行の直前までです。最後の行は、声の終わりを探してそこで止めます。題は、題が始まったところで「題」を押します。"
     + (extra ? '<br><b>' + esc(extra) + '</b>' : "");
   // 最後の行は「次の行」が無いので、終わりが音声の最後のままになる。ここで閉じられるようにする(2026-09-22)
   // 2026-09-28 にボタンを外した(Mayの依頼。使わない。最後の行の終わりはClaude側で声の終わりに詰める)。
@@ -5566,11 +5672,11 @@ function showMarkHint(extra){
   // 「ボタン → 消したい行の番号」の順に押す形にした(同日)。
   if(rawSpans(currentLang, currentNo)){
     const f = document.createElement("button");
-    f.textContent = clearArm ? "やめる(行の番号を押すと、その行の位置を消します)" : "このフレーズの位置を消す";
+    f.textContent = clearArm ? "やめる(行の番号か「題」を押すと、その位置を消します)" : "このフレーズの位置を消す";
     f.style.color = "var(--accent)";
     f.onclick = ()=>{
       clearArm = !clearArm;
-      showMarkHint(clearArm ? "位置を消したい行の番号を押してください。" : "");
+      showMarkHint(clearArm ? "位置を消したい行の番号か「題」を押してください。" : "");
     };
     h.appendChild(f);
   }
@@ -5593,11 +5699,12 @@ $("markBtn").onclick = ()=>{
 };
 // いま鳴らしている行(開始・終了)。null なら課まるごと
 function clearPlaying(){
-  document.querySelectorAll(".phrase.playing").forEach(e=>e.classList.remove("playing"));
+  document.querySelectorAll(".phrase.playing, .lesson-heading.playing").forEach(e=>e.classList.remove("playing"));
 }
+// i は行の番号。"title" なら題の声(2026-11-02)
 async function playSpan(lang, lesson, i, row){
-  const sp = spansOf(lang, lesson);
-  if(!sp || !sp[i]) return;
+  const span = i === "title" ? titleSpan(lang, lesson) : (spansOf(lang, lesson) || [])[i];
+  if(!span) return;
   const key = lang + "|" + lesson;
   if(AP.key !== key){
     const rec = await getTrack(lang, lesson);
@@ -5614,11 +5721,11 @@ async function playSpan(lang, lesson, i, row){
   }
   AP.audio.playbackRate = currentSpeed(lang);   // 開いている課ではなく、鳴らす文の言語の速度(「思い出す」で別の言語を鳴らすとき、2026-11-01)
   AP.audio.loop = false;                   // 行のくり返しは下の timeupdate で面倒を見る
-  AP.span = {start: sp[i][0], end: sp[i][1]};
+  AP.span = {start: span[0], end: span[1]};
   watchSpan(true);                         // 再生中に別の行を押したときは play が来ないので、ここで始める
   clearPlaying();
   if(row) row.classList.add("playing");
-  AP.audio.currentTime = sp[i][0];
+  AP.audio.currentTime = span[0];
   try{ await AP.audio.play(); }catch(e){}
 }
 // 行の終わりで止める。timeupdate は iPhone の Safari では0.25秒おきくらいにしか来ず、
