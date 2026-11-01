@@ -691,7 +691,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-02a";
+const BUILD = "2026-11-02b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3485,12 +3485,19 @@ function importData(raw, msgEl){
   if(Array.isArray(data.study)){
     data.study.forEach(x=>{
       if(!x || !x.lang || x.lesson==null || !x.text) return;
+      // 本文での形だけの更新(2026-11-02)。due の無い記録は間隔や回数に触らない。登録されていない語には足さない
+      if(x.form && x.due == null){
+        const old = studyRec(toNative(String(x.lang)), Number(x.lesson), String(x.text));
+        if(old){ old.form = String(x.form); studyUpdated++; }
+        return;
+      }
       const rec = { lang: toNative(String(x.lang)), lesson: Number(x.lesson), text: String(x.text),
         due: String(x.due || studyToday()), interval: Number(x.interval) || 0, reps: Number(x.reps) || 0,
         lapses: Number(x.lapses) || 0, added: x.added || Date.now(), last: x.last || 0 };
+      if(x.form) rec.form = String(x.form);
       const j = db.study.findIndex(y=>y.lang===rec.lang && y.lesson===rec.lesson && y.text===rec.text);
       if(j < 0){ db.study.push(rec); studyAdded++; }
-      else if((rec.last||0) > (db.study[j].last||0)){ db.study[j] = rec; studyUpdated++; }
+      else if((rec.last||0) > (db.study[j].last||0)){ if(!rec.form && db.study[j].form) rec.form = db.study[j].form; db.study[j] = rec; studyUpdated++; }
     });
   }
   // 行ごとの音声の位置。(lang, lesson) で照合して丸ごと差し替える(2026-09-21)
@@ -4867,7 +4874,8 @@ function studyNext(iv, grade){
 // 以前は泰・中は文字列だけで探していて、泰L24「โท」(2)が5行目の「โทรศัพท์」の頭に当たっていた(Mayの指摘)。正しくは6行目の単独の โท
 function studySentence(x){
   const L = db.lessons.find(y=>y.lang===x.lang && y.lesson===x.lesson);
-  const w = String(x.text || "").trim();
+  // form は本文や題に出てくる形(2026-11-02)。原形で登録した語(kennen → Kennst)も、その文の穴埋めにして音を流す
+  const w = String(x.form || x.text || "").trim();
   if(!L || !w) return null;
   const q = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // const spaced = !/[฀-๿぀-ヿ㐀-鿿]/.test(w);
