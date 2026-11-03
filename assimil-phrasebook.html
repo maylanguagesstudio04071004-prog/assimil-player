@@ -691,7 +691,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-04a";
+const BUILD = "2026-11-04b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -5610,7 +5610,10 @@ function lastLineEnd(env, spans, phrases, i){
   let said = run[0][1] - Math.max(run[0][0], s), end = run[0][1];
   for(let k = 1; k < run.length; k++){
     const gap = run[k][0] - run[k-1][1];
-    if(gap >= 2.5 || (gap >= 0.8 && said >= want)) break;
+    // 1行を句ごとに長い間を置いて読む録音(尼L3・L4、2026-11-04)。見込みの半分も話していなければ、6秒未満の沈黙では止めない。
+    // 0.5 は全825課で試して決めた: これで変わるのは切れていた課だけ。0.6 にすると亜L75・中L50まで延びて次の読みが入る恐れがある
+    if(gap >= 2.5 && (!med || said >= want * 0.5 || gap >= 6)) break;
+    if(gap >= 0.8 && gap < 2.5 && said >= want) break;
     said += run[k][1] - run[k][0]; end = run[k][1];
   }
   return end + 0.3;
