@@ -691,7 +691,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-02b";
+const BUILD = "2026-11-04a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -5629,6 +5629,48 @@ async function fixLastEnd(lang, lesson, t, i, L){
   save();
   showMarkHint("行 " + (i+1) + " を " + fmtTime(start) + " からにしました。最後の行なので、声の終わり(" + fmtTime(t.spans[i][1]) + ")で止めます。");
 }
+// 行の終わりの無音を削る(2026-11-04、Mayの依頼。尼L3・L4は音声がMacに無く、Claude側の道具では削れない)。
+// 端末の音声から声を探す。開始には触らない。行の終わりは「自分の声の終わり+0.3秒」、ただし次の声の0.3秒前まで。
+// 終わりが声の途中にある行は、どちらの声か分からないので触らない。Claude側の leak_audit.py と同じ決め方
+async function trimLineEnds(lang, lesson){
+  const t = db.times.find(x=>x.lang===lang && x.lesson===lesson);
+  if(!t) return;
+  showMarkHint("声の終わりを探しています…");
+  const env = await voiceEnvelope(lang, lesson);
+  if(!env){ showMarkHint("音声を読めなかったので、行の終わりは変えていません。"); return; }
+  const ps = voicePieces(env);
+  let n = 0;
+  t.spans.forEach(sp=>{
+    if(!sp || !(sp[1] > sp[0])) return;
+    const [s, e] = sp;
+    if(ps.some(([x, y])=>x < e - 0.02 && y > e + 0.02)) return;
+    const own = ps.filter(([x, y])=>x < e && y > s).map(p=>p[1]);
+    if(!own.length) return;
+    const end = Math.max(...own);
+    const after = ps.filter(([x])=>x >= e - 0.02).map(p=>p[0]);
+    const next = after.length ? Math.min(...after) : Infinity;
+    const ne = Math.round(Math.max(end + 0.1, Math.min(end + 0.3, next - 0.3)) * 100) / 100;
+    if(ne < e - 0.01){ sp[1] = ne; n++; }
+  });
+  if(n){
+    if((t.src || "").indexOf("行の終わりを詰めた") < 0) t.src = (t.src || "") + " / 行の終わりを詰めた";
+    save();
+  }
+  showMarkHint(n ? n + " 行の終わりの無音を削りました。" : "削れる無音はありませんでした。");
+}
+// この課の音声をファイルに保存(2026-11-04)。音声の元ファイルを失くしても、プレーヤーに入っていれば取り出せる
+async function saveTrackFile(lang, lesson){
+  const rec = await getTrack(lang, lesson);
+  if(!rec || !rec.blob){ showMarkHint("この課の音声はこの端末にありません。"); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(rec.blob);
+  a.download = rec.name || (lang + " L" + lesson);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 60000);
+  showMarkHint("音声「" + a.download + "」を保存します。");
+}
 // 最後に番号を押した行。「このフレーズの位置を消す」で1行だけやり直すため(2026-09-28 Mayの依頼)
 var lastMark = null;   // var: 起動時の描画がこの行より先に走っても参照できるように
 var pendingMarkMsg = "";   // 描き直し(updatePlayBtn)の後に出したい知らせ
@@ -5687,7 +5729,17 @@ function showMarkHint(extra){
       showMarkHint(clearArm ? "位置を消したい行の番号か「題」を押してください。" : "");
     };
     h.appendChild(f);
+    const tr = document.createElement("button");
+    tr.style.cssText = "color:var(--accent); margin-left:8px";
+    tr.textContent = "行の終わりの無音を削る";
+    tr.onclick = ()=>trimLineEnds(currentLang, currentNo);
+    h.appendChild(tr);
   }
+  const sv = document.createElement("button");
+  sv.style.cssText = "color:var(--accent); margin-left:8px";
+  sv.textContent = "音声をファイルに保存";
+  sv.onclick = ()=>saveTrackFile(currentLang, currentNo);
+  h.appendChild(sv);
   const b = document.createElement("button");
   b.style.marginLeft = "8px";
   b.textContent = "この課の位置を消す";
