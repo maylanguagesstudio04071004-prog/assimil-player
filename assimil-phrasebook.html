@@ -691,7 +691,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-04b";
+const BUILD = "2026-11-05a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3455,6 +3455,12 @@ function importData(raw, msgEl){
   if(data.langs) data.langs.forEach(l=>{ const n = toNative(l); if(!db.langs.includes(n)) db.langs.push(n); });
   if(Array.isArray(data.favs)){
     data.favs.forEach(f=>{
+      // 行を分けると元の行の☆が宙に浮くので、取り込みで外せるようにする(2026-11-05)
+      if(f && f.delete === true && f.lang && f.text){
+        const i = favIndex(toNative(String(f.lang)), Number(f.lesson), String(f.text), f.type||"phrase");
+        if(i >= 0) db.favs.splice(i, 1);
+        return;
+      }
       if(f && f.lang && f.text && favIndex(toNative(String(f.lang)), Number(f.lesson), String(f.text), f.type||"phrase")<0){
         db.favs.push({lang:toNative(String(f.lang)), lesson:Number(f.lesson), text:String(f.text),
                       type:f.type==="word"?"word":"phrase", added:f.added||Date.now()});
