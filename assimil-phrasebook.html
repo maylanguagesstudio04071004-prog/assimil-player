@@ -198,6 +198,15 @@ input,textarea,select{font-family:inherit}
 .study-head{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:2px 4px 12px; font-size:12px; color:var(--sub); line-height:1.8}
 .study-head select{font-size:12px; padding:3px 6px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub)}
 .study-list{margin-top:2px}
+/* 本文から単語を拾う(2026-11-06) */
+.pick-head{font-size:12px; color:var(--sub); margin:12px 2px 6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.pick-row{display:flex; gap:10px; align-items:flex-start; padding:8px 2px; border-top:1px solid var(--border)}
+.pick-row input{flex:0 0 auto; width:19px; height:19px; margin-top:2px; accent-color:var(--accent)}
+.pick-row .pk-b{flex:1; min-width:0}
+.pick-row .pk-w{font-size:15px; line-height:1.5; overflow-wrap:anywhere; unicode-bidi:plaintext}
+.pick-row .pk-rm{font-size:12px; color:var(--sub); font-style:italic}
+.pick-row .pk-ja{font-size:12.5px; color:var(--sub); line-height:1.5}
+.pick-row .pk-src{font-size:10.5px; color:var(--sub); opacity:.7}
 .study-row{display:flex; gap:10px; align-items:flex-start; background:var(--card); border:1px solid var(--border);
   border-radius:14px; padding:11px 13px; margin-bottom:8px}
 .study-row .sr-body{flex:1; min-width:0}
@@ -712,7 +721,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-06d";
+const BUILD = "2026-11-06e";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2503,6 +2512,135 @@ function phraseRow(lang, lesson, p, i){
   // フレーズ全体の訳は「訳」ボタンのタップのみで開く(長押し/単語選択と競合させない)
   return row;
 }
+/* 本文から単語を拾う(2026-11-06、Mayの依頼)。
+   引き先は **辞書(db.dict) と 単語登録(type=word のnote)** の2つだけ。完全一致のみ。
+   語形成レイヤー(語根・接尾辞など)は入れていない ── 辞書だけで本文の97〜99%に当たるため。
+   lookupWordNote() は1語ごとに db.notes 全件(19,598)を走るので、課まるごとだと重い。
+   ここでは先に引き表を1回だけ作る。 */
+const PICK_EDGE = /^[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u00BF\u00A1\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+|[\s"'\u00AB\u00BB\u201E\u201C\u201D(),.;:!?\u00BF\u00A1\u2026\u2014\u2013\u0964\u0965\u060C\u061B\u061F-]+$/g;
+function pickTrim(s){ return String(s == null ? "" : s).replace(PICK_EDGE, ""); }
+function pickTable(lang){
+  const m = new Map();
+  const share = DICT_SHARE[lang];
+  (db.dict || []).forEach(x=>{
+    if(x.lang !== lang && x.lang !== share) return;
+    if(!String(x.ja || "").trim()) return;
+    const k = selNorm(x.text, lang); if(!k) return;
+    if(x.lang === lang || !m.has(k)) m.set(k, {ja:x.ja, roman:x.roman || "", src:"辞書"});
+  });
+  db.notes.forEach(n=>{
+    if((n.type || "phrase") !== "word" || n.lang !== lang) return;
+    if(!String(n.ja || "").trim()) return;
+    const k = selNorm(n.text, lang); if(!k) return;
+    m.set(k, {ja:n.ja, roman:n.roman || "", src:"単語"});   // 自分で入れた訳が辞書より強い
+  });
+  return m;
+}
+function pickFromText(L, host, btn){
+  btn.disabled = true;
+  btn.textContent = "本文から探しています…";
+  // 文字を出してから探す(辞書引きで一瞬止まる課がある)
+  setTimeout(()=>{
+    const lang = L.lang;
+    const table = pickTable(lang);
+    const have = new Set((L.words || []).map(w=>selNorm(w, lang)));
+    const seen = new Set(), rows = [];
+    [...(L.phrases || []), L.title || ""].forEach(p=>{
+      String(p || "").split(/\s+/).forEach(raw=>{
+        const k = selNorm(raw, lang);
+        if(!k || k.length < 2 || seen.has(k) || have.has(k)) return;
+        seen.add(k);
+        const hit = table.get(k);
+        if(hit) rows.push({w: pickTrim(raw) || raw, ja: hit.ja, roman: hit.roman, src: hit.src});
+      });
+    });
+    btn.remove();
+    const box = document.createElement("div");
+    host.appendChild(box);
+    if(!rows.length){
+      box.innerHTML = '<div class="hint">本文の語で、辞書にも単語にも無いものばかりでした。拾えるものがありません。</div>';
+      return;
+    }
+    const head = document.createElement("div");
+    head.className = "pick-head";
+    const cnt = document.createElement("span");
+    const allBtn = document.createElement("button");
+    allBtn.className = "study-ear-toggle";
+    allBtn.textContent = "全部選ぶ";
+    const stLab = document.createElement("label");
+    const stCb = document.createElement("input");
+    stCb.type = "checkbox"; stCb.checked = true;
+    stLab.appendChild(stCb); stLab.appendChild(document.createTextNode(" 覚えたいにも入れる"));
+    stLab.style.cssText = "display:flex; align-items:center; gap:4px";
+    head.appendChild(cnt); head.appendChild(allBtn); head.appendChild(stLab);
+    box.appendChild(head);
+    const list = document.createElement("div");
+    const boxes = [];
+    rows.forEach(r=>{
+      const row = document.createElement("label");
+      row.className = "pick-row";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      boxes.push({cb, r});
+      row.appendChild(cb);
+      const b = document.createElement("div");
+      b.className = "pk-b";
+      b.innerHTML = '<div class="pk-w" dir="auto">' + esc(r.w)
+        + (r.roman ? ' <span class="pk-rm">' + esc(r.roman) + '</span>' : '') + '</div>'
+        + '<div class="pk-ja">' + esc(r.ja) + ' <span class="pk-src">' + esc(r.src) + '</span></div>';
+      row.appendChild(b);
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+    const act = document.createElement("button");
+    act.className = "bulk-roman";
+    box.appendChild(act);
+    const paint = ()=>{
+      const n = boxes.filter(x=>x.cb.checked).length;
+      cnt.textContent = "本文から " + rows.length + " 語見つかりました。入れる語を選んでください。";
+      act.textContent = n ? "選んだ " + n + " 語を単語に入れる" : "入れる語を選んでください";
+      act.disabled = !n;
+      allBtn.textContent = (n === rows.length) ? "全部やめる" : "全部選ぶ";
+    };
+    boxes.forEach(x=>x.cb.addEventListener("change", paint));
+    allBtn.onclick = ()=>{
+      const on = boxes.some(x=>!x.cb.checked);
+      boxes.forEach(x=>{ x.cb.checked = on; });
+      paint();
+    };
+    act.onclick = ()=>{
+      const take = boxes.filter(x=>x.cb.checked).map(x=>x.r);
+      if(!take.length) return;
+      const alsoStudy = stCb.checked;
+      L.words = L.words || [];
+      take.forEach(r=>{
+        if(!L.words.some(w=>selNorm(w, lang) === selNorm(r.w, lang))) L.words.push(r.w);
+        // 訳と読みは、その課の単語の登録として持たせる(小窓で直せるように)。既にあるものは触らない
+        const i = noteIndex(lang, L.lesson, r.w, "word");
+        if(i >= 0){
+          const n = db.notes[i];
+          if(!String(n.ja || "").trim()) n.ja = r.ja;
+          if(!String(n.roman || "").trim() && r.roman) n.roman = r.roman;
+          n.updated = Date.now();
+        } else {
+          const rec = {lang, lesson:L.lesson, text:r.w, type:"word", updated:Date.now()};
+          fieldsFor(lang, "word").forEach(f=>rec[f.key] = "");
+          rec.ja = r.ja; if(r.roman) rec.roman = r.roman;
+          db.notes.push(rec);
+        }
+        if(alsoStudy && !studyRec(lang, L.lesson, r.w))
+          db.study.push({lang, lesson:L.lesson, text:r.w, due:studyToday(),
+            interval:0, reps:0, lapses:0, added:Date.now(), last:0});
+      });
+      save();                       // 1語ずつ save() すると db 全体(約10MB)を何十回も書くので最後に1回
+      updateStudyTab();
+      const y = window.scrollY;     // 描き直すと頭に飛ぶので戻す
+      renderLesson();
+      window.scrollTo(0, y);
+    };
+    paint();
+  }, 0);
+}
 function wordChip(lang, lesson, w){
   const b = document.createElement("button");
   b.dataset.lang = lang;
@@ -2606,10 +2744,12 @@ function lessonCards(L, withLangTitle){
     //     }
     frag.appendChild(c);
   }
+  let wordCard = null;   // 「本文から単語を拾う」を挿す先(2026-11-06)
   if(L.words && L.words.length){
     const c = document.createElement("div");
     c.className = "card";
     c.innerHTML = '<h2>単語</h2>';
+    wordCard = c;
     const wc = document.createElement("div");
     wc.className = "words";
     L.words.forEach(w=>wc.appendChild(wordChip(L.lang, L.lesson, w)));
@@ -2653,6 +2793,26 @@ function lessonCards(L, withLangTitle){
     hint.textContent = "単語はタップでお気に入り、長押しで訳の編集";
     c.appendChild(hint);
     frag.appendChild(c);
+  }
+  /* 本文から単語を拾う(2026-11-06、Mayの依頼)。
+     課に単語が付いているのは1,277課のうち272課(21%)しかないが、辞書は39,398語あって
+     本文の語の97〜99%に当たる。**訳も読みも、もうアプリの中にある。**
+     足りないのは「この課の本文の語」と「辞書」をつなぐところだけなので、それをここでやる。
+     新しい訳は作らない。Mayの辞書と単語登録から持ってくるだけ。戻すならこのブロックと pickFromText を消す */
+  if((L.phrases||[]).length){
+    let host = wordCard;
+    if(!host){
+      host = document.createElement("div");
+      host.className = "card";
+      host.innerHTML = '<h2>単語</h2><div class="hint" style="margin:0 0 2px">この課にはまだ単語が登録されていません。</div>';
+      frag.appendChild(host);
+    }
+    const pb = document.createElement("button");
+    pb.className = "bulk-roman";
+    pb.textContent = "本文から単語を拾う";
+    pb.onclick = ()=>pickFromText(L, host, pb);
+    const hintEl = host.querySelector(".hint");
+    if(hintEl && wordCard) host.insertBefore(pb, hintEl); else host.appendChild(pb);
   }
   if(L.note){
     const c = document.createElement("div");
