@@ -691,7 +691,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-05a";
+const BUILD = "2026-11-06a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3491,6 +3491,12 @@ function importData(raw, msgEl){
   if(Array.isArray(data.study)){
     data.study.forEach(x=>{
       if(!x || !x.lang || x.lesson==null || !x.text) return;
+      // 印を外す(2026-11-06)。登録単語の綴りを直すとき(頭の大文字→小文字)、古い綴りの印を消せるように
+      if(x.delete === true){
+        const j = db.study.findIndex(y=>y.lang===toNative(String(x.lang)) && y.lesson===Number(x.lesson) && y.text===String(x.text));
+        if(j >= 0) db.study.splice(j, 1);
+        return;
+      }
       // 本文での形だけの更新(2026-11-02)。due の無い記録は間隔や回数に触らない。登録されていない語には足さない
       if(x.form && x.due == null){
         const old = studyRec(toNative(String(x.lang)), Number(x.lesson), String(x.text));
