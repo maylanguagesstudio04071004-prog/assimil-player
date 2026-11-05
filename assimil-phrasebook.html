@@ -307,6 +307,15 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .wd-row.busy{border-color:var(--accent)}
 .wd-row.miss .wd-in{border-color:var(--danger)}
 .tr-hint{font-size:11px; color:var(--sub); margin-top:4px}
+/* 短い知らせ(2026-11-06)。行を分けたときの位置の付け直しなど、画面が変わった後に出す */
+.toast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:60;
+  max-width:min(92vw, 520px); background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:12px;
+  padding:10px 14px; font-size:13px; line-height:1.6; box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.tr-form{margin-top:8px; font-size:12px; color:var(--sub); line-height:1.7}
+.tr-form button{font-size:12px; margin:4px 6px 0 0; padding:3px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent)}
+.study-ear-toggle{font-size:12px; padding:4px 10px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub); margin-left:8px}
+.study-ear-toggle.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
+.study-ear{font-size:15px; color:var(--sub); line-height:1.7; margin:12px 0 4px}
 .tr-hint .tr-fill{font-size:11px; margin-left:6px; padding:2px 8px; border-radius:7px;
   background:var(--accent-soft); color:var(--accent); border:0}
 .msg{font-size:13px; margin-top:10px; color:var(--accent); min-height:18px}
@@ -691,7 +700,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-06a";
+const BUILD = "2026-11-06b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1881,7 +1890,7 @@ function showTab(t){
   if(t==="tabLesson") renderLesson();
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
-  if(t==="tabStudy"){ studyQueue = null; studyShown = 0; renderStudy(); window.scrollTo(0,0); }
+  if(t==="tabStudy"){ studyQueue = null; studyShown = 0; studyEarKey = null; renderStudy(); window.scrollTo(0,0); }
   if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); }
 }
 Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
@@ -3386,9 +3395,117 @@ $("eSave").onclick = ()=>{
     tags: parseTags($("eTags").value)
   };
   const i = db.lessons.findIndex(x=>x.lang===currentLang && x.lesson===currentNo);
+  const oldPhrases = i>=0 && db.lessons[i].phrases ? db.lessons[i].phrases.slice() : [];
   if(i>=0) db.lessons[i] = rec; else db.lessons.push(rec);
+  realignTimes(currentLang, currentNo, oldPhrases, rec.phrases);
   save(); showTab("tabLesson");
 };
+/* 行を分けた・つなげたときに、行の位置も新しい行に合わせる(2026-11-06、Mayの依頼)。
+   前は位置が行の番号のまま残り、分けた行より後ろが1行ずつずれて鳴っていた(尼L5・L6)。
+   古い行と新しい行を突き合わせる: 同じ / 書き直した(1行→1行) / 分けた(1行→2〜4行、つなぐと元の行) / つなげた(その逆)。
+   行を足したり消したりして突き合わせられないときは、位置に触らない */
+function alignLines(oldP, newP){
+  const norm = s=>String(s).replace(/\s+/g, " ").trim();
+  const o = oldP.map(norm), n = newP.map(norm), I = o.length, J = n.length, INF = 1e9;
+  const best = Array.from({length:I+1}, ()=>Array(J+1).fill(INF));
+  const how = Array.from({length:I+1}, ()=>Array(J+1).fill(null));
+  best[I][J] = 0;
+  for(let i = I; i >= 0; i--) for(let j = J; j >= 0; j--){
+    if(i === I && j === J) continue;
+    const go = (c, ni, nj, op)=>{ if(best[ni][nj] + c < best[i][j]){ best[i][j] = best[ni][nj] + c; how[i][j] = [op, ni, nj]; } };
+    if(i < I && j < J) go(o[i] === n[j] ? 0 : 1, i+1, j+1, o[i] === n[j] ? "same" : "edit");
+    for(let k = 2; k <= 4; k++){
+      if(i < I && j + k <= J && norm(n.slice(j, j+k).join(" ")) === o[i]) go(0, i+1, j+k, "split");
+      if(j < J && i + k <= I && norm(o.slice(i, i+k).join(" ")) === n[j]) go(0, i+k, j+1, "join");
+    }
+  }
+  if(best[0][0] >= INF) return null;
+  const steps = []; let i = 0, j = 0;
+  while(i < I || j < J){ const h = how[i][j]; steps.push({op:h[0], o:[i, h[1]], n:[j, h[2]]}); i = h[1]; j = h[2]; }
+  return steps;
+}
+// 1行の位置を、声の固まりの間で parts.length 個に分ける。字数の割合に声の割合が一番近い切れ目を選ぶ
+function splitSpanByVoice(env, span, parts){
+  const ps = voicePieces(env).filter(([x, y])=>y > span[0] && x < span[1]).map(([x, y])=>[Math.max(x, span[0]), Math.min(y, span[1])]);
+  const k = parts.length;
+  if(ps.length < k) return null;
+  const cum = [0]; ps.forEach(([x, y])=>cum.push(cum[cum.length-1] + y - x));
+  const tot = cum[cum.length-1], totC = parts.reduce((a, b)=>a + b, 0);
+  const want = []; let c = 0;
+  for(let q = 0; q < k-1; q++){ c += parts[q]; want.push(c / totC); }
+  let best = null;
+  const pick = (from, chosen)=>{
+    if(chosen.length === k-1){
+      const sc = chosen.reduce((a, g, q)=>a + Math.abs(cum[g] / tot - want[q]), 0);
+      const gap = chosen.reduce((a, g)=>a + ps[g][0] - ps[g-1][1], 0);   // 同じくらいなら間の長いほう
+      if(!best || sc < best.sc - 1e-9 || (Math.abs(sc - best.sc) < 1e-9 && gap > best.gap)) best = {sc, gap, cuts:chosen.slice()};
+      return;
+    }
+    for(let g = from; g < ps.length; g++){ chosen.push(g); pick(g+1, chosen); chosen.pop(); }
+  };
+  pick(1, []);
+  if(!best) return null;
+  const r2 = v=>Math.round(v * 100) / 100;
+  const bounds = [0, ...best.cuts, ps.length], out = [];
+  for(let q = 0; q < k; q++){
+    const first = ps[bounds[q]], last = ps[bounds[q+1]-1];
+    const st = q === 0 ? span[0] : Math.max(out[q-1][1], first[0] - 0.12);
+    let en = span[1];
+    if(q < k-1){ const next = ps[bounds[q+1]][0]; en = Math.max(last[1] + 0.1, Math.min(last[1] + 0.3, next - 0.3)); }
+    out.push([r2(st), r2(en)]);
+  }
+  return out;
+}
+function realignTimes(lang, lesson, oldP, newP){
+  const t = db.times.find(x=>x.lang===lang && x.lesson===lesson);
+  if(!t || !t.spans || !t.spans.length || !oldP.length) return;
+  const steps = alignLines(oldP, newP);
+  if(!steps){
+    if(oldP.length !== newP.length) showToast("行の数が変わりましたが、どの行を分けたか分からなかったので、行の位置はそのままです。⏱ 位置で付け直してください。");
+    return;
+  }
+  if(!steps.some(s=>s.op === "split" || s.op === "join")) return;
+  const ok = sp=>sp && sp[1] > sp[0];
+  const spans = [], todo = [];
+  steps.forEach(s=>{
+    const os = t.spans.slice(s.o[0], s.o[1]);
+    if(s.op === "same" || s.op === "edit") spans.push(os[0] ? os[0].slice() : [0,0]);
+    else if(s.op === "join") spans.push(ok(os[0]) && ok(os[os.length-1]) ? [os[0][0], os[os.length-1][1]] : [0,0]);
+    else {
+      // まずは元の位置を1行目に、残りは「位置なし」にしておく(後ろの行がずれないように)。声が読めたら分ける
+      todo.push({at:spans.length, span:os[0], parts:newP.slice(s.n[0], s.n[1]).map(x=>Math.max(2, String(x).length))});
+      spans.push(ok(os[0]) ? os[0].slice() : [0,0]);
+      for(let q = 1; q < s.n[1] - s.n[0]; q++) spans.push([0,0]);
+    }
+  });
+  t.spans = spans;
+  t.src = (t.src || "") + " / 行を分けた・つなげたのに合わせた(Atlas)";
+  const nSplit = todo.length;
+  if(!nSplit){ showToast("行をつなげたので、行の位置もつなげました。"); return; }
+  (async ()=>{
+    const env = await voiceEnvelope(lang, lesson);
+    let done = 0;
+    todo.forEach(x=>{
+      if(!env || !ok(x.span)) return;
+      const r = splitSpanByVoice(env, x.span, x.parts);
+      if(!r) return;
+      r.forEach((sp, q)=>{ t.spans[x.at + q] = sp; });
+      done++;
+    });
+    save();
+    if(currentLang === lang && currentNo === lesson && $("pageLesson").style.display !== "none") renderLesson();
+    showToast(done === nSplit ? "行を分けたので、行の位置も声の切れ目で分けました。訳は「訳」を開くと、分ける前の訳を下書きに使えます。"
+      : "行を分けました。" + (done ? "一部の行は" : "") + "声の切れ目が見つからなかったので、分けた2行目からは位置がありません。⏱ 位置で付けてください。");
+  })();
+}
+let toastTimer = null;
+function showToast(msg){
+  let el = document.querySelector(".toast");
+  if(!el){ el = document.createElement("div"); el.className = "toast"; el.onclick = ()=>el.remove(); document.body.appendChild(el); }
+  el.textContent = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.remove(); }, 7000);
+}
 $("eCancel").onclick = ()=>showTab("tabLesson");
 $("eDelete").onclick = ()=>{
   if(!confirm(currentLang + " L" + currentNo + " を削除しますか?")) return;
@@ -4325,7 +4442,34 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
     const paint = ()=>{ const on = !!studyRec(lang, lesson, text); lb.textContent = on ? "★ 覚えたい(外す)" : "☆ 覚えたい"; lb.classList.toggle("on", on);
       if(anchorEl && anchorEl.classList) anchorEl.classList.toggle("learn", on); };
     paint();
-    lb.onclick = ()=>{ toggleStudy(lang, lesson, text); paint(); };
+    lb.onclick = ()=>{ toggleStudy(lang, lesson, text); paint(); showForm(); };
+    // 本文に同じ形が無い語(原形で登録した語など)は、本文の近い形を出して選べるようにする(2026-11-06、Mayの依頼)。
+    // 選ぶと「思い出す」でその文の穴埋めになり、音も流れる
+    const fm = document.createElement("div");
+    fm.className = "tr-form";
+    lb.parentNode.after(fm);
+    const showForm = ()=>{
+      fm.innerHTML = "";
+      const rec = studyRec(lang, lesson, text);
+      if(!rec) return;
+      if(rec.form){
+        fm.innerHTML = '「思い出す」では本文の <b></b> で出します。<button class="tf-off">やめる</button>';
+        fm.querySelector("b").textContent = "「" + rec.form + "」";
+        fm.querySelector(".tf-off").onclick = ()=>{ delete rec.form; save(); showForm(); };
+        return;
+      }
+      if(studySentence(rec)) return;   // 本文にそのままある
+      const cands = formCandidates(lang, lesson, text);
+      if(!cands.length){ fm.textContent = "本文にも題にもこの形が無いので、「思い出す」では意味から思い出すカードになります。"; return; }
+      fm.innerHTML = '本文にこの形が無いので、「思い出す」では意味から思い出すカードになります。本文の形を選ぶと、その文の穴埋めにして音も流せます:<br>';
+      cands.forEach(c=>{
+        const b = document.createElement("button");
+        b.textContent = c;
+        b.onclick = ()=>{ rec.form = c; save(); showForm(); };
+        fm.appendChild(b);
+      });
+    };
+    showForm();
   }
 
   // 保存ボタンの代わり。閉じる/外をタップ/別のポップアップを開く、のどれでも書き込まれる
@@ -4348,6 +4492,25 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
      通信はしない。出どころは 他の課の単語登録 → 語形成レイヤー → 引き専用辞書 の順。
      完全一致は入れてしまう(どこから来たかは必ず書く)。前方一致は取り違えるので
      「入れる」を押したときだけ入れる。手入力が先にあればそちらを優先する。 */
+  // 行を分けた直後は訳が空。分ける前の行(今の本文に無い行)の訳がこの行を含んでいれば、下書きとして出す(2026-11-06)
+  if(type === "phrase"){
+    const jaTa = trPop.querySelector('[data-field="ja"]');
+    const L = findLesson(lang, lesson);
+    const norm = s=>String(s).replace(/\s+/g, " ").trim();
+    if(jaTa && !jaTa.value.trim() && L){
+      const cur = new Set(L.phrases.map(norm));
+      const old = db.notes.find(x=>x.lang===lang && x.lesson===lesson && (x.type||"phrase")==="phrase" && x.ja
+        && !cur.has(norm(x.text)) && norm(x.text).includes(norm(text)));
+      if(old){
+        const hint = document.createElement("div");
+        hint.className = "tr-hint";
+        hint.innerHTML = '<span class="tr-cand"></span><button class="tr-fill">下書きに入れる</button>';
+        hint.querySelector(".tr-cand").textContent = "分ける前の訳: " + old.ja;
+        hint.querySelector(".tr-fill").onclick = ()=>{ jaTa.value = old.ja; fitTextareas(trPop); hint.textContent = "分ける前の訳を入れました。この行の分だけに直してください"; jaTa.focus(); };
+        jaTa.parentNode.appendChild(hint);
+      }
+    }
+  }
   if(type === "word"){
     const jaTa = trPop.querySelector('[data-field="ja"]');
     if(jaTa && !jaTa.value.trim()){
@@ -4864,6 +5027,31 @@ function studyToday(d){ const t = d || new Date();
   return t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,"0") + "-" + String(t.getDate()).padStart(2,"0"); }
 function studyAddDays(n){ const t = new Date(); t.setDate(t.getDate() + n); return studyToday(t); }
 function studyDue(){ const t = studyToday(); return (db.study||[]).filter(x=>x.due <= t); }
+// 覚えたい語の、本文・題での近い形(2026-11-06)。語の頭が長く同じ語を、似ている順に3つまで。
+// アクセントは外して比べる(préférer と préfère)。空白で語を区切らない言語(中・泰)は出さない
+function formCandidates(lang, lesson, text){
+  const L = findLesson(lang, lesson);
+  if(!L || /[\u0E00-\u0E7F\u3040-\u30FF\u3400-\u9FFF]/.test(text)) return [];
+  const low = s=>lang === "Türkçe" ? s.toLocaleLowerCase("tr") : s.toLowerCase();
+  const plain = s=>low(s).normalize("NFD").replace(/\p{M}/gu, "");
+  const tokRe = /\p{L}[\p{L}\p{M}'’-]*/gu;
+  const mine = (String(text).match(tokRe) || []).filter(w=>w.length >= 3);
+  const pool = new Set();
+  [...L.phrases, L.title || ""].forEach(p=>(String(p).match(tokRe) || []).forEach(w=>pool.add(w)));
+  const scored = new Map();
+  mine.forEach(w=>{
+    const a = plain(w);
+    pool.forEach(t=>{
+      const b = plain(t);
+      let cp = 0; while(cp < a.length && cp < b.length && a[cp] === b[cp]) cp++;
+      const need = Math.max(3, Math.ceil(0.6 * Math.min(a.length, b.length)));
+      if(cp < need) return;
+      const sc = (a === b ? 100 : 0) + cp - Math.abs(a.length - b.length) * 0.1 + w.length * 0.01;
+      if(!scored.has(t) || scored.get(t) < sc) scored.set(t, sc);
+    });
+  });
+  return [...scored.entries()].sort((x, y)=>y[1] - x[1]).slice(0, 3).map(x=>x[0]);
+}
 function toggleStudy(lang, lesson, text){
   const i = db.study.findIndex(x=>x.lang===lang && x.lesson===lesson && x.text===text);
   if(i >= 0) db.study.splice(i, 1);
@@ -4936,6 +5124,8 @@ function studyRoman(roman, sen, hide){
     return esc(c[1]) + (hide ? '<span class="study-gap">＿＿＿</span>' : '<mark>' + esc(c[2]) + '</mark>') + esc(c[3]);
   }).join("").replace(/(<span class="study-gap">＿＿＿<\/span>)\s+<span class="study-gap">＿＿＿<\/span>/g, "$1");   // 2語にまたがる語も、本文と同じく1つの＿＿＿に
 }
+let studyEarKey = null;   // 耳から先に: 文字を見たカード
+function studyEarMode(){ try{ return localStorage.getItem(KEY + ".studyEar") === "1"; }catch(e){ return false; } }
 function renderStudy(){
   updateStudyTab();
   const box = $("studyList");
@@ -4959,6 +5149,12 @@ function renderStudy(){
   head.className = "small-note";
   head.style.cssText = "margin:2px 4px 12px";
   head.textContent = "今日の残り " + studyQueue.length + " 語 / 覚えたい単語 " + db.study.length + " 語";
+  // 耳から先に(2026-11-06、Mayの依頼)。文字を隠して文を鳴らし、聞いてから文字を見る
+  const earBtn = document.createElement("button");
+  earBtn.className = "study-ear-toggle" + (studyEarMode() ? " on" : "");
+  earBtn.textContent = "耳から先に: " + (studyEarMode() ? "オン" : "オフ");
+  earBtn.onclick = ()=>{ lsSet(KEY + ".studyEar", studyEarMode() ? "" : "1"); studyEarKey = null; renderStudy(); };
+  head.appendChild(earBtn);
   box.appendChild(head);
   if(!studyQueue.length){
     const rest = db.study.slice().sort((a,b)=>a.due.localeCompare(b.due));
@@ -4978,6 +5174,22 @@ function renderStudy(){
   let html = '<div class="meta">' + esc(lang) + ' · L' + lesson + (sen && sen.title ? ' · 題' : '') + '</div>';
   // この文の声の位置。題は記録の title、本文は行の位置
   const hasVoice = !!sen && !!(sen.title ? titleSpan(lang, lesson) : (spansOf(lang, lesson) || [])[sen.i]);
+  // 耳から先に: 文字を出す前に、まず聞く。音の無いカードはいつもどおり
+  const cardKey = studyQueue[0];
+  if(studyEarMode() && hasVoice && studyShown === 0 && studyEarKey !== cardKey){
+    card.innerHTML = html + '<div class="study-ear">文を聞いて、覚えたい語を思い出してください。</div>'
+      + '<div class="study-acts"><button class="btn soft st-play">▶ もう一度聞く</button>'
+      + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(lang)) + '</button>'
+      + '<button class="btn st-see">文字を見る</button></div>';
+    box.appendChild(card);
+    const play = ()=>playSpan(lang, lesson, sen.i, null);
+    card.querySelector(".st-play").onclick = play;
+    const sb = card.querySelector(".st-spd");
+    bindSpeedBtn(sb, d=>{ sb.textContent = speedLabel(speedStep(d, lang)); });
+    card.querySelector(".st-see").onclick = ()=>{ studyEarKey = cardKey; renderStudy(); };
+    play();
+    return;
+  }
   if(sen){
     const a = sen.text.slice(0, sen.start), w = sen.text.slice(sen.start, sen.end), b = sen.text.slice(sen.end);
     html += '<div class="study-sen" dir="auto">' + esc(a)
@@ -5033,7 +5245,7 @@ function renderStudy(){
       if(g === "again") rec.lapses = (rec.lapses||0) + 1;
       const k = studyQueue.shift();
       if(g === "again") studyQueue.push(k);      // その場でもう一度
-      studyShown = 0;
+      studyShown = 0; studyEarKey = null;        // もう一度のときも、耳から先に
       save();
       renderStudy();
     };
