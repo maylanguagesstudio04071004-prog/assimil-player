@@ -712,7 +712,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-06c";
+const BUILD = "2026-11-06d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2618,6 +2618,16 @@ function lessonCards(L, withLangTitle){
        それまでは 語を押す→小窓→☆覚えたい→閉じる の4動作を1語ずつ繰り返すしかなかった。
        画面は描き直さず(スクロールが飛ぶ)、印と文字だけ書き換える。戻すならこのブロックごと消す */
     const notYet = L.words.filter(w=>!studyRec(L.lang, L.lesson, w));
+    /* 全部入っている課では、2026-11-06cは**何も出さなかった**。
+       そのせいで「ボタンはどこ?」になった(2026-11-06にMayが報告。ヒンディー語の課で6語とも入っていた)。
+       入っていても同じ場所に同じ形で出し、押せないようにして理由を書く。 */
+    if(!notYet.length){
+      const done = document.createElement("button");
+      done.className = "bulk-roman";
+      done.disabled = true;
+      done.textContent = "この課の単語はすべて覚えたいに入っています(" + L.words.length + "語)";
+      c.appendChild(done);
+    }
     if(notYet.length){
       const ab = document.createElement("button");
       ab.className = "bulk-roman";
@@ -2634,7 +2644,7 @@ function lessonCards(L, withLangTitle){
         updateStudyTab();
         wc.querySelectorAll("button").forEach(b=>b.classList.add("learn"));
         ab.disabled = true;
-        ab.textContent = "覚えたいに入れました(" + add + "語)";
+        ab.textContent = "覚えたいに入れました(" + add + "語)";   // 次に開いたときは「すべて入っています」になる
       };
       c.appendChild(ab);
     }
