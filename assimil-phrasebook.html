@@ -194,6 +194,18 @@ input,textarea,select{font-family:inherit}
 .study-acts .st-spd{flex:0 0 auto; min-width:64px; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
 .study-grade .btn{min-height:46px}
 .st-drop{display:block; margin:16px auto 0; background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline}
+/* 思い出すの頭と一覧(2026-11-06) */
+.study-head{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:2px 4px 12px; font-size:12px; color:var(--sub); line-height:1.8}
+.study-head select{font-size:12px; padding:3px 6px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub)}
+.study-list{margin-top:2px}
+.study-row{display:flex; gap:10px; align-items:flex-start; background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:11px 13px; margin-bottom:8px}
+.study-row .sr-body{flex:1; min-width:0}
+.study-row .sr-w{font-size:16px; line-height:1.5; overflow-wrap:anywhere; unicode-bidi:plaintext}
+.study-row .sr-ja{font-size:13px; color:var(--sub); line-height:1.5}
+.study-row .sr-meta{font-size:11px; color:var(--sub); margin-top:3px; line-height:1.6}
+.study-row .sr-miss{color:var(--accent); font-weight:600}
+.study-row .sr-x{flex:0 0 auto; background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline; padding:3px 0}
 .tr-learn.on{background:var(--accent); color:#fff}
 .words button .wroman{font-size:11px; color:var(--sub); font-weight:400; font-style:italic; line-height:1.3}
 .words button.faved{border-color:var(--star)}
@@ -700,7 +712,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-06b";
+const BUILD = "2026-11-06c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2602,6 +2614,30 @@ function lessonCards(L, withLangTitle){
     wc.className = "words";
     L.words.forEach(w=>wc.appendChild(wordChip(L.lang, L.lesson, w)));
     c.appendChild(wc);
+    /* この課の単語をまとめて「覚えたい」に入れる(2026-11-06、Mayの依頼)。
+       それまでは 語を押す→小窓→☆覚えたい→閉じる の4動作を1語ずつ繰り返すしかなかった。
+       画面は描き直さず(スクロールが飛ぶ)、印と文字だけ書き換える。戻すならこのブロックごと消す */
+    const notYet = L.words.filter(w=>!studyRec(L.lang, L.lesson, w));
+    if(notYet.length){
+      const ab = document.createElement("button");
+      ab.className = "bulk-roman";
+      ab.textContent = "この課の単語をまとめて覚えたいに入れる(" + notYet.length + "語)";
+      ab.onclick = ()=>{
+        let add = 0;
+        notYet.forEach(w=>{
+          if(studyRec(L.lang, L.lesson, w)) return;
+          db.study.push({lang:L.lang, lesson:L.lesson, text:w, due:studyToday(),
+            interval:0, reps:0, lapses:0, added:Date.now(), last:0});
+          add++;
+        });
+        save();
+        updateStudyTab();
+        wc.querySelectorAll("button").forEach(b=>b.classList.add("learn"));
+        ab.disabled = true;
+        ab.textContent = "覚えたいに入れました(" + add + "語)";
+      };
+      c.appendChild(ab);
+    }
     const hint = document.createElement("div");
     hint.className = "hint";
     hint.textContent = "単語はタップでお気に入り、長押しで訳の編集";
@@ -5103,7 +5139,8 @@ function studySentence(x){
 }
 function updateStudyTab(){
   const el = $("tabStudyN"); if(!el) return;
-  const n = studyDue().length; el.textContent = n ? String(n) : "";
+  const n = studyPick().list.length;   // 上限を掛けたあとの数(2026-11-06)。出る数と札の数を合わせる
+  el.textContent = n ? String(n) : "";
 }
 // 文の読みを、隠した語の分だけ伏せて(hide)、または印を付けて返す(2026-10-24、Mayの依頼)。
 // 本文と読みの空白区切りの数がそろうときだけ語の位置が分かる。そろわない(中・泰・亜の一部)ときは null
@@ -5124,6 +5161,69 @@ function studyRoman(roman, sen, hide){
     return esc(c[1]) + (hide ? '<span class="study-gap">＿＿＿</span>' : '<mark>' + esc(c[2]) + '</mark>') + esc(c[3]);
   }).join("").replace(/(<span class="study-gap">＿＿＿<\/span>)\s+<span class="study-gap">＿＿＿<\/span>/g, "$1");   // 2語にまたがる語も、本文と同じく1つの＿＿＿に
 }
+/* 1日に新しく出す語の上限(2026-11-06、Mayの依頼)。まとめて入れた語が一度に全部来ると続かない。
+   **まだ一度も答えていない語だけ**を上限までにする。復習(一度でも答えた語)は上限の外 ──
+   こちらを先に延ばすと間隔が崩れるので、来たぶんは必ず全部出す。0 = 制限なし。
+   端末ごとの好みなので localStorage(耳から先に と同じ置き場)。戻すなら STUDY_NEW_DEFAULT を 0 にする */
+const STUDY_NEW_STEPS = [5, 10, 20, 30, 50, 0];
+const STUDY_NEW_DEFAULT = 20;
+function studyNewCap(){
+  try{ const v = localStorage.getItem(KEY + ".studyNew");
+    return (v === null || v === "") ? STUDY_NEW_DEFAULT : (Number(v) || 0); }catch(e){ return STUDY_NEW_DEFAULT; }
+}
+function studyIsNew(x){ return !(x.reps > 0); }
+/* 上限は「1回の机に向かう時間」ではなく「その日」に掛ける(2026-11-06)。
+   出し渋った語は期限が今日のままなので、数えておかないとタブを開き直すたびに
+   新しい語がもう20語出てしまう。実際に一度答えた語だけを、その日の数として足す */
+function studyNewUsed(){
+  try{ const v = String(localStorage.getItem(KEY + ".studyNewDay") || "").split("|");
+    return v[0] === studyToday() ? (Number(v[1]) || 0) : 0; }catch(e){ return 0; }
+}
+function studyNewUsedAdd(){ lsSet(KEY + ".studyNewDay", studyToday() + "|" + (studyNewUsed() + 1)); }
+/* 今日出すぶんを選ぶ。復習は「出なかった回数」の多い順(2026-11-06、Mayの依頼)。
+   lapses は2026-10-16から数えるだけで、どこからも読まれていなかった。 */
+function studyPick(){
+  const due = studyDue();
+  const rev = due.filter(x=>!studyIsNew(x)).sort((a,b)=>
+    (b.lapses||0)-(a.lapses||0) || a.due.localeCompare(b.due) || (a.added||0)-(b.added||0));
+  const fresh = due.filter(studyIsNew).sort((a,b)=>(a.added||0)-(b.added||0));
+  const cap = studyNewCap();
+  const left = cap ? Math.max(0, cap - studyNewUsed()) : 0;
+  const take = cap ? fresh.slice(0, left) : fresh;
+  return {list: rev.concat(take), held: fresh.length - take.length};
+}
+let studyHeld = 0;          // 上限で明日に回した新しい語の数
+let studyView = "card";     // card=練習 / list=一覧(2026-11-06、Mayの依頼)
+/* 覚えたい語の一覧(2026-11-06、Mayの依頼)。カードは1枚ずつしか出ないので、
+   何が入っているか・間違えて入れた語を外すのが、その語の順番が来るまでできなかった。
+   並びは「出なかった回数」の多い順。戻すなら studyView と この関数と 一覧ボタンを消す */
+function renderStudyList(box){
+  const t = studyToday();
+  const rows = db.study.slice().sort((a,b)=>
+    (b.lapses||0)-(a.lapses||0) || a.due.localeCompare(b.due) || (a.added||0)-(b.added||0));
+  const wrap = document.createElement("div");
+  wrap.className = "study-list";
+  rows.forEach(x=>{
+    const wn = getNote(x.lang, x.lesson, x.text, "word") || {};
+    const row = document.createElement("div");
+    row.className = "study-row";
+    row.innerHTML = '<div class="sr-body"><div class="sr-w" dir="auto">' + esc(x.text)
+      + (wn.roman ? ' <span class="study-roman">' + esc(wn.roman) + '</span>' : '') + '</div>'
+      + (wn.ja ? '<div class="sr-ja">' + esc(wn.ja) + '</div>' : '')
+      + '<div class="sr-meta">' + esc(x.lang) + ' · L' + x.lesson
+      + ' · ' + (x.due <= t ? "今日" : "次は " + esc(x.due.slice(5).replace("-", "/")))
+      + ((x.lapses||0) ? ' · <span class="sr-miss">出なかった ' + x.lapses + ' 回</span>' : '')
+      + ((x.reps||0) ? ' · 練習 ' + x.reps + ' 回' : ' · まだ')
+      + '</div></div><button class="sr-x">外す</button>';
+    row.querySelector(".sr-x").onclick = ()=>{
+      if(!confirm("「" + x.text + "」を覚えたいから外しますか?(練習の記録も消えます)")) return;
+      toggleStudy(x.lang, x.lesson, x.text);
+      studyQueue = null; studyShown = 0; renderStudy();
+    };
+    wrap.appendChild(row);
+  });
+  box.appendChild(wrap);
+}
 let studyEarKey = null;   // 耳から先に: 文字を見たカード
 function studyEarMode(){ try{ return localStorage.getItem(KEY + ".studyEar") === "1"; }catch(e){ return false; } }
 function renderStudy(){
@@ -5135,8 +5235,9 @@ function renderStudy(){
     return;
   }
   if(!studyQueue){
-    studyQueue = studyDue().sort((a,b)=>a.due.localeCompare(b.due) || (a.added||0)-(b.added||0))
-      .map(x=>x.lang + "|" + x.lesson + "|" + x.text);
+    const pick = studyPick();            // 上限と並び(2026-11-06)
+    studyHeld = pick.held;
+    studyQueue = pick.list.map(x=>x.lang + "|" + x.lesson + "|" + x.text);
     studyShown = 0;
   }
   // 外された語は飛ばす
@@ -5146,22 +5247,52 @@ function renderStudy(){
     studyQueue.shift();
   }
   const head = document.createElement("div");
-  head.className = "small-note";
-  head.style.cssText = "margin:2px 4px 12px";
-  head.textContent = "今日の残り " + studyQueue.length + " 語 / 覚えたい単語 " + db.study.length + " 語";
+  head.className = "study-head";
+  const miss = db.study.filter(x=>(x.lapses||0) >= 2).length;
+  head.appendChild(document.createTextNode(
+    "今日の残り " + studyQueue.length + " 語 / 覚えたい単語 " + db.study.length + " 語"
+    + (miss ? " / よく出なかった語 " + miss + " 語" : "")));
   // 耳から先に(2026-11-06、Mayの依頼)。文字を隠して文を鳴らし、聞いてから文字を見る
   const earBtn = document.createElement("button");
   earBtn.className = "study-ear-toggle" + (studyEarMode() ? " on" : "");
   earBtn.textContent = "耳から先に: " + (studyEarMode() ? "オン" : "オフ");
   earBtn.onclick = ()=>{ lsSet(KEY + ".studyEar", studyEarMode() ? "" : "1"); studyEarKey = null; renderStudy(); };
   head.appendChild(earBtn);
+  // 一覧(2026-11-06、Mayの依頼)
+  const listBtn = document.createElement("button");
+  listBtn.className = "study-ear-toggle" + (studyView === "list" ? " on" : "");
+  listBtn.textContent = studyView === "list" ? "練習に戻る" : "一覧";
+  listBtn.onclick = ()=>{ studyView = (studyView === "list" ? "card" : "list"); renderStudy(); };
+  head.appendChild(listBtn);
+  // 1日に出す新しい語の数(2026-11-06)
+  const capLab = document.createElement("label");
+  capLab.style.cssText = "margin-left:4px";
+  capLab.appendChild(document.createTextNode("新しい語/日 "));
+  const capSel = document.createElement("select");
+  STUDY_NEW_STEPS.forEach(n=>{
+    const o = document.createElement("option");
+    o.value = String(n); o.textContent = n ? n + "語" : "制限なし";
+    if(n === studyNewCap()) o.selected = true;
+    capSel.appendChild(o);
+  });
+  capSel.onchange = ()=>{
+    lsSet(KEY + ".studyNew", capSel.value);
+    studyQueue = null; studyShown = 0; studyEarKey = null; renderStudy();
+  };
+  capLab.appendChild(capSel);
+  head.appendChild(capLab);
   box.appendChild(head);
+  if(studyView === "list"){ renderStudyList(box); return; }
   if(!studyQueue.length){
-    const rest = db.study.slice().sort((a,b)=>a.due.localeCompare(b.due));
-    const nx = rest[0];
-    const nDay = nx ? rest.filter(x=>x.due===nx.due).length : 0;
+    const t = studyToday();
+    const later = db.study.filter(x=>x.due > t).sort((a,b)=>a.due.localeCompare(b.due));
+    const nx = later[0];
+    const nDay = nx ? later.filter(x=>x.due===nx.due).length : 0;
     box.insertAdjacentHTML("beforeend", '<div class="empty-msg">今日の分は終わりました。'
-      + (nx ? '<br>次は ' + nx.due.slice(5).replace("-", "/") + ' に ' + nDay + ' 語です。' : '') + '</div>');
+      + (studyHeld ? '<br>新しい語はあと ' + studyHeld + ' 語ありますが、1日 ' + studyNewCap()
+          + ' 語までにしてあるので明日に回しました(今日はもう ' + studyNewUsed()
+          + ' 語)。<br>もっとやるなら上の「新しい語/日」を変えてください。' : '')
+      + (nx ? '<br>次は ' + esc(nx.due.slice(5).replace("-", "/")) + ' に ' + nDay + ' 語です。' : '') + '</div>');
     return;
   }
   const [lang, nStr, ...tp] = studyQueue[0].split("|");
@@ -5239,6 +5370,7 @@ function renderStudy(){
   card.querySelectorAll(".st-g").forEach(b=>{
     b.onclick = ()=>{
       const g = b.dataset.g;
+      if(studyIsNew(rec)) studyNewUsedAdd();   // 今日はじめて答えた新しい語を数える(2026-11-06)
       rec.interval = studyNext(rec.interval || 0, g);
       rec.due = rec.interval ? studyAddDays(rec.interval) : studyToday();
       rec.reps = (rec.reps||0) + 1; rec.last = Date.now();
