@@ -721,7 +721,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-06e";
+const BUILD = "2026-11-07a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2536,7 +2536,24 @@ function pickTable(lang){
   });
   return m;
 }
+const PICK_OPEN = "本文から単語を拾う";
+/* 開いたら閉じられるようにする(2026-11-07、Mayの依頼「一度開くと開きっぱなしになる」)。
+   2026-11-06e はボタンを remove() していたので、入れずにやめる道が無かった
+   （課を移るまで一覧が出たまま）。開閉は同じボタンで行い、長い一覧の下にも「閉じる」を置く。
+   拾い直しは要らないので、一度作った一覧は残して付け外しするだけにする */
 function pickFromText(L, host, btn){
+  if(btn._box){                       // 開いている → 閉じる
+    btn._box.remove();
+    btn._box = null;
+    btn.textContent = PICK_OPEN;
+    return;
+  }
+  if(btn._made){                      // 一度作ってある → そのまま戻す(探し直さない)
+    host.appendChild(btn._made);
+    btn._box = btn._made;
+    btn.textContent = "閉じる";
+    return;
+  }
   btn.disabled = true;
   btn.textContent = "本文から探しています…";
   // 文字を出してから探す(辞書引きで一瞬止まる課がある)
@@ -2554,9 +2571,12 @@ function pickFromText(L, host, btn){
         if(hit) rows.push({w: pickTrim(raw) || raw, ja: hit.ja, roman: hit.roman, src: hit.src});
       });
     });
-    btn.remove();
     const box = document.createElement("div");
     host.appendChild(box);
+    btn.disabled = false;
+    btn._made = box;
+    btn._box = box;
+    btn.textContent = "閉じる";
     if(!rows.length){
       box.innerHTML = '<div class="hint">本文の語で、辞書にも単語にも無いものばかりでした。拾えるものがありません。</div>';
       return;
@@ -2595,6 +2615,12 @@ function pickFromText(L, host, btn){
     const act = document.createElement("button");
     act.className = "bulk-roman";
     box.appendChild(act);
+    // 一覧が長いので下にも閉じる口を置く(2026-11-07)
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "st-drop";
+    closeBtn.textContent = "閉じる";
+    closeBtn.onclick = ()=>{ pickFromText(L, host, btn); btn.scrollIntoView({block:"center"}); };
+    box.appendChild(closeBtn);
     const paint = ()=>{
       const n = boxes.filter(x=>x.cb.checked).length;
       cnt.textContent = "本文から " + rows.length + " 語見つかりました。入れる語を選んでください。";
