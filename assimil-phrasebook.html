@@ -726,7 +726,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-09a";
+const BUILD = "2026-11-09b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2777,6 +2777,35 @@ function markPrismChip(b){
   m.textContent = "🔺";
   m.title = "Prismの本にもある";
   t.appendChild(m);
+}
+/* 「思い出す」のカードにも🔺(2026-11-09、Mayの依頼)。上の行(言語・課)に印だけ出し、
+   どの本のどの意味かとPrismへの入口は、答えを見たあとに出す(先に出すと意味が答えのヒントになる)。
+   索引の読み込みが後から終わっても、カードを描き直さずに足す(描き直すと「耳から先に」の音がもう一度鳴る) */
+function prismStudyDecor(card, lang, word, detail){
+  const paint = ()=>{
+    if(!card.isConnected) return;
+    const hits = prismHits(lang, word);
+    if(!hits.length) return;
+    const meta = card.querySelector(".meta");
+    if(meta && !meta.querySelector(".wprism")) meta.insertAdjacentHTML("beforeend", ' · <span class="wprism" style="font-size:11px;margin:0">🔺</span>Prism');
+    if(!detail || card.querySelector(".tr-prism")) return;
+    const pl = document.createElement("div");
+    pl.className = "tr-prism";
+    pl.style.margin = "8px 0 4px";
+    pl.innerHTML = "🔺 Prismの本では<br>" + hits.slice(0, 4).map(h=>"・" + esc(h.ja || "(訳なし)") + " — " + esc(h.src)).join("<br>")
+      + (hits.length > 4 ? "<br>ほか" + (hits.length - 4) + "件" : "");
+    const th = hits.map(h=>(h.themes || [])[0]).find(Boolean);
+    if(th){
+      const a = document.createElement("a");
+      a.href = "./prism.html#theme=" + encodeURIComponent(th);
+      a.textContent = "Prism の「" + th + "」を開く";
+      pl.appendChild(document.createElement("br"));
+      pl.appendChild(a);
+    }
+    const acts = card.querySelector(".study-acts");
+    if(acts) acts.before(pl); else card.appendChild(pl);
+  };
+  if(prismIdx) paint(); else prismIndex().then(paint);
 }
 function wordChip(lang, lesson, w){
   const b = document.createElement("button");
@@ -5651,6 +5680,7 @@ function renderStudy(){
     const sb = card.querySelector(".st-spd");
     bindSpeedBtn(sb, d=>{ sb.textContent = speedLabel(speedStep(d, lang)); });
     card.querySelector(".st-see").onclick = ()=>{ studyEarKey = cardKey; renderStudy(); };
+    prismStudyDecor(card, lang, word, false);
     play();
     return;
   }
@@ -5693,6 +5723,7 @@ function renderStudy(){
   html += '</div><button class="st-drop">覚えたいから外す</button>';
   card.innerHTML = html;
   box.appendChild(card);
+  prismStudyDecor(card, lang, word, studyShown >= 2);
   const play = ()=>{ if(hasVoice) playSpan(lang, lesson, sen.i, null); };
   const q = c=>card.querySelector(c);
   if(q(".st-mean")) q(".st-mean").onclick = ()=>{ studyShown = 1; renderStudy(); };
