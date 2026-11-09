@@ -726,7 +726,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-09b";
+const BUILD = "2026-11-10a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -864,6 +864,25 @@ async function atlasRead(){
     }catch(e){ res(null); }
   });
 }
+/* 起動時用。「まだ何も入っていない」と「読めなかった」を分けて返す(2026-11-10)。
+   {state:"ok", text} / {state:"empty"} / {state:"fail", why}
+   開くのが遅いだけのこともあるので、3秒×4回まで待つ */
+async function atlasReadBoot(){
+  let h = await openAtlasDB();
+  for(let i = 0; !h && i < 3; i++){ adbFailed = false; h = await openAtlasDB(); }
+  if(!h) return {state: "fail", why: "保存先(IndexedDB)を開けませんでした。"};
+  return new Promise(res=>{
+    try{
+      const q = h.transaction(ADB_STORE, "readonly").objectStore(ADB_STORE).get(ADB_KEY);
+      q.onsuccess = ()=>{
+        const v = q.result;
+        if(v === undefined || v === null || v === "") return res({state: "empty"});
+        res({state: "ok", text: v});
+      };
+      q.onerror = ()=>res({state: "fail", why: "保存してあるデータを読み出せませんでした。"});
+    }catch(e){ res({state: "fail", why: "保存してあるデータを読み出せませんでした。"}); }
+  });
+}
 function atlasWrite(text){
   return openAtlasDB().then(h=>{
     if(!h) return false;
@@ -894,7 +913,32 @@ function warnBar(msg){
   }
   el.textContent = msg;
 }
+/* 起動時に本体(IndexedDB)を読めなかったら、この画面からは何も書かない(2026-11-10)。
+   それまでは「読めなかった=手元のほうが新しい」と扱って save() していた。手元(localStorage の控え)は
+   約5MBを超えた2026-08から更新されていないので、次のどちらでも本物が古い中身で上書きされ得た:
+   - 読み出しだけが失敗した(開けたが get がエラー、JSON が壊れていた)
+   - 開くのが3秒より遅れた(いったん「使えない」と決めたあとで接続が届き、次の save() が通ってしまう)
+   起きた記録は無いが、起きると全データに及ぶので塞いだ。
+   戻すなら storeLocked を使っている4か所(ここ・save・bootStorage・pagehide)を外す */
+let storeLocked = false;
+function lockStore(why){
+  storeLocked = true;
+  STORE.mode = "none"; STORE.lastErr = why;
+  let el = document.getElementById("saveWarn");
+  if(el) el.remove();
+  el = document.createElement("div");
+  el.id = "saveWarn";
+  el.style.cssText = "position:fixed; left:8px; right:8px; bottom:8px; z-index:99;"
+    + "background:var(--danger); color:#fff; padding:12px 14px; border-radius:12px;"
+    + "font-size:13px; line-height:1.6; box-shadow:0 6px 20px rgba(0,0,0,.25)";
+  el.textContent = why + " 保存してあるデータを守るため、この画面での変更は保存しません"
+    + "(いま見えているのは古い控えか、空の画面です)。ここを押すと開き直します。"
+    + "何度開き直しても同じなら、取り込みや書き出しはせずに、そのまま知らせてください。";
+  el.onclick = ()=>location.reload();
+  document.body.appendChild(el);
+}
 function save(){
+  if(storeLocked) return;    // 本体を読めていないあいだは書かない
   db.savedAt = Date.now();   // どちらの保存先が新しいかの判定に使う
   const text = JSON.stringify(db);
   STORE.bytes = text.length * 2;
@@ -930,6 +974,7 @@ function stamp(t){
     + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
 }
 function makeUndo(){
+  if(storeLocked) return;   // 読めていない画面の中身で、本物の控えを上書きしない
   const rec = {at: Date.now(), lessons: db.lessons.length, grammar: db.grammar.length,
                text: JSON.stringify(db)};
   undoInfo = rec;
@@ -989,7 +1034,13 @@ async function bootStorage(){
   // 控えはリロードしても残る。起動時に拾ってボタンを出す(2026-08-15)
   readUndo().then(r=>{ if(r){ undoInfo = r; refreshUndoBtn(); } });
   let raw = null;
-  try{ const t = await atlasRead(); if(t) raw = JSON.parse(t); }catch(e){}
+  const got = await atlasReadBoot();
+  if(got.state === "fail"){ lockStore(got.why); return; }
+  if(got.state === "ok"){
+    try{ raw = typeof got.text === "string" ? JSON.parse(got.text) : got.text; }catch(e){ raw = null; }
+    // 中身があるのに読めない(壊れている)ときも、上書きしないで止める
+    if(!raw || !Array.isArray(raw.lessons)){ lockStore("保存してあるデータの中身を読めませんでした。"); return; }
+  }
   const here = Number(db.savedAt) || 0;
   const there = raw ? (Number(raw.savedAt) || 0) : -1;
   if(raw && there >= here){
@@ -5424,6 +5475,22 @@ function studyRec(lang, lesson, text){ return (db.study||[]).find(x=>x.lang===la
 function studyToday(d){ const t = d || new Date();
   return t.getFullYear() + "-" + String(t.getMonth()+1).padStart(2,"0") + "-" + String(t.getDate()).padStart(2,"0"); }
 function studyAddDays(n){ const t = new Date(); t.setDate(t.getDate() + n); return studyToday(t); }
+/* 次に出す日。間隔が7日以上なら、前後1日(14日以上は前後2日)のうち、いちばん語数の少ない日に寄せる(2026-11-10)。
+   同じ日に答えた語は同じ日に戻ってくるので、日ごとの量に山ができていた(2026-11-08の書き出しで 96語の日と4語の日)。
+   間隔そのもの(rec.interval)は変えない ─ 次の間隔は寄せる前の数から決まる。
+   同じ語数なら、もとの日 → 近い日 → 後ろの日の順。戻すなら呼び出し側を studyAddDays(rec.interval) に戻す */
+function studySpreadDue(iv, rec){
+  if(iv < 7) return studyAddDays(iv);
+  const w = iv >= 14 ? 2 : 1;
+  const cnt = {};
+  (db.study || []).forEach(x=>{ if(x !== rec) cnt[x.due] = (cnt[x.due] || 0) + 1; });
+  let best = null;
+  [0, -1, 1, -2, 2].filter(d=>Math.abs(d) <= w).forEach(d=>{
+    const day = studyAddDays(iv + d), n = cnt[day] || 0;
+    if(!best || n < best.n) best = {day, n};   // 並びが優先順なので、同数なら先のものが残る
+  });
+  return best.day;
+}
 function studyDue(){ const t = studyToday(); return (db.study||[]).filter(x=>x.due <= t); }
 // 覚えたい語の、本文・題での近い形(2026-11-06)。語の頭が長く同じ語を、似ている順に3つまで。
 // アクセントは外して比べる(préférer と préfère)。空白で語を区切らない言語(中・泰)は出さない
@@ -5736,7 +5803,7 @@ function renderStudy(){
       const g = b.dataset.g;
       if(studyIsNew(rec)) studyNewUsedAdd();   // 今日はじめて答えた新しい語を数える(2026-11-06)
       rec.interval = studyNext(rec.interval || 0, g);
-      rec.due = rec.interval ? studyAddDays(rec.interval) : studyToday();
+      rec.due = rec.interval ? studySpreadDue(rec.interval, rec) : studyToday();
       rec.reps = (rec.reps||0) + 1; rec.last = Date.now();
       if(g === "again") rec.lapses = (rec.lapses||0) + 1;
       const k = studyQueue.shift();
@@ -6694,7 +6761,7 @@ function openFromHash(){
 window.addEventListener("hashchange", openFromHash);
 bootStorage().then(openFromHash, openFromHash);
 // 閉じる直前にもう一度書いておく(入力直後にアプリを閉じた場合の取りこぼし防止)
-window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
+window.addEventListener("pagehide", ()=>{ if(storeLocked) return; try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
 </script>
 </body>
 </html>
