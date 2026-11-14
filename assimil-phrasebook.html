@@ -478,8 +478,11 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <input id="q" type="search" placeholder="全言語・全レッスンから検索(原文・日本語訳、部分一致)">
   <div class="filterbar">
     <button id="fAll" class="on">すべて</button>
-    <button id="fPhrase">フレーズ</button>
-    <button id="fWord">単語</button>
+    <!-- 「フレーズ」「単語」の絞り込みは隠した(2026-11-15、Mayの依頼「使っていないので無くてもいい」)。
+         「すべて」で両方出る。失うのは、300件で打ち切られる語を単語だけに絞って見ること。
+         ボタンと処理は残してある。戻すなら下の2つの style="display:none" を外す -->
+    <button id="fPhrase" style="display:none">フレーズ</button>
+    <button id="fWord" style="display:none">単語</button>
     <button id="fTag">#タグ</button>
   </div>
   <div id="rcount"></div>
@@ -734,7 +737,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-15b";
+const BUILD = "2026-11-15c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
