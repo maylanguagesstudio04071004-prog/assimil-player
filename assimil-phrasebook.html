@@ -185,6 +185,14 @@ input,textarea,select{font-family:inherit}
   border:1px solid var(--border); border-radius:8px; padding:3px 9px}
 /* 思い出す(2026-10-16) */
 .study-card{padding:18px 16px}
+/* 今日のタグ(2026-11-15) */
+.tagday{padding:14px 16px; margin-bottom:12px}
+.tagday .td-lab{font-size:12px; color:var(--sub)}
+.tagday .td-tag{font-size:20px; font-weight:700; margin:2px 0 2px}
+.tagday .td-sub{font-size:12px; color:var(--sub); line-height:1.6}
+.tagday .td-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.tagday .td-acts .btn{padding:10px 14px; font-size:14px}
+.tagday.done .td-tag{color:var(--sub)}
 .study-sen{font-size:21px; line-height:1.7; margin:10px 0 6px; unicode-bidi:plaintext}
 .study-sen mark{background:var(--accent-soft); color:var(--text); border-radius:4px; padding:0 2px}
 .study-gap{color:var(--accent); letter-spacing:.05em; white-space:nowrap}
@@ -737,7 +745,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-15c";
+const BUILD = "2026-11-15d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -800,6 +808,10 @@ function load(raw){
   /* 覚えたい単語と、思い出す練習の記録(2026-10-16)。{lang, lesson, text, due:"YYYY-MM-DD", interval:日数, reps, lapses, added, last}。
      text は単語登録(課の下の単語)の語そのもの。無くても従来どおり動く。 */
   if(!Array.isArray(d.study)) d.study = [];
+  /* 今日のタグ(2026-11-15)。{date:"YYYY-MM-DD", tag, seen:{タグ:見た日}, last:{タグ:最後に出した日}} */
+  if(!d.tagDay || typeof d.tagDay !== "object" || Array.isArray(d.tagDay)) d.tagDay = {};
+  if(!d.tagDay.seen || typeof d.tagDay.seen !== "object") d.tagDay.seen = {};
+  if(!d.tagDay.last || typeof d.tagDay.last !== "object") d.tagDay.last = {};
   d.study.forEach(x=>{ x.lang = toNative(x.lang); });
   // 語根索引。rootsを持たない従来データも空配列で問題なく読める
   if(!Array.isArray(d.roots)) d.roots = [];
@@ -3381,6 +3393,16 @@ function openTagPage(tag){
   panel.innerHTML = '<div class="map-head"><b>#' + esc(tag) + '</b>'
     + '<span style="font-size:12px; color:var(--sub); flex:none">' + nLang + ' 言語 / ' + Ls.length + ' 課</span>'
     + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
+  // 今日のタグなら、このページからも「見た」を付けられる(2026-11-15)
+  if(db.tagDay.tag === tag && db.tagDay.seen[tag] !== studyToday()){
+    const sb = document.createElement("button");
+    sb.className = "btn soft";
+    sb.style.cssText = "display:block; margin:0 0 12px; padding:9px 14px; font-size:14px";
+    sb.textContent = "✓ 今日のタグを見た";
+    sb.onclick = ()=>{ tagDayMarkSeen(tag); sb.textContent = "✓ 見ました"; sb.disabled = true;
+      if($("pageStudy").style.display !== "none") renderStudy(); };
+    panel.appendChild(sb);
+  }
   Ls.forEach(L=>{
     const c = document.createElement("div");
     c.className = "card";
@@ -4094,6 +4116,15 @@ function importData(raw, msgEl){
       if(j < 0){ db.study.push(rec); studyAdded++; }
       else if((rec.last||0) > (db.study[j].last||0)){ if(!rec.form && db.study[j].form) rec.form = db.study[j].form; db.study[j] = rec; studyUpdated++; }
     });
+  }
+  // 今日のタグの記録(2026-11-15)。タグごとに新しい日付のほうを残す。いま出しているタグは、こちらに無いときだけもらう
+  if(data.tagDay && typeof data.tagDay === "object" && !Array.isArray(data.tagDay)){
+    ["seen", "last"].forEach(k=>{
+      const src = data.tagDay[k];
+      if(!src || typeof src !== "object") return;
+      Object.keys(src).forEach(t=>{ const v = String(src[t]); if(v > (db.tagDay[k][t] || "")) db.tagDay[k][t] = v; });
+    });
+    if(!db.tagDay.tag && data.tagDay.tag){ db.tagDay.tag = String(data.tagDay.tag); db.tagDay.date = String(data.tagDay.date || ""); }
   }
   // 行ごとの音声の位置。(lang, lesson) で照合して丸ごと差し替える(2026-09-21)
   let timesAdded = 0, timesUpdated = 0, timesDeleted = 0;
@@ -5695,12 +5726,79 @@ function renderStudyList(box){
 }
 let studyEarKey = null;   // 耳から先に: 文字を見たカード
 function studyEarMode(){ try{ return localStorage.getItem(KEY + ".studyEar") === "1"; }catch(e){ return false; } }
+/* ---------- 今日のタグ ----------
+   2026-11-15、Mayの依頼「単語だけではなく、#タグ単位でも1日1タグ学べるように」。
+   「思い出す」のいちばん上に、その日のタグを1つ出す。押すといつものタグのページ(各言語のレッスンが並ぶ)が開く。
+   - 出すのは2言語以上にまたがるタグだけ(Mayが選んだ。2026-11-15時点で160個のうち50個)。
+   - 順番: 最後に出した日がいちばん古いタグから(まだ出していないタグが先。同じなら言語の多い順)。
+   - 「見た」を押すまでは、日が替わっても同じタグを出す(見ないまま流れていかないように)。
+   - 「別のタグにする」は、いまのタグを後回しにして次を出す。
+   記録は db.tagDay(書き出しに入る)。戻すなら renderStudy の tagDayCard の呼び出しを外す */
+function bridgeTagList(){
+  const m = new Map();
+  db.lessons.forEach(L=>(L.tags||[]).forEach(t=>{
+    let o = m.get(t);
+    if(!o){ o = {tag: t, langs: new Set(), n: 0}; m.set(t, o); }
+    o.langs.add(L.lang); o.n++;
+  }));
+  return [...m.values()].filter(o=>o.langs.size > 1).map(o=>({tag: o.tag, langs: o.langs.size, n: o.n}));
+}
+function tagDayNext(list, except){
+  const st = db.tagDay;
+  return list.filter(x=>x.tag !== except)
+    .sort((a,b)=>(st.last[a.tag]||"").localeCompare(st.last[b.tag]||"") || b.langs - a.langs || b.n - a.n
+      || a.tag.localeCompare(b.tag, "ja"))[0] || null;
+}
+// 今日のタグを決めて返す。日が替わったときだけ保存する
+function tagDayToday(){
+  const st = db.tagDay, list = bridgeTagList(), today = studyToday();
+  if(!list.length) return null;
+  let cur = list.find(x=>x.tag === st.tag) || null;
+  if(!cur){
+    cur = tagDayNext(list, null);                      // 初めて、またはそのタグが無くなった
+    st.tag = cur.tag; st.date = today; save();
+  } else if(st.date !== today){
+    // 割り当てた日以降に「見た」なら次へ。見ていなければ同じタグをもう一度
+    if(st.seen[st.tag] && st.seen[st.tag] >= (st.date || "")){ cur = tagDayNext(list, null); st.tag = cur.tag; }
+    st.date = today; save();
+  }
+  return {cur, total: list.length, seenCount: list.filter(x=>st.seen[x.tag]).length, done: st.seen[cur.tag] === today};
+}
+function tagDayMarkSeen(tag){
+  const today = studyToday();
+  db.tagDay.seen[tag] = today; db.tagDay.last[tag] = today; save();
+}
+function tagDaySkip(){
+  const st = db.tagDay, list = bridgeTagList(), today = studyToday();
+  if(list.length < 2) return;
+  st.last[st.tag] = today;                 // 後回し: いちばん新しい扱いにして列の後ろへ
+  const nx = tagDayNext(list, st.tag);
+  st.tag = nx.tag; st.date = today; save();
+}
+function tagDayCard(box){
+  const t = tagDayToday();
+  if(!t) return;
+  const c = document.createElement("div");
+  c.className = "card tagday" + (t.done ? " done" : "");
+  c.innerHTML = '<div class="td-lab">' + (t.done ? "✓ 今日のタグ(見ました)" : "今日のタグ") + '</div>'
+    + '<div class="td-tag">#' + esc(t.cur.tag) + '</div>'
+    + '<div class="td-sub">' + t.cur.langs + ' 言語 / ' + t.cur.n + ' 課 ・ これまでに見たタグ ' + t.seenCount + ' / ' + t.total + '</div>'
+    + '<div class="td-acts"><button class="btn td-open">開く</button>'
+    + (t.done ? '' : '<button class="btn soft td-seen">✓ 見た</button>')
+    + (t.total > 1 ? '<button class="btn soft td-skip">' + (t.done ? "もう1つ見る" : "別のタグにする") + '</button>' : '')
+    + '</div>';
+  box.appendChild(c);
+  c.querySelector(".td-open").onclick = ()=>openTagPage(t.cur.tag);
+  if(c.querySelector(".td-seen")) c.querySelector(".td-seen").onclick = ()=>{ tagDayMarkSeen(t.cur.tag); renderStudy(); };
+  if(c.querySelector(".td-skip")) c.querySelector(".td-skip").onclick = ()=>{ tagDaySkip(); renderStudy(); };
+}
 function renderStudy(){
   updateStudyTab();
   const box = $("studyList");
   box.innerHTML = "";
+  tagDayCard(box);
   if(!db.study.length){
-    box.innerHTML = '<div class="empty-msg">覚えたい単語はまだありません。<br>レッスンの下の単語を押して、小窓の「☆ 覚えたい」を押すと、ここに出ます。</div>';
+    box.insertAdjacentHTML("beforeend", '<div class="empty-msg">覚えたい単語はまだありません。<br>レッスンの下の単語を押して、小窓の「☆ 覚えたい」を押すと、ここに出ます。</div>');
     return;
   }
   if(!studyQueue){
