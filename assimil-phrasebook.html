@@ -745,7 +745,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-15d";
+const BUILD = "2026-11-15e";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -812,6 +812,7 @@ function load(raw){
   if(!d.tagDay || typeof d.tagDay !== "object" || Array.isArray(d.tagDay)) d.tagDay = {};
   if(!d.tagDay.seen || typeof d.tagDay.seen !== "object") d.tagDay.seen = {};
   if(!d.tagDay.last || typeof d.tagDay.last !== "object") d.tagDay.last = {};
+  if(!Array.isArray(d.tagDay.back)) d.tagDay.back = [];   // 「別のタグにする」で後回しにしたタグ。翌日から順に出す(2026-11-15e)
   d.study.forEach(x=>{ x.lang = toNative(x.lang); });
   // 語根索引。rootsを持たない従来データも空配列で問題なく読める
   if(!Array.isArray(d.roots)) d.roots = [];
@@ -5732,7 +5733,8 @@ function studyEarMode(){ try{ return localStorage.getItem(KEY + ".studyEar") ===
    - 出すのは2言語以上にまたがるタグだけ(Mayが選んだ。2026-11-15時点で160個のうち50個)。
    - 順番: 最後に出した日がいちばん古いタグから(まだ出していないタグが先。同じなら言語の多い順)。
    - 「見た」を押すまでは、日が替わっても同じタグを出す(見ないまま流れていかないように)。
-   - 「別のタグにする」は、いまのタグを後回しにして次を出す。
+   - 「別のタグにする」は、いまのタグを後回しにして次を出す。後回しにしたタグは翌日にまた出る
+     (2026-11-15e、Mayの依頼。最初は列の最後=約1周後に回していた)。何個も後回しにしたら、翌日から1日1つずつ順に出る。
    記録は db.tagDay(書き出しに入る)。戻すなら renderStudy の tagDayCard の呼び出しを外す */
 function bridgeTagList(){
   const m = new Map();
@@ -5744,10 +5746,19 @@ function bridgeTagList(){
   return [...m.values()].filter(o=>o.langs.size > 1).map(o=>({tag: o.tag, langs: o.langs.size, n: o.n}));
 }
 function tagDayNext(list, except){
-  const st = db.tagDay;
-  return list.filter(x=>x.tag !== except)
+  const st = db.tagDay, ex = new Set(except || []);
+  return list.filter(x=>!ex.has(x.tag))
     .sort((a,b)=>(st.last[a.tag]||"").localeCompare(st.last[b.tag]||"") || b.langs - a.langs || b.n - a.n
       || a.tag.localeCompare(b.tag, "ja"))[0] || null;
+}
+// 後回しの列から、まだ有効なタグを1つ取り出す(無ければ null)
+function tagDayFromBack(list){
+  const st = db.tagDay;
+  while(st.back.length){
+    const t = st.back.shift(), x = list.find(y=>y.tag === t);
+    if(x) return x;
+  }
+  return null;
 }
 // 今日のタグを決めて返す。日が替わったときだけ保存する
 function tagDayToday(){
@@ -5755,11 +5766,18 @@ function tagDayToday(){
   if(!list.length) return null;
   let cur = list.find(x=>x.tag === st.tag) || null;
   if(!cur){
-    cur = tagDayNext(list, null);                      // 初めて、またはそのタグが無くなった
+    cur = tagDayFromBack(list) || tagDayNext(list);    // 初めて、またはそのタグが無くなった
     st.tag = cur.tag; st.date = today; save();
   } else if(st.date !== today){
-    // 割り当てた日以降に「見た」なら次へ。見ていなければ同じタグをもう一度
-    if(st.seen[st.tag] && st.seen[st.tag] >= (st.date || "")){ cur = tagDayNext(list, null); st.tag = cur.tag; }
+    const seen = st.seen[st.tag] && st.seen[st.tag] >= (st.date || "");   // 割り当てた日以降に「見た」
+    if(st.back.length){
+      // きのうまでに後回しにしたタグがある → 古い順に出す。見ていない今のタグは列の後ろで待たせる
+      if(!seen && !st.back.includes(st.tag)) st.back.push(st.tag);
+      cur = tagDayFromBack(list) || cur;
+      st.tag = cur.tag;
+    } else if(seen){
+      cur = tagDayNext(list); st.tag = cur.tag;
+    }                                                   // 見ていなければ同じタグをもう一度
     st.date = today; save();
   }
   return {cur, total: list.length, seenCount: list.filter(x=>st.seen[x.tag]).length, done: st.seen[cur.tag] === today};
@@ -5771,8 +5789,10 @@ function tagDayMarkSeen(tag){
 function tagDaySkip(){
   const st = db.tagDay, list = bridgeTagList(), today = studyToday();
   if(list.length < 2) return;
-  st.last[st.tag] = today;                 // 後回し: いちばん新しい扱いにして列の後ろへ
-  const nx = tagDayNext(list, st.tag);
+  // まだ見ていないタグは後回しの列へ(翌日にまた出る)。見たあとの「もう1つ見る」は列に入れない
+  if(st.seen[st.tag] !== today && !st.back.includes(st.tag)) st.back.push(st.tag);
+  const nx = tagDayNext(list, [st.tag, ...st.back]) || tagDayFromBack(list.filter(x=>x.tag !== st.tag));   // 全部後回しにしたら列の頭から
+  if(!nx) return;
   st.tag = nx.tag; st.date = today; save();
 }
 function tagDayCard(box){
