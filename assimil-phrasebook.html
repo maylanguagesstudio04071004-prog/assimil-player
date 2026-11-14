@@ -342,7 +342,7 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
   display:none; align-items:center; max-width:92vw; background:var(--accent); color:#fff; border-radius:999px;
   box-shadow:0 6px 20px rgba(0,0,0,.3)}
 .tag-return button{background:none; color:inherit; font-size:14px; font-weight:600; padding:11px 6px 11px 16px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
 .tag-return button.tg-x{padding:11px 14px 11px 8px; font-weight:400; opacity:.85; flex:none}
 .tr-form{margin-top:8px; font-size:12px; color:var(--sub); line-height:1.7}
 .tr-form button{font-size:12px; margin:4px 6px 0 0; padding:3px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent)}
@@ -734,7 +734,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-15a";
+const BUILD = "2026-11-15b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2481,19 +2481,22 @@ $("wfQ").oninput = ()=>renderWf();
    レッスン画面にいるあいだ(言語や課を替えても)出し続け、ほかのタブへ移るか ✕ で消える。
    タグのページ以外から飛んだとき(検索結果・例文など)は出さない。
    戻すなら tagReturn・tagReturnNext・paintTagReturn と、その呼び出し(jumpTo・showTab・openSubPage・openTagPage)を外す */
-let tagReturn = null, tagReturnNext = null;   // {tag, y}
+// 2026-11-15b: ◇・§のページ(openTopicPage)の例文から飛んだときも同じボタンで戻る(Mayの依頼)。そのときは {topic, type, y}
+let tagReturn = null, tagReturnNext = null;   // {tag, y} か {topic, type, y}
 function paintTagReturn(){
   const el = $("tagReturn");
   if(!el) return;
   const on = !!tagReturn && $("pageLesson").style.display !== "none";
   el.style.display = on ? "flex" : "none";
   if(!on) return;
-  el.querySelector(".tg-go").textContent = "↩ #" + tagReturn.tag + " に戻る";
+  el.querySelector(".tg-go").textContent = "↩ "
+    + (tagReturn.topic != null ? (tagReturn.type === "concept" ? "◇ " : "§ ") + tagReturn.topic : "#" + tagReturn.tag) + " に戻る";
 }
 $("tagReturn").querySelector(".tg-go").onclick = ()=>{
   if(!tagReturn) return;
   const y = tagReturn.y;
-  openTagPage(tagReturn.tag);
+  if(tagReturn.topic != null) openTopicPage(tagReturn.topic, tagReturn.type);
+  else openTagPage(tagReturn.tag);
   $("mapPanel").scrollTop = y;
 };
 $("tagReturn").querySelector(".tg-x").onclick = ()=>{ tagReturn = null; paintTagReturn(); };
@@ -3477,7 +3480,7 @@ function openTopicPage(topic, type){
         + "border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--text);"
         + "font-size:14px; line-height:1.5";
       b.innerHTML = esc(e.text) + '<span style="color:var(--sub); font-size:11.5px"> — L' + e.lesson + '</span>';
-      b.onclick = ()=>{ closeMap(); jumpTo(e.lang, e.lesson, e.text); };
+      b.onclick = ()=>{ tagReturnNext = {topic, type: isCon ? "concept" : "grammar", y: panel.scrollTop}; closeMap(); jumpTo(e.lang, e.lesson, e.text); };
       c.appendChild(b);
     });
     panel.appendChild(c);
