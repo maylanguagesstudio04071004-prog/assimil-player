@@ -511,6 +511,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <div class="filterbar" style="margin-top:2px">
     <button id="fmCon" class="on">◇ 概念</button>
     <button id="fmGram">§ 文法</button>
+    <!-- ことわざ・なまりは◇概念(文法の軸)と性格が違うので独立させた(2026-11-16、Mayの依頼)。戻すならこの2つと SOLO_TOPICS を外す -->
+    <button id="fmKoto">◇ ことわざ</button>
+    <button id="fmNama">◇ なまり</button>
     <!-- 「↺ 思い出す」はタブへ移した(2026-10-16c) -->
   </div>
   <div class="langbar" id="favLangbar"></div>
@@ -745,7 +748,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-15e";
+const BUILD = "2026-11-16a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3672,12 +3675,46 @@ if($("fmFav")) $("fmFav").onclick = ()=>{ favView = "fav"; renderFavs(); };
 if($("fmObs")) $("fmObs").onclick = ()=>{ favView = "obs"; renderFavs(); };
 if($("fmCon")) $("fmCon").onclick = ()=>{ favView = "con"; renderFavs(); };
 if($("fmGram")) $("fmGram").onclick = ()=>{ favView = "gram"; renderFavs(); };
+const SOLO_TOPICS = {koto: "ことわざ", nama: "なまり"};   // ◇概念の一覧から外し、独立した切り替えにする題材
+if($("fmKoto")) $("fmKoto").onclick = ()=>{ favView = "koto"; renderFavs(); };
+if($("fmNama")) $("fmNama").onclick = ()=>{ favView = "nama"; renderFavs(); };
 if($("fmStudy")) $("fmStudy").onclick = ()=>{ favView = "study"; studyQueue = null; renderFavs(); };
 function renderFavs(){
   if($("fmFav")) $("fmFav").classList.toggle("on", favView==="fav");
   if($("fmObs")) $("fmObs").classList.toggle("on", favView==="obs");
   if($("fmCon")) $("fmCon").classList.toggle("on", favView==="con");
   if($("fmGram")) $("fmGram").classList.toggle("on", favView==="gram");
+  if($("fmKoto")) $("fmKoto").classList.toggle("on", favView==="koto");
+  if($("fmNama")) $("fmNama").classList.toggle("on", favView==="nama");
+  // ことわざ・なまり: 言語ごとに1行ずつ。押すとその題材のページ(各言語が並ぶ)が開く
+  if(SOLO_TOPICS[favView]){
+    const topic = SOLO_TOPICS[favView];
+    $("favLangbar").innerHTML = "";
+    const box = $("favList");
+    box.innerHTML = "";
+    const list = db.grammar.filter(g=>g.type==="concept" && g.topic===topic)
+      .sort((a,b)=>conLangOrder(a.lang)-conLangOrder(b.lang));
+    if(!list.length){ box.innerHTML = '<div class="empty-msg">◇' + esc(topic) + 'はまだありません。</div>'; return; }
+    const all = document.createElement("button");
+    all.className = "con-row";
+    all.innerHTML = '<div class="con-top"><span class="con-name">◇ ' + esc(topic) + '(全言語を並べて見る)</span>'
+      + '<span class="con-n">' + list.length + ' 言語</span></div>';
+    all.onclick = ()=>openTopicPage(topic, "concept");
+    box.appendChild(all);
+    list.forEach(g=>{
+      const b = document.createElement("button");
+      b.className = "con-row";
+      const first = String(g.body||"").split("\n").find(x=>x.trim()) || "";
+      b.innerHTML = '<div class="con-top"><span class="con-name">' + esc(g.lang) + '</span>'
+        + '<span class="con-n">' + (g.lesson!=null ? "L" + g.lesson : "") + '</span></div>'
+        + '<div class="con-langs">' + esc(first.slice(0, 60)) + '</div>';
+      b.onclick = ()=>{ openTopicPage(topic, "concept");
+        const c = [...$("mapPanel").querySelectorAll(".card h2")].find(h=>h.textContent.startsWith(g.lang));
+        if(c) $("mapPanel").scrollTop = c.parentNode.offsetTop - 8; };
+      box.appendChild(b);
+    });
+    return;
+  }
   if($("fmStudy")){ $("fmStudy").classList.toggle("on", favView==="study");
     const n = studyDue().length; $("fmStudy").textContent = "↺ 思い出す" + (n ? " " + n : ""); }
   if(favView==="study"){ $("favLangbar").innerHTML = ""; renderStudy(); return; }
@@ -3687,7 +3724,7 @@ function renderFavs(){
     $("favLangbar").innerHTML = "";
     const box = $("favList");
     box.innerHTML = "";
-    const con = db.grammar.filter(g=>g.type==="concept");
+    const con = db.grammar.filter(g=>g.type==="concept" && !Object.values(SOLO_TOPICS).includes(g.topic));
     if(!con.length){
       box.innerHTML = '<div class="empty-msg">◇概念はまだありません。</div>';
       return;
@@ -3711,8 +3748,8 @@ function renderFavs(){
       ["数",         ["数詞", "数", "助数詞", "単数形", "複数形"]],
       ["動詞の時",   ["現在", "進行形", "過去", "未来", "接続法", "遠さ"]],
       ["人と場所",   ["名前", "家族", "丁寧さ", "場所と方向"]],
-      ["語のしくみ", ["-ment", "句動詞"]],
-      ["言い回し",   ["ことわざ", "なまり"]]
+      ["語のしくみ", ["-ment", "句動詞"]]
+      // 「言い回し」(ことわざ・なまり)は独立した切り替えに移した(2026-11-16)
     ];
     const grouped = new Set(CON_GROUPS.flatMap(g=>g[1]));
     const rest = [...byTopic.keys()].filter(t=>!grouped.has(t))
