@@ -356,6 +356,12 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .tag-return button.tg-x{padding:11px 14px 11px 8px; font-weight:400; opacity:.85; flex:none}
 .tr-form{margin-top:8px; font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.7}
 .tr-form button{font-size:calc(12px * var(--fs,1)); margin:4px 6px 0 0; padding:3px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent)}
+/* 「思い出す」の書く欄(2026-11-17) */
+.study-ink{position:relative; margin-top:12px; border:1px dashed var(--border); border-radius:12px; background:var(--bg)}
+.study-ink canvas{display:block; width:100%; touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; border-radius:12px}
+.study-ink .ink-hint{position:absolute; left:12px; top:9px; font-size:calc(12px * var(--fs,1)); color:var(--sub); pointer-events:none}
+.study-ink .ink-btns{position:absolute; right:6px; top:6px; display:flex; gap:6px}
+.study-ink .ink-btns button{font-size:calc(12px * var(--fs,1)); padding:4px 10px; border-radius:8px; background:var(--card); border:1px solid var(--border); color:var(--sub)}
 .study-ear-toggle{font-size:calc(12px * var(--fs,1)); padding:4px 10px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub); margin-left:8px}
 .study-ear-toggle.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
 .study-ear{font-size:calc(15px * var(--fs,1)); color:var(--sub); line-height:1.7; margin:12px 0 4px}
@@ -758,7 +764,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-17b";
+const BUILD = "2026-11-17c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -5798,6 +5804,91 @@ function renderStudyList(box){
 }
 let studyEarKey = null;   // 耳から先に: 文字を見たカード
 function studyEarMode(){ try{ return localStorage.getItem(KEY + ".studyEar") === "1"; }catch(e){ return false; } }
+/* ---------- 書く欄 ----------
+   2026-11-17、Mayの依頼(iPad mini と Apple Pencil を使い始めた。「単語の抜け部分を書き込み対応に」)。
+   カードの下に、ペンで自由に書ける欄を出す。線のまま残し、文字には変換しない(どの言語の文字でも書ける)。
+   「答えを見る」のあとも書いた字は残るので、すぐ上に出る正解と見比べて、今までどおり自分で判定する。
+   - 書いた線はカードが替わるまで覚えておく(意味を見る・答えを見るで描き直しても消えない)。保存はしない。
+   - ペンを一度でも使ったら、その後は指と手のひらの接触を無視する(ペンを持つ手が触れても線が入らない)。
+     ペンを使っていない端末(iPhone)では指で書ける。
+   - 既定は、短い辺が700以上の画面(iPad)でオン、それより小さい画面でオフ。上の「書く欄」で切り替える(端末ごと)。
+   戻すなら renderStudy の studyInkAttach の2か所と、頭のボタンを外す */
+let studyInk = {key: null, strokes: []};
+let inkPenSeen = false, inkResize = null;
+function studyInkMode(){
+  try{ const v = localStorage.getItem(KEY + ".studyInk");
+    if(v === "1") return true;
+    if(v === "0") return false; }catch(e){}
+  return Math.min(screen.width, screen.height) >= 700;
+}
+function studyInkAttach(card, key){
+  inkResize = null;
+  if(!studyInkMode()) return;
+  const acts = card.querySelector(".study-acts");
+  if(!acts) return;
+  if(studyInk.key !== key) studyInk = {key, strokes: []};
+  const ink = studyInk;
+  const wrap = document.createElement("div");
+  wrap.className = "study-ink";
+  wrap.innerHTML = '<canvas></canvas><div class="ink-hint">ここに書けます</div>'
+    + '<div class="ink-btns"><button class="ink-undo">1つ戻す</button><button class="ink-clear">消す</button></div>';
+  acts.before(wrap);
+  const cv = wrap.querySelector("canvas"), hint = wrap.querySelector(".ink-hint"), ctx = cv.getContext("2d");
+  const H = Math.round(150 * fontScale());
+  const seg = (a, b)=>{ ctx.lineWidth = 1.6 + 2.6 * (b.p || 0.5); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
+  const dot = a=>{ ctx.beginPath(); ctx.arc(a.x, a.y, 0.8 + 1.3 * (a.p || 0.5), 0, Math.PI * 2); ctx.fill(); };
+  const redraw = ()=>{
+    const dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const col = getComputedStyle(document.body).color;
+    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ink.strokes.forEach(st=>{ if(!st.length) return; dot(st[0]); for(let i = 1; i < st.length; i++) seg(st[i-1], st[i]); });
+    hint.style.display = ink.strokes.length ? "none" : "";
+  };
+  const setup = ()=>{
+    const w = wrap.clientWidth;
+    if(!w) return;
+    const dpr = window.devicePixelRatio || 1;
+    cv.style.height = H + "px";
+    cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr);
+    redraw();
+  };
+  setup();
+  if(!wrap.clientWidth) requestAnimationFrame(setup);
+  inkResize = ()=>{ if(wrap.isConnected) setup(); };
+  let cur = null;
+  const pt = e=>{ const r = cv.getBoundingClientRect();
+    return {x: Math.round((e.clientX - r.left) * 10) / 10, y: Math.round((e.clientY - r.top) * 10) / 10,
+            p: e.pointerType === "pen" ? (e.pressure || 0.5) : 0.5}; };
+  cv.addEventListener("pointerdown", e=>{
+    if(e.pointerType === "pen") inkPenSeen = true;
+    if(e.pointerType === "touch" && inkPenSeen) return;      // ペンを使っているあいだは手のひらを無視
+    if(cur) return;
+    e.preventDefault();
+    try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+    const a = pt(e);
+    cur = {id: e.pointerId, pts: [a]};
+    ink.strokes.push(cur.pts);
+    hint.style.display = "none";
+    dot(a);
+  });
+  cv.addEventListener("pointermove", e=>{
+    if(!cur || e.pointerId !== cur.id) return;
+    e.preventDefault();
+    let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+    if(!evs || !evs.length) evs = [e];
+    evs.forEach(ev=>{ const b = pt(ev), a = cur.pts[cur.pts.length - 1];
+      if(Math.abs(b.x - a.x) + Math.abs(b.y - a.y) < 0.6) return;
+      seg(a, b); cur.pts.push(b); });
+  });
+  const end = e=>{ if(cur && e.pointerId === cur.id) cur = null; };
+  cv.addEventListener("pointerup", end);
+  cv.addEventListener("pointercancel", end);
+  wrap.querySelector(".ink-undo").onclick = ()=>{ ink.strokes.pop(); redraw(); };
+  wrap.querySelector(".ink-clear").onclick = ()=>{ ink.strokes.length = 0; redraw(); };
+}
+window.addEventListener("resize", ()=>{ if(inkResize) inkResize(); });
 /* ---------- 今日のタグ ----------
    2026-11-15、Mayの依頼「単語だけではなく、#タグ単位でも1日1タグ学べるように」。
    「思い出す」のいちばん上に、その日のタグを1つ出す。押すといつものタグのページ(各言語のレッスンが並ぶ)が開く。
@@ -5916,6 +6007,12 @@ function renderStudy(){
   earBtn.textContent = "耳から先に: " + (studyEarMode() ? "オン" : "オフ");
   earBtn.onclick = ()=>{ lsSet(KEY + ".studyEar", studyEarMode() ? "" : "1"); studyEarKey = null; renderStudy(); };
   head.appendChild(earBtn);
+  // 書く欄(2026-11-17)。Apple Pencil で答えを書いてから見比べる
+  const inkBtn = document.createElement("button");
+  inkBtn.className = "study-ear-toggle" + (studyInkMode() ? " on" : "");
+  inkBtn.textContent = "書く欄: " + (studyInkMode() ? "オン" : "オフ");
+  inkBtn.onclick = ()=>{ lsSet(KEY + ".studyInk", studyInkMode() ? "0" : "1"); renderStudy(); };
+  head.appendChild(inkBtn);
   // 一覧(2026-11-06、Mayの依頼)
   const listBtn = document.createElement("button");
   listBtn.className = "study-ear-toggle" + (studyView === "list" ? " on" : "");
@@ -5977,6 +6074,7 @@ function renderStudy(){
     bindSpeedBtn(sb, d=>{ sb.textContent = speedLabel(speedStep(d, lang)); });
     card.querySelector(".st-see").onclick = ()=>{ studyEarKey = cardKey; renderStudy(); };
     prismStudyDecor(card, lang, word, false);
+    studyInkAttach(card, cardKey);
     play();
     return;
   }
@@ -6020,6 +6118,7 @@ function renderStudy(){
   card.innerHTML = html;
   box.appendChild(card);
   prismStudyDecor(card, lang, word, studyShown >= 2);
+  studyInkAttach(card, cardKey);
   const play = ()=>{ if(hasVoice) playSpan(lang, lesson, sen.i, null); };
   const q = c=>card.querySelector(c);
   if(q(".st-mean")) q(".st-mean").onclick = ()=>{ studyShown = 1; renderStudy(); };
@@ -6038,6 +6137,7 @@ function renderStudy(){
       const k = studyQueue.shift();
       if(g === "again") studyQueue.push(k);      // その場でもう一度
       studyShown = 0; studyEarKey = null;        // もう一度のときも、耳から先に
+      studyInk = {key: null, strokes: []};       // 答えたら、書いた字は消す
       save();
       renderStudy();
     };
