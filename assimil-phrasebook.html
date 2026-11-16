@@ -758,7 +758,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-17a";
+const BUILD = "2026-11-17b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -5734,11 +5734,14 @@ function studyRoman(roman, sen, hide){
    **まだ一度も答えていない語だけ**を上限までにする。復習(一度でも答えた語)は上限の外 ──
    こちらを先に延ばすと間隔が崩れるので、来たぶんは必ず全部出す。0 = 制限なし。
    端末ごとの好みなので localStorage(耳から先に と同じ置き場)。戻すなら STUDY_NEW_DEFAULT を 0 にする */
-const STUDY_NEW_STEPS = [5, 10, 20, 30, 50, 0];
-const STUDY_NEW_DEFAULT = 20;
+/* 2026-11-17、Mayの依頼で選択肢を 30・50・70・100、既定を 70 に変えた(毎日100語を超えて答えていて、そのほうが覚えやすいとのこと)。
+   それまでは [5, 10, 20, 30, 50, 0(制限なし)]・既定 20。前の端末に残っている値がこの4つに無いとき(5・10・20・制限なし)は既定の 70 として扱う。
+   戻すなら次の2行を const STUDY_NEW_STEPS = [5, 10, 20, 30, 50, 0]; const STUDY_NEW_DEFAULT = 20; にする */
+const STUDY_NEW_STEPS = [30, 50, 70, 100];
+const STUDY_NEW_DEFAULT = 70;
 function studyNewCap(){
-  try{ const v = localStorage.getItem(KEY + ".studyNew");
-    return (v === null || v === "") ? STUDY_NEW_DEFAULT : (Number(v) || 0); }catch(e){ return STUDY_NEW_DEFAULT; }
+  try{ const v = Number(localStorage.getItem(KEY + ".studyNew"));
+    return STUDY_NEW_STEPS.includes(v) ? v : STUDY_NEW_DEFAULT; }catch(e){ return STUDY_NEW_DEFAULT; }
 }
 function studyIsNew(x){ return !(x.reps > 0); }
 /* 上限は「1回の机に向かう時間」ではなく「その日」に掛ける(2026-11-06)。
