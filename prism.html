@@ -247,6 +247,16 @@ table.ax td.off{color:var(--line)}
   </div>
   <div class="sub" style="margin-top:6px">「AIに渡す書き出し」は、比較軸ごとに各言語の語をまとめたJSONです。
     空欄の意味・出典・補いの印もファイルの中に書いてあります。観察テーマの候補を探してもらうときに渡します。</div>
+
+  <!-- ファイルから読み込む(2026-11-17、Mayの依頼。新しいiPadへ移すため) -->
+  <div class="row" style="margin-top:10px">
+    <button class="btn" onclick="restorePick()">ファイルから読み込む</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
+  </div>
+  <div class="sub" style="margin-top:6px">「全データをJSONで保存」で書き出したファイルを、まるごと戻します（別の端末へ移すとき用）。
+    <b>いまこの端末に入っているものは、全部入れ替わります。</b>
+    入れ替える前の状態は、上の「直前の取り込みを戻す」で1回だけ戻せます。画像は入りません。
+    素材のJSONは、こちらではなく「取り込み」に貼ってください。</div>
   <div id="expMsg" class="msg"></div>
 
   <hr>
@@ -298,7 +308,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-10-04f";
+const BUILD = "2026-11-17a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -2666,6 +2676,55 @@ function download(name, text, type){
 }
 function stamp(){ const d=new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+/* ファイルから読み込む(2026-11-17、Mayの依頼)。
+   Prismには書き出ししかなく、**書き出したものを戻す道が無かった**。
+   「取り込み」は素材の形（source/bookTheme/items）しか受けないので、
+   端末を移すときに ⭐・チェック済み・メモ を持っていけなかった。
+   Atlas の 設定→バックアップ→「ファイルから読み込む」と同じ役目。
+   **まるごと入れ替える。** 取り込みのような足し算ではない。
+   入れ替える前に makeUndo() を取るので「直前の取り込みを戻す」で1回だけ戻せる。
+   戻すなら、この2つの関数と設定のボタン・input を消す。 */
+function restorePick(){
+  const f = $("restoreFile");
+  f.value = "";          // 同じファイルをもう一度選んでも change が起きるように
+  f.click();
+}
+function doRestore(file){
+  const m = $("expMsg");
+  const say = (cls, t)=>{ m.className = "msg " + cls; m.textContent = t; };
+  const r = new FileReader();   // iOSのSafariでも確実に読めるよう File.text() は使わない
+  r.onerror = ()=>say("err", "ファイルを読めませんでした。");
+  r.onload = async ()=>{
+    try{
+      const d = JSON.parse(r.result);
+      // Prismの書き出しかどうかを見る。Atlasのバックアップや素材を入れても壊れないように
+      if(!d || typeof d !== "object" || Array.isArray(d)
+         || !Array.isArray(d.senses) || !Array.isArray(d.entries) || !Array.isArray(d.langs)){
+        say("err", "Prismの書き出しファイルではないようです(senses / entries / langs が見当たりません)。"
+          + "素材のJSONは「取り込み」に貼ってください。");
+        return;
+      }
+      const tell = x => (x.senses || []).length + "軸 / " + (x.entries || []).length + "語 / 観察"
+        + (x.collections || []).length + "件 / メモ" + (x.memos || []).length + "件";
+      const now = tell(db), next = tell(d);
+      if(!confirm("この端末の中身を、ファイルの中身で入れ替えます。\n\n"
+        + "いま: " + now + "\nファイル: " + next
+        + "\n\n入れ替えますか?(「直前の取り込みを戻す」で1回だけ戻せます)")){
+        say("", "入れ替えをやめました。");
+        return;
+      }
+      await makeUndo();
+      db = normalizeDb(d);
+      labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
+      save();
+      showTab("Settings");
+      say("ok", "読み込みました(" + next + ")。");
+    }catch(e){
+      say("err", "読み込めません: " + (e && e.message ? e.message : e));
+    }
+  };
+  r.readAsText(file);
+}
 function doExport(){
   const t = JSON.stringify(db, null, 1);
   download("prism-"+stamp()+".json", t);
@@ -2925,6 +2984,11 @@ function openFromHash(){
 window.addEventListener("hashchange", openFromHash);
 
 /* ---------- 起動 ---------- */
+// ファイル選択の受け口(2026-11-17)
+if($("restoreFile")) $("restoreFile").onchange = e=>{
+  const f = e.target.files && e.target.files[0];
+  if(f) doRestore(f);
+};
 (async function boot(){
   try{ await bootStorage(); }
   catch(e){ db = emptyDb(); warnBar("読み込みに失敗しました: " + (e && e.message)); }
