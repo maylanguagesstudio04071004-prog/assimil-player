@@ -37,10 +37,10 @@ textarea, input[type=text], input[type=search], .f-input, .tr-input{unicode-bidi
 .phrase .txt, .words .wtxt, .result .txt{unicode-bidi:plaintext}
 body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
   background:var(--bg); color:var(--text); padding-bottom:env(safe-area-inset-bottom)}
-header{padding:calc(14px + env(safe-area-inset-top)) 20px 4px; font-size:18px; font-weight:700; position:relative}
-header small{display:block; font-weight:400; color:var(--sub); font-size:12px; margin-top:2px}
+header{padding:calc(14px + env(safe-area-inset-top)) 20px 4px; font-size:calc(18px * var(--fs,1)); font-weight:700; position:relative}
+header small{display:block; font-weight:400; color:var(--sub); font-size:calc(12px * var(--fs,1)); margin-top:2px}
 header .hlink{position:absolute; right:14px; top:calc(8px + env(safe-area-inset-top));
-  font-size:15px; font-weight:700; color:var(--accent); text-decoration:none;
+  font-size:calc(15px * var(--fs,1)); font-weight:700; color:var(--accent); text-decoration:none;
   padding:13px 18px; border:1px solid var(--accent); border-radius:24px;
   background:var(--accent-soft); line-height:1}
 /* ホーム画面アプリではenv()が0を返す端末があるため、最低余白を保証 */
@@ -52,13 +52,15 @@ html.pwa header{padding-top:max(calc(14px + env(safe-area-inset-top)), 64px)}
 html.pwa header .hlink{top:max(calc(8px + env(safe-area-inset-top)), 58px)}
 .tabs{display:flex; gap:6px; padding:12px 16px}
 .tabs button{flex:1; padding:13px 2px; border:1px solid var(--border); background:var(--card);
-  color:var(--sub); border-radius:12px; font-size:14px; font-weight:600; white-space:nowrap}
+  color:var(--sub); border-radius:12px; font-size:calc(14px * var(--fs,1)); font-weight:600; white-space:nowrap}
 .tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff}
-.tabs .tab-n{font-size:10px; margin-left:2px; vertical-align:super}
-main{padding:0 16px 40px; max-width:560px; margin:0 auto}
+.tabs .tab-n{font-size:calc(10px * var(--fs,1)); margin-left:2px; vertical-align:super}
+/* 文字の大きさ(2026-11-17、Mayの依頼)。font-size はすべて calc(Npx * var(--fs,1)) にしてあり、設定で --fs を変える。
+   本文の幅と小窓の幅も同じ倍率で広げる(広げないと1行に入る字数が減る)。戻すなら --fs を 1 のままにする */
+main{padding:0 16px 40px; max-width:calc(560px * var(--fs,1)); margin:0 auto}
 .card{background:var(--card); border:1px solid var(--border); border-radius:16px;
   padding:16px; margin-bottom:14px}
-.card h2{margin:0 0 10px; font-size:13px; color:var(--sub); font-weight:600;
+.card h2{margin:0 0 10px; font-size:calc(13px * var(--fs,1)); color:var(--sub); font-weight:600;
   text-transform:uppercase; letter-spacing:.05em}
 button{font-family:inherit; cursor:pointer; border:none}
 input,textarea,select{font-family:inherit}
@@ -66,26 +68,26 @@ input,textarea,select{font-family:inherit}
 .langbar{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 12px; -webkit-overflow-scrolling:touch}
 .langbar::-webkit-scrollbar{display:none}
 .langbar button{flex:none; padding:9px 16px; border-radius:20px; border:1px solid var(--border);
-  background:var(--card); color:var(--sub); font-size:14px; font-weight:600; white-space:nowrap}
+  background:var(--card); color:var(--sub); font-size:calc(14px * var(--fs,1)); font-weight:600; white-space:nowrap}
 .langbar button.on{background:var(--accent); border-color:var(--accent); color:#fff}
 /* lesson selector */
 .lesson-row{display:flex; align-items:center; gap:10px}
-.lesson-row input{width:90px; font-size:26px; font-weight:700; text-align:center;
+.lesson-row input{width:90px; font-size:calc(26px * var(--fs,1)); font-weight:700; text-align:center;
   padding:8px; border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text)}
 .step{width:46px; height:46px; border-radius:12px; background:var(--accent-soft);
-  color:var(--accent); font-size:22px; font-weight:700; flex:none}
-.lesson-title{font-size:15px; font-weight:700; flex:1; min-width:0}
-.lesson-heading{font-size:17px; font-weight:700; margin:2px 4px 10px; line-height:1.5}
-.lesson-heading-ja{font-size:13px; color:var(--sub); font-weight:400; margin-top:3px; line-height:1.6}
-.lesson-heading-roman{font-size:13px; color:var(--sub); font-weight:400; font-style:italic; margin-top:3px; line-height:1.5}
+  color:var(--accent); font-size:calc(22px * var(--fs,1)); font-weight:700; flex:none}
+.lesson-title{font-size:calc(15px * var(--fs,1)); font-weight:700; flex:1; min-width:0}
+.lesson-heading{font-size:calc(17px * var(--fs,1)); font-weight:700; margin:2px 4px 10px; line-height:1.5}
+.lesson-heading-ja{font-size:calc(13px * var(--fs,1)); color:var(--sub); font-weight:400; margin-top:3px; line-height:1.6}
+.lesson-heading-roman{font-size:calc(13px * var(--fs,1)); color:var(--sub); font-weight:400; font-style:italic; margin-top:3px; line-height:1.5}
 .tagrow{display:flex; flex-wrap:wrap; gap:6px; margin:0 4px 12px}
 .tagrow button{padding:7px 13px; border-radius:15px; background:var(--accent-soft);
-  color:var(--accent); font-size:13px; font-weight:600}
-.phrase .roman{font-size:13px; color:var(--sub); font-style:italic; margin-top:2px; line-height:1.5; overflow-wrap:anywhere}
+  color:var(--accent); font-size:calc(13px * var(--fs,1)); font-weight:600}
+.phrase .roman{font-size:calc(13px * var(--fs,1)); color:var(--sub); font-style:italic; margin-top:2px; line-height:1.5; overflow-wrap:anywhere}
 .bulk-roman{margin-top:12px; width:100%; padding:10px; border-radius:10px; background:var(--bg);
-  border:1px solid var(--border); color:var(--accent); font-size:13.5px; font-weight:600}
+  border:1px solid var(--border); color:var(--accent); font-size:calc(13.5px * var(--fs,1)); font-weight:600}
 .obs-btn{flex:none; width:48px; border-radius:10px; background:var(--accent-soft);
-  color:var(--accent); font-size:19px; border:1px solid transparent}
+  color:var(--accent); font-size:calc(19px * var(--fs,1)); border:1px solid transparent}
 /* #lessonActions は2026-09-21cに撤去。戻したときのために残す */
 #lessonActions .obs-btn{flex:none; width:64px; padding:12px 0}
 .lesson-foot{display:flex; gap:8px; margin-top:10px; align-items:stretch}
@@ -93,48 +95,48 @@ input,textarea,select{font-family:inherit}
 .lesson-foot .obs-btn{flex:none; width:56px}
 .result .txt{white-space:pre-wrap}
 .compare-btn{width:100%; margin-top:12px; padding:10px; border-radius:10px;
-  background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; font-weight:600}
+  background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:calc(14px * var(--fs,1)); font-weight:600}
 .compare-btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
 /* week strip (7課=1週のナビ) */
 .week-strip{display:flex; gap:5px; margin-top:12px; align-items:stretch}
 .week-strip button{border-radius:9px; font-weight:600; padding:11px 0}
-.week-strip .wnav{flex:none; width:36px; background:var(--accent-soft); color:var(--accent); font-size:13px}
+.week-strip .wnav{flex:none; width:36px; background:var(--accent-soft); color:var(--accent); font-size:calc(13px * var(--fs,1))}
 .week-strip .wnav:disabled{opacity:.35}
 .week-strip .wcell{flex:1; min-width:0; background:var(--bg); border:1px solid var(--border);
-  color:var(--sub); font-size:12.5px}
+  color:var(--sub); font-size:calc(12.5px * var(--fs,1))}
 .week-strip .wcell.reg{background:var(--accent-soft); border-color:transparent; color:var(--text)}
 .week-strip .wcell.cur{background:var(--accent); border-color:var(--accent); color:#fff}
-.week-strip .wcell .g{font-size:9px; vertical-align:super}
+.week-strip .wcell .g{font-size:calc(9px * var(--fs,1)); vertical-align:super}
 /* coverage map */
 #mapBack{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:20; display:none}
 #mapPanel{position:fixed; left:50%; transform:translateX(-50%);
   top:calc(12px + env(safe-area-inset-top)); max-height:calc(100vh - 24px - env(safe-area-inset-top));
-  width:min(560px, calc(100vw - 16px)); background:var(--card); border:1px solid var(--border);
+  width:min(calc(560px * var(--fs,1)), calc(100vw - 16px)); background:var(--card); border:1px solid var(--border);
   border-radius:16px; z-index:21; display:none; padding:14px; overflow-y:auto}
 .map-head{display:flex; align-items:center; gap:8px; margin-bottom:12px}
-.map-head b{flex:1; font-size:16px; min-width:0}
+.map-head b{flex:1; font-size:calc(16px * var(--fs,1)); min-width:0}
 .map-grid{display:grid; grid-template-columns:repeat(7, 1fr); gap:5px}
-.map-grid button{aspect-ratio:1.1; border-radius:8px; font-size:11.5px; font-weight:600;
+.map-grid button{aspect-ratio:1.1; border-radius:8px; font-size:calc(11.5px * var(--fs,1)); font-weight:600;
   background:var(--bg); border:1px solid var(--border); color:var(--sub); padding:0}
 .map-grid button.reg{background:var(--accent-soft); border-color:transparent; color:var(--text)}
 .map-grid button.cur{background:var(--accent); border-color:var(--accent); color:#fff}
-.map-grid button .g{font-size:8.5px; vertical-align:super}
+.map-grid button .g{font-size:calc(8.5px * var(--fs,1)); vertical-align:super}
 /* 文法マトリクス */
 .mx-corner{position:sticky; left:0; top:0; z-index:3; background:var(--card)}
-.mx-langh{writing-mode:vertical-rl; font-size:11px; color:var(--sub); font-weight:600;
+.mx-langh{writing-mode:vertical-rl; font-size:calc(11px * var(--fs,1)); color:var(--sub); font-weight:600;
   display:flex; align-items:center; padding:4px 0; min-height:86px;
   position:sticky; top:0; z-index:1; background:var(--card)}
 .mx-lab{position:sticky; left:0; z-index:2; background:var(--card); text-align:left;
-  font-size:12px; font-weight:600; color:var(--text); padding:6px 8px 6px 4px; line-height:1.4}
+  font-size:calc(12px * var(--fs,1)); font-weight:600; color:var(--text); padding:6px 8px 6px 4px; line-height:1.4}
 .mx-cell{border-radius:6px; min-height:32px}
 .mx-cell.on{background:var(--accent); opacity:.82; border:1px solid transparent}
 .mx-cell.off{background:var(--bg); border:1px dashed var(--border)}
 /* lesson content */
 .phrase{padding:12px 4px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:flex-start}
 .phrase:last-child{border-bottom:none}
-.phrase .no{flex:none; width:22px; font-size:12px; color:var(--sub); font-weight:600; padding-top:4px;
+.phrase .no{flex:none; width:22px; font-size:calc(12px * var(--fs,1)); color:var(--sub); font-weight:600; padding-top:4px;
   font-variant-numeric:tabular-nums; text-align:right}
-.phrase .txt{font-size:17px; line-height:1.65; overflow-wrap:anywhere; flex:1}
+.phrase .txt{font-size:calc(17px * var(--fs,1)); line-height:1.65; overflow-wrap:anywhere; flex:1}
 /* 行の音声の位置が分かっている課だけ、番号を押せる印にする */
 #content.has-audio .phrase .no.no-play{background:var(--accent-soft); color:var(--accent);
   border-radius:7px; width:24px; padding:4px 0 3px; text-align:center; cursor:pointer}
@@ -142,181 +144,181 @@ input,textarea,select{font-family:inherit}
 /* 例文などから飛んできた行(2026-10-16)。2秒ほど縁取りして、どの行か分かるようにする */
 .phrase.jumped{box-shadow:0 0 0 2px var(--accent) inset; border-radius:8px; transition:box-shadow .6s}
 #markBtn{padding:7px 12px; border-radius:11px; background:var(--accent-soft); color:var(--accent);
-  font-size:13px; font-weight:700; white-space:nowrap}
+  font-size:calc(13px * var(--fs,1)); font-weight:700; white-space:nowrap}
 #markBtn.on{background:var(--accent); color:#fff}
-#markHint{font-size:12px; color:var(--sub); line-height:1.6; margin-top:8px;
+#markHint{font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.6; margin-top:8px;
   background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px 11px}
 #markHint button{margin-top:6px; padding:7px 12px; border-radius:9px; background:var(--card);
-  border:1px solid var(--border); color:var(--danger); font-size:12px; font-weight:700}
+  border:1px solid var(--border); color:var(--danger); font-size:calc(12px * var(--fs,1)); font-weight:700}
 /* 位置を直している間は、番号が「ここから」の印になる */
 #content.time-edit .phrase .no{background:var(--card); border:1px dashed var(--accent); color:var(--accent);
   border-radius:7px; width:26px; padding:3px 0 2px; text-align:center; cursor:pointer}
 #content.time-edit .phrase .no.marked{border-style:solid; background:var(--accent-soft)}
 /* 題の声(2026-11-02)。音声のある課だけ、行の番号と同じように押せる */
-.title-no{display:none; flex:none; font-size:12px; font-weight:600; padding:4px 7px 3px; margin-top:2px; border-radius:7px;
+.title-no{display:none; flex:none; font-size:calc(12px * var(--fs,1)); font-weight:600; padding:4px 7px 3px; margin-top:2px; border-radius:7px;
   background:var(--accent-soft); color:var(--accent); cursor:pointer}
 #content.has-audio .title-no{display:block}
 #content.time-edit .title-no{background:var(--card); border:1px dashed var(--accent)}
 #content.time-edit .title-no.marked{border-style:solid; background:var(--accent-soft)}
 .lesson-heading.playing{background:var(--accent-soft); border-radius:8px}
 .lesson-heading.jumped{box-shadow:0 0 0 2px var(--accent) inset; border-radius:8px; transition:box-shadow .6s}
-.phrase .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
+.phrase .fav{flex:none; background:none; font-size:calc(22px * var(--fs,1)); color:var(--border); padding:6px 10px; margin:-4px -6px 0 0; line-height:1.2}
 .phrase .fav.on{color:var(--star)}
 #playBtn{background:var(--accent); color:#fff}
 .seek-foot{display:flex; align-items:center; gap:6px; margin-top:2px}
 .seek-side{flex:1; display:flex; min-width:0}
 #loopBtn{padding:7px 12px; border-radius:11px; background:var(--accent-soft); color:var(--accent);
-  font-size:13px; font-weight:700; white-space:nowrap}
+  font-size:calc(13px * var(--fs,1)); font-weight:700; white-space:nowrap}
 #loopBtn.on{background:var(--accent); color:#fff}
 #spdBtn{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
 .audio-row{display:flex; gap:10px; margin-top:12px; align-items:center; justify-content:center}
 #seekBar{width:100%; accent-color:var(--accent); margin:12px 0 2px}
-#seekTime{font-size:12px; color:var(--sub); text-align:center; font-variant-numeric:tabular-nums; flex:none}
+#seekTime{font-size:calc(12px * var(--fs,1)); color:var(--sub); text-align:center; font-variant-numeric:tabular-nums; flex:none}
 .words{display:flex; flex-wrap:wrap; gap:8px}
 .words button{padding:8px 14px; border-radius:12px; background:var(--accent-soft); color:var(--text);
-  font-size:15px; line-height:1.4; border:1px solid transparent;
+  font-size:calc(15px * var(--fs,1)); line-height:1.4; border:1px solid transparent;
   display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left}
-.words button .wja{font-size:11px; color:var(--sub); font-weight:400; line-height:1.3}
+.words button .wja{font-size:calc(11px * var(--fs,1)); color:var(--sub); font-weight:400; line-height:1.3}
 .words button.learn{box-shadow:0 0 0 1.5px var(--accent) inset}   /* 覚えたい単語(2026-10-16) */
 /* Prismの本にもある語(2026-11-09) */
-.words button .wprism{font-size:9px; margin-left:3px; vertical-align:2px}
-.tr-prism{margin:-4px 0 10px; font-size:12px; color:var(--sub); line-height:1.6}
+.words button .wprism{font-size:calc(9px * var(--fs,1)); margin-left:3px; vertical-align:2px}
+.tr-prism{margin:-4px 0 10px; font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.6}
 .tr-prism a{display:inline-block; margin-top:4px; color:var(--accent); text-decoration:none;
   border:1px solid var(--border); border-radius:8px; padding:3px 9px}
 /* 思い出す(2026-10-16) */
 .study-card{padding:18px 16px}
 /* 今日のタグ(2026-11-15) */
 .tagday{padding:14px 16px; margin-bottom:12px}
-.tagday .td-lab{font-size:12px; color:var(--sub)}
-.tagday .td-tag{font-size:20px; font-weight:700; margin:2px 0 2px}
-.tagday .td-sub{font-size:12px; color:var(--sub); line-height:1.6}
+.tagday .td-lab{font-size:calc(12px * var(--fs,1)); color:var(--sub)}
+.tagday .td-tag{font-size:calc(20px * var(--fs,1)); font-weight:700; margin:2px 0 2px}
+.tagday .td-sub{font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.6}
 .tagday .td-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
-.tagday .td-acts .btn{padding:10px 14px; font-size:14px}
+.tagday .td-acts .btn{padding:10px 14px; font-size:calc(14px * var(--fs,1))}
 .tagday.done .td-tag{color:var(--sub)}
-.study-sen{font-size:21px; line-height:1.7; margin:10px 0 6px; unicode-bidi:plaintext}
+.study-sen{font-size:calc(21px * var(--fs,1)); line-height:1.7; margin:10px 0 6px; unicode-bidi:plaintext}
 .study-sen mark{background:var(--accent-soft); color:var(--text); border-radius:4px; padding:0 2px}
 .study-gap{color:var(--accent); letter-spacing:.05em; white-space:nowrap}
-.study-sroman{font-size:14px; color:var(--sub); font-style:italic; line-height:1.6; margin:-2px 0 6px; overflow-wrap:anywhere}
+.study-sroman{font-size:calc(14px * var(--fs,1)); color:var(--sub); font-style:italic; line-height:1.6; margin:-2px 0 6px; overflow-wrap:anywhere}
 .study-sroman mark{background:var(--accent-soft); color:var(--text); border-radius:4px; padding:0 2px}
-.study-ja{font-size:14px; color:var(--sub); line-height:1.6}
-.study-mean{font-size:15px; margin-top:10px}
-.study-ans{font-size:20px; font-weight:700; margin-top:8px; unicode-bidi:plaintext}
-.study-roman{font-size:14px; font-weight:400; color:var(--sub); font-style:italic}
+.study-ja{font-size:calc(14px * var(--fs,1)); color:var(--sub); line-height:1.6}
+.study-mean{font-size:calc(15px * var(--fs,1)); margin-top:10px}
+.study-ans{font-size:calc(20px * var(--fs,1)); font-weight:700; margin-top:8px; unicode-bidi:plaintext}
+.study-roman{font-size:calc(14px * var(--fs,1)); font-weight:400; color:var(--sub); font-style:italic}
 .study-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
 .study-acts .btn{flex:1; min-width:96px}
 .study-acts .st-spd{flex:0 0 auto; min-width:64px; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
 .study-grade .btn{min-height:46px}
-.st-drop{display:block; margin:16px auto 0; background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline}
+.st-drop{display:block; margin:16px auto 0; background:none; border:none; color:var(--sub); font-size:calc(12px * var(--fs,1)); text-decoration:underline}
 /* 思い出すの頭と一覧(2026-11-06) */
-.study-head{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:2px 4px 12px; font-size:12px; color:var(--sub); line-height:1.8}
-.study-head select{font-size:12px; padding:3px 6px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub)}
+.study-head{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:2px 4px 12px; font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.8}
+.study-head select{font-size:calc(12px * var(--fs,1)); padding:3px 6px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub)}
 .study-list{margin-top:2px}
 /* 本文から単語を拾う(2026-11-06) */
-.pick-head{font-size:12px; color:var(--sub); margin:12px 2px 6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.pick-head{font-size:calc(12px * var(--fs,1)); color:var(--sub); margin:12px 2px 6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 .pick-row{display:flex; gap:10px; align-items:flex-start; padding:8px 2px; border-top:1px solid var(--border)}
 .pick-row input{flex:0 0 auto; width:19px; height:19px; margin-top:2px; accent-color:var(--accent)}
 .pick-row .pk-b{flex:1; min-width:0}
-.pick-row .pk-w{font-size:15px; line-height:1.5; overflow-wrap:anywhere; unicode-bidi:plaintext}
-.pick-row .pk-rm{font-size:12px; color:var(--sub); font-style:italic}
-.pick-row .pk-ja{font-size:12.5px; color:var(--sub); line-height:1.5}
-.pick-row .pk-src{font-size:10.5px; color:var(--sub); opacity:.7}
+.pick-row .pk-w{font-size:calc(15px * var(--fs,1)); line-height:1.5; overflow-wrap:anywhere; unicode-bidi:plaintext}
+.pick-row .pk-rm{font-size:calc(12px * var(--fs,1)); color:var(--sub); font-style:italic}
+.pick-row .pk-ja{font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.5}
+.pick-row .pk-src{font-size:calc(10.5px * var(--fs,1)); color:var(--sub); opacity:.7}
 .study-row{display:flex; gap:10px; align-items:flex-start; background:var(--card); border:1px solid var(--border);
   border-radius:14px; padding:11px 13px; margin-bottom:8px}
 .study-row .sr-body{flex:1; min-width:0}
-.study-row .sr-w{font-size:16px; line-height:1.5; overflow-wrap:anywhere; unicode-bidi:plaintext}
-.study-row .sr-ja{font-size:13px; color:var(--sub); line-height:1.5}
-.study-row .sr-meta{font-size:11px; color:var(--sub); margin-top:3px; line-height:1.6}
+.study-row .sr-w{font-size:calc(16px * var(--fs,1)); line-height:1.5; overflow-wrap:anywhere; unicode-bidi:plaintext}
+.study-row .sr-ja{font-size:calc(13px * var(--fs,1)); color:var(--sub); line-height:1.5}
+.study-row .sr-meta{font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:3px; line-height:1.6}
 .study-row .sr-miss{color:var(--accent); font-weight:600}
-.study-row .sr-x{flex:0 0 auto; background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline; padding:3px 0}
+.study-row .sr-x{flex:0 0 auto; background:none; border:none; color:var(--sub); font-size:calc(12px * var(--fs,1)); text-decoration:underline; padding:3px 0}
 .tr-learn.on{background:var(--accent); color:#fff}
-.words button .wroman{font-size:11px; color:var(--sub); font-weight:400; font-style:italic; line-height:1.3}
+.words button .wroman{font-size:calc(11px * var(--fs,1)); color:var(--sub); font-weight:400; font-style:italic; line-height:1.3}
 .words button.faved{border-color:var(--star)}
-.words button.faved .wtxt::after{content:" ★"; color:var(--star); font-size:12px}
-.lesson-note{font-size:13px; color:var(--sub); line-height:1.7}
-.empty-msg{text-align:center; color:var(--sub); font-size:14px; padding:40px 0; line-height:1.9}
-.hint{font-size:11px; color:var(--sub); margin-top:8px}
+.words button.faved .wtxt::after{content:" ★"; color:var(--star); font-size:calc(12px * var(--fs,1))}
+.lesson-note{font-size:calc(13px * var(--fs,1)); color:var(--sub); line-height:1.7}
+.empty-msg{text-align:center; color:var(--sub); font-size:calc(14px * var(--fs,1)); padding:40px 0; line-height:1.9}
+.hint{font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:8px}
 /* search */
-#q, #favClear{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
+#q, #favClear{width:100%; padding:12px; font-size:calc(16px * var(--fs,1)); border:1px solid var(--border);
   border-radius:12px; background:var(--card); color:var(--text)}
 .filterbar{display:flex; gap:8px; margin:10px 0}
 .filterbar button{padding:11px 17px; border-radius:20px; background:var(--card); border:1px solid var(--border);
-  color:var(--sub); font-size:14px; font-weight:600}
+  color:var(--sub); font-size:calc(14px * var(--fs,1)); font-weight:600}
 .filterbar button.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
 .result{background:var(--card); border:1px solid var(--border); border-radius:14px;
   padding:12px 14px; margin-bottom:8px; cursor:pointer; display:flex; gap:10px; align-items:flex-start}
 .result .body{flex:1; min-width:0}
-.result .txt{font-size:16px; line-height:1.55; overflow-wrap:anywhere}
+.result .txt{font-size:calc(16px * var(--fs,1)); line-height:1.55; overflow-wrap:anywhere}
 .result .txt mark, .result .txt-ja mark{background:var(--accent-soft); color:var(--accent); border-radius:3px; padding:0 1px}
-.result .txt-ja{font-size:14px; color:var(--sub); line-height:1.5; margin-top:3px; overflow-wrap:anywhere}
-.result .meta{font-size:12px; color:var(--sub); margin-top:4px}
-.result .fav{flex:none; background:none; font-size:22px; color:var(--border); padding:6px 10px; margin:-4px -6px 0 0}
+.result .txt-ja{font-size:calc(14px * var(--fs,1)); color:var(--sub); line-height:1.5; margin-top:3px; overflow-wrap:anywhere}
+.result .meta{font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:4px}
+.result .fav{flex:none; background:none; font-size:calc(22px * var(--fs,1)); color:var(--border); padding:6px 10px; margin:-4px -6px 0 0}
 .result .fav.on{color:var(--star)}
-#rcount, #rcount2{font-size:12px; color:var(--sub); margin:6px 4px 10px}
-#rootQ, #wfQ, #sufQ{width:100%; padding:12px; font-size:16px; border:1px solid var(--border);
+#rcount, #rcount2{font-size:calc(12px * var(--fs,1)); color:var(--sub); margin:6px 4px 10px}
+#rootQ, #wfQ, #sufQ{width:100%; padding:12px; font-size:calc(16px * var(--fs,1)); border:1px solid var(--border);
   border-radius:12px; background:var(--card); color:var(--text)}
-#wfCount, #sufCount, #cmpCount, #preCount, #caseCount, #stackCount, #addCount{font-size:12px; color:var(--sub); margin:6px 4px 10px}
+#wfCount, #sufCount, #cmpCount, #preCount, #caseCount, #stackCount, #addCount{font-size:calc(12px * var(--fs,1)); color:var(--sub); margin:6px 4px 10px}
 .cmp-rule{padding:8px 0; border-top:1px solid var(--border)}
-.cmp-rule .cr-p{font-size:14px; font-weight:700}
-.cmp-rule .cr-e{font-size:14px; margin-top:3px}
-.cmp-rule .cr-m{font-size:12px; color:var(--sub); margin-top:2px}
+.cmp-rule .cr-p{font-size:calc(14px * var(--fs,1)); font-weight:700}
+.cmp-rule .cr-e{font-size:calc(14px * var(--fs,1)); margin-top:3px}
+.cmp-rule .cr-m{font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px}
 .cn-pair{margin-top:8px; padding:8px 11px; border-radius:9px; background:var(--bg); border:1px solid var(--border)}
-.cn-pair div{font-size:14px; line-height:1.7}
+.cn-pair div{font-size:calc(14px * var(--fs,1)); line-height:1.7}
 .stk-chain{display:flex; flex-wrap:wrap; align-items:flex-end; gap:3px; margin-top:10px}
 .stk-part{display:flex; flex-direction:column; align-items:center; padding:6px 10px;
-  border-radius:9px; background:var(--accent-soft); color:var(--accent); font-size:16px; font-weight:700}
+  border-radius:9px; background:var(--accent-soft); color:var(--accent); font-size:calc(16px * var(--fs,1)); font-weight:700}
 .stk-part.stem{background:var(--accent); color:#fff}
-.stk-part b{font-size:9.5px; font-weight:600; opacity:.85; margin-top:2px}
-.stk-plus{align-self:center; color:var(--sub); font-size:13px; padding-bottom:12px}
-.stk-slots{font-size:13px; color:var(--sub); margin-top:6px; line-height:1.7}
+.stk-part b{font-size:calc(9.5px * var(--fs,1)); font-weight:600; opacity:.85; margin-top:2px}
+.stk-plus{align-self:center; color:var(--sub); font-size:calc(13px * var(--fs,1)); padding-bottom:12px}
+.stk-slots{font-size:calc(13px * var(--fs,1)); color:var(--sub); margin-top:6px; line-height:1.7}
 .stk-slots span{color:var(--accent)}
 .case-pair{padding:10px 0; border-top:1px solid var(--border)}
-.case-pair .cp-prep{font-size:20px; font-weight:700; color:var(--accent); margin-bottom:5px}
+.case-pair .cp-prep{font-size:calc(20px * var(--fs,1)); font-weight:700; color:var(--accent); margin-bottom:5px}
 .case-pair .cp-row{display:flex; align-items:baseline; gap:8px; margin-top:8px}
-.case-pair .cp-case{font-size:12px; font-weight:700; padding:2px 9px; border-radius:11px;
+.case-pair .cp-case{font-size:calc(12px * var(--fs,1)); font-weight:700; padding:2px 9px; border-radius:11px;
   background:var(--accent-soft); color:var(--accent)}
-.case-pair .cp-label{font-size:12.5px; color:var(--sub)}
+.case-pair .cp-label{font-size:calc(12.5px * var(--fs,1)); color:var(--sub)}
 .case-pair .cp-ex{margin-top:4px}
-.place-band{font-size:12px; font-weight:700; color:var(--accent); margin:12px 0 5px}
+.place-band{font-size:calc(12px * var(--fs,1)); font-weight:700; color:var(--accent); margin:12px 0 5px}
 .tagrow button.here{background:var(--accent); color:#fff}
-.prof-head{font-size:19px; font-weight:700; line-height:1.65; margin-top:2px}
-.prof-note{font-size:13.5px; color:var(--sub); line-height:1.8; margin-top:9px}
+.prof-head{font-size:calc(19px * var(--fs,1)); font-weight:700; line-height:1.65; margin-top:2px}
+.prof-note{font-size:calc(13.5px * var(--fs,1)); color:var(--sub); line-height:1.8; margin-top:9px}
 /* 接尾辞: スロットの鎖 */
 .suf-chain{display:flex; flex-wrap:wrap; align-items:flex-end; gap:2px; margin-top:4px}
 .suf-part{display:flex; flex-direction:column; align-items:center; padding:6px 9px;
-  border-radius:9px; background:var(--accent-soft); color:var(--accent); font-size:16px; font-weight:700}
+  border-radius:9px; background:var(--accent-soft); color:var(--accent); font-size:calc(16px * var(--fs,1)); font-weight:700}
 .suf-part.stem{background:var(--accent); color:#fff}
-.suf-part b{font-size:9.5px; font-weight:600; opacity:.8; margin-top:2px}
-.suf-plus{align-self:center; color:var(--sub); font-size:14px; padding-bottom:12px}
-.suf-chain-ja{font-size:13px; color:var(--sub); margin-top:6px}
+.suf-part b{font-size:calc(9.5px * var(--fs,1)); font-weight:600; opacity:.8; margin-top:2px}
+.suf-plus{align-self:center; color:var(--sub); font-size:calc(14px * var(--fs,1)); padding-bottom:12px}
+.suf-chain-ja{font-size:calc(13px * var(--fs,1)); color:var(--sub); margin-top:6px}
 .suf-forms{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px}
-.suf-forms span{font-size:13px; font-weight:600; padding:3px 9px; border-radius:11px;
+.suf-forms span{font-size:calc(13px * var(--fs,1)); font-weight:600; padding:3px 9px; border-radius:11px;
   background:var(--bg); border:1px solid var(--border); color:var(--text)}
 .suf-ex{display:flex; flex-wrap:wrap; align-items:baseline; gap:7px; width:100%; text-align:left;
   margin-top:7px; padding:8px 10px; border-radius:9px; background:var(--bg);
-  border:1px solid var(--border); color:var(--text); font-size:14px; line-height:1.5}
+  border:1px solid var(--border); color:var(--text); font-size:calc(14px * var(--fs,1)); line-height:1.5}
 .suf-ex .sx-w{font-weight:700}
-.suf-ex .sx-p{font-size:12px; color:var(--accent)}
-.suf-ex .sx-m{font-size:12px; color:var(--sub); flex:1; min-width:0}
-.suf-ex .sx-l{font-size:11px; color:var(--sub); margin-left:auto; flex:none}
+.suf-ex .sx-p{font-size:calc(12px * var(--fs,1)); color:var(--accent)}
+.suf-ex .sx-m{font-size:calc(12px * var(--fs,1)); color:var(--sub); flex:1; min-width:0}
+.suf-ex .sx-l{font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-left:auto; flex:none}
 .rchips{display:flex; flex-wrap:wrap; gap:5px; margin-top:5px}
-.rchip{font-size:11px; padding:3px 9px; border-radius:12px; background:var(--accent-soft);
+.rchip{font-size:calc(11px * var(--fs,1)); padding:3px 9px; border-radius:12px; background:var(--accent-soft);
   color:var(--accent); font-weight:600}
 .rchip.warn{background:transparent; border:1px dashed var(--danger); color:var(--danger)}
 /* 語根の子音のローマ字(2026-10-13)。アラビア文字の右→左の中でも、左→右で k-t-b と並ぶように isolate */
-.rroman{font-size:14px; color:var(--sub); direction:ltr; unicode-bidi:isolate; letter-spacing:.03em}
+.rroman{font-size:calc(14px * var(--fs,1)); color:var(--sub); direction:ltr; unicode-bidi:isolate; letter-spacing:.03em}
 .rform{margin-top:10px; padding:10px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--border)}
 .rform-head{margin-bottom:6px}
-.rsurface{font-size:18px; font-weight:600; unicode-bidi:plaintext}
+.rsurface{font-size:calc(18px * var(--fs,1)); font-weight:600; unicode-bidi:plaintext}
 .rocc{display:flex; gap:9px; width:100%; text-align:left; align-items:flex-start;
   padding:8px 0; border-top:1px solid var(--border); background:none; color:var(--text)}
-.rocc-l{flex:none; font-size:11.5px; color:var(--sub); font-weight:700; padding-top:3px; min-width:32px}
-.rocc-t{font-size:14.5px; line-height:1.55; overflow-wrap:anywhere; unicode-bidi:plaintext}
+.rocc-l{flex:none; font-size:calc(11.5px * var(--fs,1)); color:var(--sub); font-weight:700; padding-top:3px; min-width:32px}
+.rocc-t{font-size:calc(14.5px * var(--fs,1)); line-height:1.55; overflow-wrap:anywhere; unicode-bidi:plaintext}
 .phrase .txt .rtok, .lesson-title-txt .rtok{border-bottom:1px dashed var(--accent); cursor:pointer}
 /* forms */
 textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--border);
-  border-radius:12px; background:var(--bg); color:var(--text); font-size:14px; resize:vertical; line-height:1.7}
+  border-radius:12px; background:var(--bg); color:var(--text); font-size:calc(14px * var(--fs,1)); resize:vertical; line-height:1.7}
 .btn{padding:12px 18px; border-radius:12px; background:var(--accent); color:#fff;
-  font-size:15px; font-weight:700}
+  font-size:calc(15px * var(--fs,1)); font-weight:700}
 .btn.soft{background:var(--accent-soft); color:var(--accent)}
 .btn.danger{background:transparent; color:var(--danger); border:1px solid var(--danger)}
 .btn.full{width:100%; margin-top:10px}
@@ -324,96 +326,96 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .con-row{display:block; width:100%; text-align:left; background:var(--card);
   border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:8px}
 .con-top{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
-.con-name{font-size:18px; font-weight:700; color:var(--text)}
-.con-n{font-size:12px; color:var(--accent); font-weight:600; white-space:nowrap}
-.con-langs{font-size:12px; color:var(--sub); margin-top:6px; line-height:1.7}
-.con-miss{font-size:11px; color:var(--sub); opacity:.6; margin-top:4px; line-height:1.7}
+.con-name{font-size:calc(18px * var(--fs,1)); font-weight:700; color:var(--text)}
+.con-n{font-size:calc(12px * var(--fs,1)); color:var(--accent); font-weight:600; white-space:nowrap}
+.con-langs{font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:6px; line-height:1.7}
+.con-miss{font-size:calc(11px * var(--fs,1)); color:var(--sub); opacity:.6; margin-top:4px; line-height:1.7}
 /* ◇の組の見出し(2026-10-10) */
-.con-group{font-size:13px; font-weight:700; color:var(--accent); margin:18px 4px 8px; letter-spacing:.04em}
+.con-group{font-size:calc(13px * var(--fs,1)); font-weight:700; color:var(--accent); margin:18px 4px 8px; letter-spacing:.04em}
 /* 単語をまとめて登録(2026-08-15) */
-.wd-head{font-size:11px; color:var(--sub); font-weight:700; letter-spacing:.04em;
+.wd-head{font-size:calc(11px * var(--fs,1)); color:var(--sub); font-weight:700; letter-spacing:.04em;
   margin:14px 4px 6px}
 .wd-row{display:flex; gap:8px; align-items:center; background:var(--card);
   border:1px solid var(--border); border-radius:12px; padding:8px 10px; margin-bottom:6px}
-.wd-src{flex:0 0 40%; font-size:15px; unicode-bidi:plaintext; word-break:break-word}
-.wd-in{flex:1; min-width:0; padding:9px; font-size:15px; border:1px solid var(--border);
+.wd-src{flex:0 0 40%; font-size:calc(15px * var(--fs,1)); unicode-bidi:plaintext; word-break:break-word}
+.wd-in{flex:1; min-width:0; padding:9px; font-size:calc(15px * var(--fs,1)); border:1px solid var(--border);
   border-radius:8px; background:var(--bg); color:var(--text); unicode-bidi:plaintext}
 .wd-row.busy{border-color:var(--accent)}
 .wd-row.miss .wd-in{border-color:var(--danger)}
-.tr-hint{font-size:11px; color:var(--sub); margin-top:4px}
+.tr-hint{font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:4px}
 /* 短い知らせ(2026-11-06)。行を分けたときの位置の付け直しなど、画面が変わった後に出す */
 .toast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:60;
   max-width:min(92vw, 520px); background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:12px;
-  padding:10px 14px; font-size:13px; line-height:1.6; box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  padding:10px 14px; font-size:calc(13px * var(--fs,1)); line-height:1.6; box-shadow:0 6px 24px rgba(0,0,0,.25)}
 /* #タグのページへ戻る(2026-11-15) */
 .tag-return{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(14px + env(safe-area-inset-bottom)); z-index:15;
   display:none; align-items:center; max-width:92vw; background:var(--accent); color:#fff; border-radius:999px;
   box-shadow:0 6px 20px rgba(0,0,0,.3)}
-.tag-return button{background:none; color:inherit; font-size:14px; font-weight:600; padding:11px 6px 11px 16px;
+.tag-return button{background:none; color:inherit; font-size:calc(14px * var(--fs,1)); font-weight:600; padding:11px 6px 11px 16px;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
 .tag-return button.tg-x{padding:11px 14px 11px 8px; font-weight:400; opacity:.85; flex:none}
-.tr-form{margin-top:8px; font-size:12px; color:var(--sub); line-height:1.7}
-.tr-form button{font-size:12px; margin:4px 6px 0 0; padding:3px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent)}
-.study-ear-toggle{font-size:12px; padding:4px 10px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub); margin-left:8px}
+.tr-form{margin-top:8px; font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.7}
+.tr-form button{font-size:calc(12px * var(--fs,1)); margin:4px 6px 0 0; padding:3px 10px; border-radius:8px; background:var(--accent-soft); color:var(--accent)}
+.study-ear-toggle{font-size:calc(12px * var(--fs,1)); padding:4px 10px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub); margin-left:8px}
 .study-ear-toggle.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
-.study-ear{font-size:15px; color:var(--sub); line-height:1.7; margin:12px 0 4px}
-.tr-hint .tr-fill{font-size:11px; margin-left:6px; padding:2px 8px; border-radius:7px;
+.study-ear{font-size:calc(15px * var(--fs,1)); color:var(--sub); line-height:1.7; margin:12px 0 4px}
+.tr-hint .tr-fill{font-size:calc(11px * var(--fs,1)); margin-left:6px; padding:2px 8px; border-radius:7px;
   background:var(--accent-soft); color:var(--accent); border:0}
-.msg{font-size:13px; margin-top:10px; color:var(--accent); min-height:18px}
+.msg{font-size:calc(13px * var(--fs,1)); margin-top:10px; color:var(--accent); min-height:18px}
 .msg.err{color:var(--danger)}
-.small-note{font-size:12px; color:var(--sub); margin-top:8px; line-height:1.7}
+.small-note{font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:8px; line-height:1.7}
 pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:12px;
-  font-size:11.5px; overflow-x:auto; line-height:1.6}
+  font-size:calc(11.5px * var(--fs,1)); overflow-x:auto; line-height:1.6}
 /* settings language list */
 .lang-item{display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--border)}
 .lang-item:last-child{border-bottom:none}
-.lang-item b{flex:1; font-size:15px; min-width:0}
-.lang-item span{font-size:12px; color:var(--sub)}
+.lang-item b{flex:1; font-size:calc(15px * var(--fs,1)); min-width:0}
+.lang-item span{font-size:calc(12px * var(--fs,1)); color:var(--sub)}
 .lang-item button{width:38px; height:38px; border-radius:10px; background:var(--bg);
-  border:1px solid var(--border); color:var(--text); font-size:15px}
+  border:1px solid var(--border); color:var(--text); font-size:calc(15px * var(--fs,1))}
 .lang-item button.del{color:var(--danger)}
 .add-lang{display:flex; gap:8px; margin-top:12px}
 .add-lang input{flex:1; padding:11px; border:1px solid var(--border); border-radius:10px;
-  background:var(--bg); color:var(--text); font-size:15px}
+  background:var(--bg); color:var(--text); font-size:calc(15px * var(--fs,1))}
 .add-lang button{padding:0 18px; border-radius:10px; background:var(--accent); color:#fff; font-weight:700}
 /* edit form */
-.f-label{font-size:12px; color:var(--sub); font-weight:600; margin:14px 0 5px}
+.f-label{font-size:calc(12px * var(--fs,1)); color:var(--sub); font-weight:600; margin:14px 0 5px}
 .f-input{width:100%; padding:11px; border:1px solid var(--border); border-radius:10px;
-  background:var(--bg); color:var(--text); font-size:15px}
+  background:var(--bg); color:var(--text); font-size:calc(15px * var(--fs,1))}
 /* フレーズごとの日本語訳ポップアップ */
-.note-btn{flex:none; background:none; font-size:13.5px; color:var(--sub); padding:9px 13px;
+.note-btn{flex:none; background:none; font-size:calc(13.5px * var(--fs,1)); color:var(--sub); padding:9px 13px;
   border:1px solid var(--border); border-radius:10px; line-height:1.4; align-self:flex-start}
 .note-btn.on{color:var(--accent); border-color:var(--accent); background:var(--accent-soft)}
 .tr-pop{position:fixed; z-index:999; background:var(--card);
   border:1px solid var(--border); border-radius:14px; padding:12px;
-  box-shadow:0 10px 28px rgba(0,0,0,.28); font-size:14px; line-height:1.55; max-height:70vh; overflow:auto}
-.tr-pop .tr-src{font-size:13px; color:var(--sub); margin-bottom:10px; overflow-wrap:anywhere}
+  box-shadow:0 10px 28px rgba(0,0,0,.28); font-size:calc(14px * var(--fs,1)); line-height:1.55; max-height:70vh; overflow:auto}
+.tr-pop .tr-src{font-size:calc(13px * var(--fs,1)); color:var(--sub); margin-bottom:10px; overflow-wrap:anywhere}
 /* 右上の ✕(2026-10-03 Mayの依頼)。画面の下の語から開くと下の「閉じる」が端に隠れて押しにくかった。
    ポップアップの中をスクロールしても上に残る */
 .tr-pop .tr-x{position:sticky; top:-6px; float:right; margin:-4px -4px 4px 10px; width:38px; height:38px;
   border-radius:19px; border:1px solid var(--border); background:var(--bg); color:var(--text);
-  font-size:17px; line-height:1; padding:0; z-index:2}
+  font-size:calc(17px * var(--fs,1)); line-height:1; padding:0; z-index:2}
 .tr-pop .tr-field{margin-bottom:10px}
-.tr-pop .tr-label{font-size:11px; color:var(--sub); font-weight:600; margin-bottom:4px}
+.tr-pop .tr-label{font-size:calc(11px * var(--fs,1)); color:var(--sub); font-weight:600; margin-bottom:4px}
 .tr-pop .tr-input{width:100%; min-height:56px; padding:8px; border:1px solid var(--border);
-  border-radius:8px; background:var(--bg); color:var(--text); font-size:16px; resize:vertical; line-height:1.6}
+  border-radius:8px; background:var(--bg); color:var(--text); font-size:calc(16px * var(--fs,1)); resize:vertical; line-height:1.6}
 /* 2026-10-07: 14px → 16px。iPhoneのSafariは16px未満の入力欄に触れると画面を拡大し、
    ポップアップが左へはみ出して読みの欄が入力できなかった(Mayが独L42で気づいた) */
 .tr-pop .tr-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:2px}
-.tr-pop .tr-actions button{padding:11px 15px; border-radius:10px; font-size:14px; font-weight:600}
+.tr-pop .tr-actions button{padding:11px 15px; border-radius:10px; font-size:calc(14px * var(--fs,1)); font-weight:600}
 .tr-pop .tr-actions .btn{background:var(--accent); color:#fff}
 .tr-pop .tr-actions .btn.soft{background:var(--bg); color:var(--text); border:1px solid var(--border)}
 .tr-pop .tr-auto{background:var(--accent-soft); color:var(--accent)}
 /* 単語/部分選択した範囲だけの簡易訳(読み取り専用のミニポップアップ) */
 .sel-pop{position:fixed; z-index:1000; max-width:260px; background:var(--card);
   border:1px solid var(--border); border-radius:12px; padding:9px 11px;
-  box-shadow:0 8px 22px rgba(0,0,0,.26); font-size:13.5px; line-height:1.5}
-.sel-pop .sel-src{font-size:11.5px; color:var(--sub); margin-bottom:3px; overflow-wrap:anywhere}
+  box-shadow:0 8px 22px rgba(0,0,0,.26); font-size:calc(13.5px * var(--fs,1)); line-height:1.5}
+.sel-pop .sel-src{font-size:calc(11.5px * var(--fs,1)); color:var(--sub); margin-bottom:3px; overflow-wrap:anywhere}
 .sel-pop .sel-out{color:var(--text); overflow-wrap:anywhere}
-.sel-pop .sel-out.err{color:var(--danger); font-size:12px}
+.sel-pop .sel-out.err{color:var(--danger); font-size:calc(12px * var(--fs,1))}
 .sel-pop .sel-out.sel-none{color:var(--sub)}
-.sel-pop .sel-sub{font-size:11.5px; color:var(--sub)}
-.sel-pop .sel-go{display:inline-block; margin-top:7px; font-size:12px; color:var(--accent);
+.sel-pop .sel-sub{font-size:calc(11.5px * var(--fs,1)); color:var(--sub)}
+.sel-pop .sel-go{display:inline-block; margin-top:7px; font-size:calc(12px * var(--fs,1)); color:var(--accent);
   text-decoration:none; border:1px solid var(--border); border-radius:8px; padding:3px 9px}
 </style>
 </head>
@@ -442,7 +444,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
       <input id="lessonNo" type="number" inputmode="numeric" min="1" value="1">
       <button class="step" id="nextBtn">＋</button>
       <button class="step" id="playBtn" style="display:none">▶</button>
-      <button class="step" id="spdBtn" style="display:none; width:auto; padding:0 12px; font-size:15px">1.0×</button>
+      <button class="step" id="spdBtn" style="display:none; width:auto; padding:0 12px; font-size:calc(15px * var(--fs,1))">1.0×</button>
       <div class="lesson-title" id="lessonTitle"></div>
     </div>
     <div id="seekRow" style="display:none">
@@ -692,6 +694,12 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <div id="netProbeOut" class="small-note" style="margin-top:0"></div> -->
     <div class="small-note">GitHubに上げても、スマホ側が古いファイルを持ったままのことがあります。上の「版」が渡したものと違うときに押してください。保存したデータは消えません。</div>
   </div>
+  <!-- 文字の大きさ(2026-11-17、Mayの依頼)。この端末だけの設定(書き出しには入らない) -->
+  <div class="card">
+    <h2>文字の大きさ</h2>
+    <div class="filterbar" id="fsBar" style="flex-wrap:wrap; margin:0"></div>
+    <div class="small-note">アプリ全体の文字が変わります。この端末だけの設定です。</div>
+  </div>
   <div class="card">
     <h2>言語(表示順)</h2>
     <div id="langList"></div>
@@ -750,7 +758,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-16b";
+const BUILD = "2026-11-17a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -936,7 +944,7 @@ function warnBar(msg){
     el.id = "saveWarn";
     el.style.cssText = "position:fixed; left:8px; right:8px; bottom:8px; z-index:99;"
       + "background:var(--danger); color:#fff; padding:12px 14px; border-radius:12px;"
-      + "font-size:13px; line-height:1.6; box-shadow:0 6px 20px rgba(0,0,0,.25)";
+      + "font-size:calc(13px * var(--fs,1)); line-height:1.6; box-shadow:0 6px 20px rgba(0,0,0,.25)";
     el.onclick = ()=>el.remove();
     document.body.appendChild(el);
   }
@@ -959,7 +967,7 @@ function lockStore(why){
   el.id = "saveWarn";
   el.style.cssText = "position:fixed; left:8px; right:8px; bottom:8px; z-index:99;"
     + "background:var(--danger); color:#fff; padding:12px 14px; border-radius:12px;"
-    + "font-size:13px; line-height:1.6; box-shadow:0 6px 20px rgba(0,0,0,.25)";
+    + "font-size:calc(13px * var(--fs,1)); line-height:1.6; box-shadow:0 6px 20px rgba(0,0,0,.25)";
   el.textContent = why + " 保存してあるデータを守るため、この画面での変更は保存しません"
     + "(いま見えているのは古い控えか、空の画面です)。ここを押すと開き直します。"
     + "何度開き直しても同じなら、取り込みや書き出しはせずに、そのまま知らせてください。";
@@ -1491,10 +1499,10 @@ function openRootPopup(hits, anchorRect){
   hits.forEach((h,i)=>{
     html += '<div class="tr-src">√ ' + esc(h.r.root) + (h.r.meaning ? ' — ' + esc(h.r.meaning) : "")
       + (rootHasReview(h.r) ? ' <span class="rchip warn">要確認</span>' : "") + '</div>'
-      + '<div style="font-size:15px; line-height:1.7; margin-bottom:8px">'
+      + '<div style="font-size:calc(15px * var(--fs,1)); line-height:1.7; margin-bottom:8px">'
       + '<b>' + esc(h.f.surface) + '</b>'
       + (h.f.surfaceRoman ? ' <span style="color:var(--sub); font-style:italic">' + esc(h.f.surfaceRoman) + '</span>' : "")
-      + '<br><span style="color:var(--sub); font-size:13px">見出し形 ' + esc(h.w.lemma)
+      + '<br><span style="color:var(--sub); font-size:calc(13px * var(--fs,1))">見出し形 ' + esc(h.w.lemma)
       + (h.w.meaning ? ' — ' + esc(h.w.meaning) : "")
       + (h.w.partOfSpeech ? ' · ' + esc(h.w.partOfSpeech) : "") + '</span></div>'
       + '<button class="rgo btn soft" data-i="' + i + '" style="width:100%; margin-bottom:10px">'
@@ -1565,7 +1573,7 @@ function renderRoots(){
     row.innerHTML = '<div class="body">'
       + '<div class="txt"><b>' + esc(r.root) + '</b>'
       + (rootRoman(r) ? ' <span class="rroman">' + esc(rootRoman(r)) + '</span>' : "")
-      + (r.meaning ? ' <span style="font-size:14px; color:var(--sub)">' + esc(r.meaning) + '</span>' : "")
+      + (r.meaning ? ' <span style="font-size:calc(14px * var(--fs,1)); color:var(--sub)">' + esc(r.meaning) + '</span>' : "")
       + '</div>'
       + '<div class="rchips">' + featureChips(r)
       + (rootHasReview(r) ? '<span class="rchip warn">要確認</span>' : "") + '</div>'
@@ -1586,34 +1594,34 @@ function openRootDetail(r){
   const box = $("rootDetail");
   box.style.display = "";
   let html = '<button class="btn soft" id="rootBack" style="margin-bottom:10px">← 語根一覧へ</button>'
-    + '<div class="card"><div style="font-size:26px; font-weight:700; line-height:1.4; unicode-bidi:plaintext">'
+    + '<div class="card"><div style="font-size:calc(26px * var(--fs,1)); font-weight:700; line-height:1.4; unicode-bidi:plaintext">'
     + esc(r.root) + '</div>'
-    + (rootRoman(r) ? '<div class="rroman" style="display:block; text-align:right; font-size:17px; margin-top:2px">' + esc(rootRoman(r)) + '</div>' : "")
+    + (rootRoman(r) ? '<div class="rroman" style="display:block; text-align:right; font-size:calc(17px * var(--fs,1)); margin-top:2px">' + esc(rootRoman(r)) + '</div>' : "")
     + '<div class="meta" style="margin-top:4px">' + esc(r.lang)
     + (r.normalizedRoot ? ' · 照合キー ' + esc(mkRoot(r)) : "") + ' · ' + esc(r.id) + '</div>'
     + '<div class="rchips">' + featureChips(r)
     + (r.status==="needsReview" ? '<span class="rchip warn">要確認</span>' : "") + '</div>'
-    + (r.meaning ? '<div style="margin-top:8px; font-size:15px">' + esc(r.meaning) + '</div>' : "")
-    + (r.notes ? '<div style="margin-top:6px; font-size:13.5px; color:var(--sub); line-height:1.7; white-space:pre-wrap">'
+    + (r.meaning ? '<div style="margin-top:8px; font-size:calc(15px * var(--fs,1))">' + esc(r.meaning) + '</div>' : "")
+    + (r.notes ? '<div style="margin-top:6px; font-size:calc(13.5px * var(--fs,1)); color:var(--sub); line-height:1.7; white-space:pre-wrap">'
         + esc(r.notes) + '</div>' : "")
     + '</div>';
   const words = (r.words||[]).slice().sort((a,b)=>
     (a.includeInRootStudy===false) - (b.includeInRootStudy===false));
   words.forEach((w,wi)=>{
-    html += '<div class="card"><div style="font-size:20px; font-weight:600; unicode-bidi:plaintext">'
+    html += '<div class="card"><div style="font-size:calc(20px * var(--fs,1)); font-weight:600; unicode-bidi:plaintext">'
       + esc(w.lemma)
-      + (w.lemmaRoman ? ' <span style="font-size:14px; color:var(--sub); font-style:italic">'
+      + (w.lemmaRoman ? ' <span style="font-size:calc(14px * var(--fs,1)); color:var(--sub); font-style:italic">'
           + esc(w.lemmaRoman) + '</span>' : "") + '</div>'
       + '<div class="meta">' + [w.meaning, w.partOfSpeech].filter(Boolean).map(esc).join(" · ") + '</div>'
       + '<div class="rchips">'
       + (w.status==="needsReview" ? '<span class="rchip warn">要確認</span>' : "")
       + (w.includeInRootStudy===false ? '<span class="rchip">学習一覧に出さない</span>' : "")
       + '</div>'
-      + (w.note ? '<div style="font-size:13px; color:var(--sub); margin-top:6px; line-height:1.7">'
+      + (w.note ? '<div style="font-size:calc(13px * var(--fs,1)); color:var(--sub); margin-top:6px; line-height:1.7">'
           + esc(w.note) + '</div>' : "");
     (w.forms||[]).forEach((f,fi)=>{
       html += '<div class="rform"><div class="rform-head"><span class="rsurface">' + esc(f.surface) + '</span>'
-        + (f.surfaceRoman ? ' <span style="font-size:13px; color:var(--sub); font-style:italic">'
+        + (f.surfaceRoman ? ' <span style="font-size:calc(13px * var(--fs,1)); color:var(--sub); font-style:italic">'
             + esc(f.surfaceRoman) + '</span>' : "")
         + ((f.formFeatures||[]).length || f.formNote
             ? '<div class="meta">' + esc([(f.formFeatures||[]).join(" / "), f.formNote].filter(Boolean).join(" · ")) + '</div>'
@@ -1726,7 +1734,7 @@ function renderWf(){
     row.dataset.lang = b.lang;
     row.innerHTML = '<div class="body">'
       + '<div class="txt"><b>' + esc(b.base) + '</b>'
-      + (b.baseMeaning ? ' <span style="font-size:14px; color:var(--sub)">' + esc(b.baseMeaning) + '</span>' : "")
+      + (b.baseMeaning ? ' <span style="font-size:calc(14px * var(--fs,1)); color:var(--sub)">' + esc(b.baseMeaning) + '</span>' : "")
       + '</div>'
       + '<div class="meta">' + esc(b.class || "") + ' · 派生 ' + ws.length + ' 語'
       + (dia ? ' · ◎本文 ' + dia : "") + '</div>'
@@ -1745,8 +1753,8 @@ function openBase(b){
   box.style.display = "";
   const ws = wfWords(b);
   let html = '<button class="btn soft" id="wfBack" style="margin-bottom:10px">← 基語一覧へ</button>'
-    + '<div class="card"><div style="font-size:26px; font-weight:700; line-height:1.4">' + esc(b.base) + '</div>'
-    + (b.baseMeaning ? '<div style="margin-top:4px; font-size:15px">' + esc(b.baseMeaning) + '</div>' : "")
+    + '<div class="card"><div style="font-size:calc(26px * var(--fs,1)); font-weight:700; line-height:1.4">' + esc(b.base) + '</div>'
+    + (b.baseMeaning ? '<div style="margin-top:4px; font-size:calc(15px * var(--fs,1))">' + esc(b.baseMeaning) + '</div>' : "")
     + '<div class="meta" style="margin-top:4px">' + esc(b.lang) + ' · ' + esc(b.class || "") + '</div>';
   // 基語そのものが本文に出ていれば、そこへ飛べる(語根と違い基語は単語として実在する)
   if((b.baseOccurrences||[]).length){
@@ -1757,20 +1765,20 @@ function openBase(b){
     html += '</div>';
   }
   html += '</div>';
-  if(b.notes) html += '<div class="card" style="white-space:pre-wrap; font-size:14px; line-height:1.75">' + esc(b.notes) + '</div>';
+  if(b.notes) html += '<div class="card" style="white-space:pre-wrap; font-size:calc(14px * var(--fs,1)); line-height:1.75">' + esc(b.notes) + '</div>';
   // 接辞ごとにまとめる
   const byAffix = new Map();
   ws.forEach(w=>{ if(!byAffix.has(w.affix)) byAffix.set(w.affix, []); byAffix.get(w.affix).push(w); });
   let wi = 0;
   const flat = [];
   byAffix.forEach((arr, affix)=>{
-    html += '<div class="card"><div style="font-weight:700; font-size:15px; margin-bottom:8px">' + esc(affix) + '</div>';
+    html += '<div class="card"><div style="font-weight:700; font-size:calc(15px * var(--fs,1)); margin-bottom:8px">' + esc(affix) + '</div>';
     arr.forEach(w=>{
       flat.push(w);
       html += '<div style="padding:9px 0; border-top:1px solid var(--border)">'
-        + '<div style="font-size:16px"><b>' + esc(w.lemma) + '</b>'
-        + ' <span style="font-size:12px; color:var(--sub)" title="' + esc(srcLabel(w.source)) + '">' + srcMark(w.source) + '</span></div>'
-        + (w.meaning ? '<div style="font-size:13.5px; color:var(--sub); margin-top:2px">' + esc(w.meaning) + '</div>' : "");
+        + '<div style="font-size:calc(16px * var(--fs,1))"><b>' + esc(w.lemma) + '</b>'
+        + ' <span style="font-size:calc(12px * var(--fs,1)); color:var(--sub)" title="' + esc(srcLabel(w.source)) + '">' + srcMark(w.source) + '</span></div>'
+        + (w.meaning ? '<div style="font-size:calc(13.5px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(w.meaning) + '</div>' : "");
       if((w.occurrences||[]).length){
         html += '<div class="rchips" style="margin-top:5px">';
         w.occurrences.forEach((o,oi)=>{
@@ -1870,10 +1878,10 @@ function renderSuf(){
     const c = document.createElement("div");
     c.className = "card";
     const dia = (s.examples||[]).filter(e=>e.source==="dialog").length;
-    c.innerHTML = '<div style="font-size:17px; font-weight:700">' + esc(s.name) + '</div>'
+    c.innerHTML = '<div style="font-size:calc(17px * var(--fs,1)); font-weight:700">' + esc(s.name) + '</div>'
       + '<div class="suf-forms">' + (s.forms||[]).map(f=>'<span>' + esc(f) + '</span>').join("") + '</div>'
-      + (s.gloss ? '<div style="font-size:14px; margin-top:7px">' + esc(s.gloss) + '</div>' : "")
-      + (s.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(s.note) + '</div>' : "")
+      + (s.gloss ? '<div style="font-size:calc(14px * var(--fs,1)); margin-top:7px">' + esc(s.gloss) + '</div>' : "")
+      + (s.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:5px">' + esc(s.note) + '</div>' : "")
       + '<div class="meta" style="margin-top:6px">'
       + ((s.lessons||[]).length ? 'L' + s.lessons.join(", L") : "")
       + (dia ? ' · ◎本文 ' + dia : "") + '</div>';
@@ -1926,18 +1934,18 @@ function renderCmp(lang){
       const c = document.createElement("div");
       c.className = "card";
       c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px">'
-        + '<span style="font-size:22px; font-weight:700">' + esc(cl.form) + '</span>'
-        + (cl.roman ? '<span style="font-size:13px; color:var(--sub); font-style:italic">' + esc(cl.roman) + '</span>' : '')
-        + '<span style="font-size:15px">' + esc(cl.gloss || "") + '</span></div>'
-        + (cl.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(cl.note) + '</div>' : '')
+        + '<span style="font-size:calc(22px * var(--fs,1)); font-weight:700">' + esc(cl.form) + '</span>'
+        + (cl.roman ? '<span style="font-size:calc(13px * var(--fs,1)); color:var(--sub); font-style:italic">' + esc(cl.roman) + '</span>' : '')
+        + '<span style="font-size:calc(15px * var(--fs,1))">' + esc(cl.gloss || "") + '</span></div>'
+        + (cl.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:5px">' + esc(cl.note) + '</div>' : '')
         + '<div class="meta" style="margin-top:5px">' + ((cl.lessons||[]).length ? 'L' + cl.lessons.join(", L") : '') + '</div>';
       (cl.examples||[]).forEach(e=>{
         const b = document.createElement("button");
         b.className = "suf-ex";
         b.style.display = "block";
-        b.innerHTML = '<div style="font-size:15px">' + esc(e.text) + '</div>'
-          + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
-          + '<div style="font-size:11px; color:var(--sub); margin-top:2px">L' + e.lesson + '</div>';
+        b.innerHTML = '<div style="font-size:calc(15px * var(--fs,1))">' + esc(e.text) + '</div>'
+          + (e.ja ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
+          + '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:2px">L' + e.lesson + '</div>';
         b.onclick = ()=>jumpTo(cl.lang, e.lesson, e.text);
         c.appendChild(b);
       });
@@ -1957,21 +1965,21 @@ function renderCmp(lang){
     c.className = "card";
     const dia = (p.compounds||[]).filter(x=>x.source==="dialog").length;
     c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px">'
-      + '<span style="font-size:22px; font-weight:700">' + esc(p.head) + '</span>'
-      + (p.roman ? '<span style="font-size:13px; color:var(--sub); font-style:italic">' + esc(p.roman) + '</span>' : '')
-      + '<span style="font-size:15px">' + esc(p.gloss || "") + '</span></div>'
-      + (p.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(p.note) + '</div>' : '')
+      + '<span style="font-size:calc(22px * var(--fs,1)); font-weight:700">' + esc(p.head) + '</span>'
+      + (p.roman ? '<span style="font-size:calc(13px * var(--fs,1)); color:var(--sub); font-style:italic">' + esc(p.roman) + '</span>' : '')
+      + '<span style="font-size:calc(15px * var(--fs,1))">' + esc(p.gloss || "") + '</span></div>'
+      + (p.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:5px">' + esc(p.note) + '</div>' : '')
       + '<div class="meta" style="margin-top:5px">' + ((p.lessons||[]).length ? 'L' + p.lessons.join(", L") : '')
       + (dia ? ' · ◎本文 ' + dia : '') + '</div>';
     (p.compounds||[]).forEach(w=>{
       const b = document.createElement("button");
       b.className = "suf-ex";
       b.style.display = "block";
-      b.innerHTML = '<div><span style="font-size:16px; font-weight:700">' + esc(w.word) + '</span>'
-        + (w.roman ? ' <span style="font-size:12px; color:var(--sub); font-style:italic">' + esc(w.roman) + '</span>' : '')
-        + (w.meaning ? ' <span style="font-size:13px">' + esc(w.meaning) + '</span>' : '') + '</div>'
-        + '<div style="font-size:12px; color:var(--accent); margin-top:2px">' + esc(w.parse || "") + '</div>'
-        + (w.source==="dialog" ? '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + w.lesson + '</div>' : '');
+      b.innerHTML = '<div><span style="font-size:calc(16px * var(--fs,1)); font-weight:700">' + esc(w.word) + '</span>'
+        + (w.roman ? ' <span style="font-size:calc(12px * var(--fs,1)); color:var(--sub); font-style:italic">' + esc(w.roman) + '</span>' : '')
+        + (w.meaning ? ' <span style="font-size:calc(13px * var(--fs,1))">' + esc(w.meaning) + '</span>' : '') + '</div>'
+        + '<div style="font-size:calc(12px * var(--fs,1)); color:var(--accent); margin-top:2px">' + esc(w.parse || "") + '</div>'
+        + (w.source==="dialog" ? '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:2px">◎L' + w.lesson + '</div>' : '');
       if(w.lesson != null) b.onclick = ()=>jumpTo(p.lang, w.lesson);
       else b.style.cursor = "default";
       c.appendChild(b);
@@ -1997,7 +2005,7 @@ function showTab(t){
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
   if(t==="tabStudy"){ studyQueue = null; studyShown = 0; studyEarKey = null; renderStudy(); window.scrollTo(0,0); }
-  if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); }
+  if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); renderFontScale(); }
   if(t!=="tabLesson") tagReturn = null;   // ほかのタブへ移ったら「#タグに戻る」は片付ける
   paintTagReturn();
 }
@@ -2023,20 +2031,20 @@ function clsCard(cl){
   const c = document.createElement("div");
   c.className = "card";
   c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap">'
-    + '<span style="font-size:22px; font-weight:700">' + esc(cl.form) + '</span>'
-    + (cl.roman ? '<span style="font-size:13px; color:var(--sub); font-style:italic">' + esc(cl.roman) + '</span>' : '')
-    + '<span style="font-size:15px">' + esc(cl.gloss || "") + '</span></div>'
-    + (cl.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(cl.note) + '</div>' : '')
+    + '<span style="font-size:calc(22px * var(--fs,1)); font-weight:700">' + esc(cl.form) + '</span>'
+    + (cl.roman ? '<span style="font-size:calc(13px * var(--fs,1)); color:var(--sub); font-style:italic">' + esc(cl.roman) + '</span>' : '')
+    + '<span style="font-size:calc(15px * var(--fs,1))">' + esc(cl.gloss || "") + '</span></div>'
+    + (cl.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:5px">' + esc(cl.note) + '</div>' : '')
     + (cl.pair ? '<div class="cn-pair"><div>' + esc(cl.pair.content) + '</div><div>' + esc(cl.pair.container) + '</div></div>' : '')
     + '<div class="meta" style="margin-top:5px">' + ((cl.lessons||[]).length ? 'L' + cl.lessons.join(", L") : '') + '</div>';
   (cl.examples||[]).forEach(e=>{
     const b = document.createElement("button");
     b.className = "suf-ex";
     b.style.display = "block";
-    b.innerHTML = '<div style="font-size:15px">' + esc(e.text) + '</div>'
-      + (e.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
-      + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
-      + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
+    b.innerHTML = '<div style="font-size:calc(15px * var(--fs,1))">' + esc(e.text) + '</div>'
+      + (e.roman ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
+      + (e.ja ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
+      + '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
     b.onclick = ()=>jumpTo(cl.lang, e.lesson, e.text);
     c.appendChild(b);
   });
@@ -2080,19 +2088,19 @@ function renderAdd(lang){
     const c = document.createElement("div");
     c.className = "card";
     c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap">'
-      + '<span style="font-size:17px; font-weight:700">' + esc(a.name) + '</span>'
-      + '<span style="font-size:14px">' + esc(a.gloss || "") + '</span></div>'
+      + '<span style="font-size:calc(17px * var(--fs,1)); font-weight:700">' + esc(a.name) + '</span>'
+      + '<span style="font-size:calc(14px * var(--fs,1))">' + esc(a.gloss || "") + '</span></div>'
       + '<div class="suf-forms">' + (a.forms||[]).map(f=>'<span>' + esc(f) + '</span>').join("") + '</div>'
-      + (a.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:6px">' + esc(a.note) + '</div>' : '')
+      + (a.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:6px">' + esc(a.note) + '</div>' : '')
       + '<div class="meta" style="margin-top:5px">' + ((a.lessons||[]).length ? 'L' + a.lessons.join(", L") : '') + '</div>';
     (a.examples||[]).forEach(e=>{
       const b = document.createElement("button");
       b.className = "suf-ex";
       b.style.display = "block";
-      b.innerHTML = '<div style="font-size:15px">' + esc(e.text) + '</div>'
-        + (e.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
-        + (e.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
-        + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
+      b.innerHTML = '<div style="font-size:calc(15px * var(--fs,1))">' + esc(e.text) + '</div>'
+        + (e.roman ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); font-style:italic; margin-top:2px">' + esc(e.roman) + '</div>' : '')
+        + (e.ja ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(e.ja) + '</div>' : '')
+        + '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:2px">◎L' + e.lesson + '</div>';
       b.onclick = ()=>jumpTo(a.lang, e.lesson, e.text);
       c.appendChild(b);
     });
@@ -2119,8 +2127,8 @@ function renderStack(){
     const c = document.createElement("div");
     c.className = "card";
     c.innerHTML = '<h2>ひとつの文に、積み木が2つ</h2>'
-      + '<div style="font-size:15.5px; line-height:1.7">' + esc(ch.example) + '</div>'
-      + (ch.ja ? '<div style="font-size:13px; color:var(--sub); margin-top:4px">' + esc(ch.ja) + '</div>' : '')
+      + '<div style="font-size:calc(15.5px * var(--fs,1)); line-height:1.7">' + esc(ch.example) + '</div>'
+      + (ch.ja ? '<div style="font-size:calc(13px * var(--fs,1)); color:var(--sub); margin-top:4px">' + esc(ch.ja) + '</div>' : '')
       + (ch.stacks||[]).map(s=>stackBlocks(s.parts)).join("")
       + '<div class="hint">動詞のうしろに語を積んでいく。最後の語が性・数を背負う</div>';
     const b = document.createElement("button");
@@ -2142,19 +2150,19 @@ function renderStack(){
     const c = document.createElement("div");
     c.className = "card";
     c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap">'
-      + '<span style="font-size:18px; font-weight:700">' + esc(s.name) + '</span>'
-      + '<span style="font-size:14px">' + esc(s.gloss || "") + '</span></div>'
+      + '<span style="font-size:calc(18px * var(--fs,1)); font-weight:700">' + esc(s.name) + '</span>'
+      + '<span style="font-size:calc(14px * var(--fs,1))">' + esc(s.gloss || "") + '</span></div>'
       + '<div class="stk-slots">' + (s.slots||[]).map(x=>esc(x)).join(' <span>+</span> ') + '</div>'
-      + (s.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:6px">' + esc(s.note) + '</div>' : '')
+      + (s.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:6px">' + esc(s.note) + '</div>' : '')
       + stackBlocks(s.parts);
     if(s.example){
       const b = document.createElement("button");
       b.className = "suf-ex";
       b.style.display = "block";
-      b.innerHTML = '<div style="font-size:14.5px; line-height:1.6">' + esc(s.example.text) + '</div>'
-        + (s.example.roman ? '<div style="font-size:12px; color:var(--sub); font-style:italic; margin-top:2px">' + esc(s.example.roman) + '</div>' : '')
-        + (s.example.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(s.example.ja) + '</div>' : '')
-        + '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + s.example.lesson + '</div>';
+      b.innerHTML = '<div style="font-size:calc(14.5px * var(--fs,1)); line-height:1.6">' + esc(s.example.text) + '</div>'
+        + (s.example.roman ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); font-style:italic; margin-top:2px">' + esc(s.example.roman) + '</div>' : '')
+        + (s.example.ja ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(s.example.ja) + '</div>' : '')
+        + '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:2px">◎L' + s.example.lesson + '</div>';
       b.onclick = ()=>jumpTo(s.lang, s.example.lesson, s.example.text);
       c.appendChild(b);
     }
@@ -2181,8 +2189,8 @@ function renderCase(){
         html += '<div class="cp-row"><span class="cp-case">' + esc(x.case) + '</span>'
           + '<span class="cp-label">' + esc(x.label) + '</span></div>'
           + '<button class="suf-ex cp-ex" data-l="' + x.lesson + '" style="display:block">'
-          + '<div style="font-size:14.5px">' + esc(x.example) + '</div>'
-          + '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(x.meaning) + ' · L' + x.lesson + '</div>'
+          + '<div style="font-size:calc(14.5px * var(--fs,1))">' + esc(x.example) + '</div>'
+          + '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(x.meaning) + ' · L' + x.lesson + '</div>'
           + '</button>';
       });
       html += '</div>';
@@ -2206,21 +2214,21 @@ function renderCase(){
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px; flex-wrap:wrap">'
-      + '<span style="font-size:20px; font-weight:700">' + esc(c.case) + '</span>'
-      + (c.native ? '<span style="font-size:12.5px; color:var(--sub)">' + esc(c.native) + '</span>' : '')
-      + '<span style="font-size:15px">' + esc(c.gloss || "") + '</span></div>'
-      + (c.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(c.note) + '</div>' : '')
+      + '<span style="font-size:calc(20px * var(--fs,1)); font-weight:700">' + esc(c.case) + '</span>'
+      + (c.native ? '<span style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub)">' + esc(c.native) + '</span>' : '')
+      + '<span style="font-size:calc(15px * var(--fs,1))">' + esc(c.gloss || "") + '</span></div>'
+      + (c.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:5px">' + esc(c.note) + '</div>' : '')
       + '<div class="meta" style="margin-top:5px">' + ((c.lessons||[]).length ? 'L' + c.lessons.join(", L") : '') + '</div>';
     (c.governors||[]).forEach(g=>{
       const b = document.createElement("button");
       b.className = "suf-ex";
       b.style.display = "block";
-      b.innerHTML = '<div><span style="font-size:15.5px; font-weight:700">' + esc(g.trigger) + '</span>'
-        + ' <span style="font-size:11px; color:var(--accent)">' + esc(g.kind || "") + '</span></div>'
-        + (g.meaning ? '<div style="font-size:12.5px; color:var(--sub); margin-top:2px">' + esc(g.meaning) + '</div>' : '')
-        + (g.text ? '<div style="font-size:13.5px; margin-top:4px; line-height:1.5">' + esc(g.text) + '</div>' : '')
-        + (g.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(g.ja) + '</div>' : '')
-        + (g.lesson != null ? '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + g.lesson + '</div>' : '');
+      b.innerHTML = '<div><span style="font-size:calc(15.5px * var(--fs,1)); font-weight:700">' + esc(g.trigger) + '</span>'
+        + ' <span style="font-size:calc(11px * var(--fs,1)); color:var(--accent)">' + esc(g.kind || "") + '</span></div>'
+        + (g.meaning ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(g.meaning) + '</div>' : '')
+        + (g.text ? '<div style="font-size:calc(13.5px * var(--fs,1)); margin-top:4px; line-height:1.5">' + esc(g.text) + '</div>' : '')
+        + (g.ja ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(g.ja) + '</div>' : '')
+        + (g.lesson != null ? '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:2px">◎L' + g.lesson + '</div>' : '');
       if(g.lesson != null) b.onclick = ()=>jumpTo(c.lang, g.lesson, g.text);
       else b.style.cursor = "default";
       card.appendChild(b);
@@ -2264,21 +2272,21 @@ function renderPre(){
     c.className = "card";
     const dia = (p.verbs||[]).filter(v=>v.source==="dialog").length;
     c.innerHTML = '<div style="display:flex; align-items:baseline; gap:9px">'
-      + '<span style="font-size:22px; font-weight:700">' + esc(p.prefix) + '</span>'
-      + '<span style="font-size:15px">' + esc(p.gloss || "") + '</span></div>'
-      + (p.note ? '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:5px">' + esc(p.note) + '</div>' : '')
+      + '<span style="font-size:calc(22px * var(--fs,1)); font-weight:700">' + esc(p.prefix) + '</span>'
+      + '<span style="font-size:calc(15px * var(--fs,1))">' + esc(p.gloss || "") + '</span></div>'
+      + (p.note ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:5px">' + esc(p.note) + '</div>' : '')
       + '<div class="meta" style="margin-top:5px">' + ((p.lessons||[]).length ? 'L' + p.lessons.join(", L") : '')
       + (dia ? ' · ◎本文 ' + dia : '') + '</div>';
     (p.verbs||[]).forEach(v=>{
       const b = document.createElement("button");
       b.className = "suf-ex";
       b.style.display = "block";
-      b.innerHTML = '<div><span style="font-size:16px; font-weight:700">' + esc(v.verb) + '</span>'
-        + (v.meaning ? ' <span style="font-size:13px">' + esc(v.meaning) + '</span>' : '') + '</div>'
-        + (v.split ? '<div style="font-size:12.5px; color:var(--accent); margin-top:2px">' + esc(v.split) + '</div>' : '')
-        + (v.text ? '<div style="font-size:13px; color:var(--sub); margin-top:3px; line-height:1.5">' + esc(v.text) + '</div>' : '')
-        + (v.ja ? '<div style="font-size:12px; color:var(--sub); margin-top:2px">' + esc(v.ja) + '</div>' : '')
-        + (v.lesson != null ? '<div style="font-size:11px; color:var(--sub); margin-top:2px">◎L' + v.lesson + '</div>' : '');
+      b.innerHTML = '<div><span style="font-size:calc(16px * var(--fs,1)); font-weight:700">' + esc(v.verb) + '</span>'
+        + (v.meaning ? ' <span style="font-size:calc(13px * var(--fs,1))">' + esc(v.meaning) + '</span>' : '') + '</div>'
+        + (v.split ? '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--accent); margin-top:2px">' + esc(v.split) + '</div>' : '')
+        + (v.text ? '<div style="font-size:calc(13px * var(--fs,1)); color:var(--sub); margin-top:3px; line-height:1.5">' + esc(v.text) + '</div>' : '')
+        + (v.ja ? '<div style="font-size:calc(12px * var(--fs,1)); color:var(--sub); margin-top:2px">' + esc(v.ja) + '</div>' : '')
+        + (v.lesson != null ? '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:2px">◎L' + v.lesson + '</div>' : '');
       if(v.lesson != null) b.onclick = ()=>jumpTo(p.lang, v.lesson, v.text);
       else b.style.cursor = "default";
       c.appendChild(b);
@@ -2334,10 +2342,10 @@ function openLangProfile(lang){
       const b = document.createElement("button");
       b.className = "suf-ex";
       b.style.display = "block";
-      b.innerHTML = '<div style="font-size:15px; font-weight:700">' + gMark(g) + ' ' + esc(topic) + '</div>'
-        + '<div style="font-size:12.5px; color:var(--sub); line-height:1.7; margin-top:3px">'
+      b.innerHTML = '<div style="font-size:calc(15px * var(--fs,1)); font-weight:700">' + gMark(g) + ' ' + esc(topic) + '</div>'
+        + '<div style="font-size:calc(12.5px * var(--fs,1)); color:var(--sub); line-height:1.7; margin-top:3px">'
         + esc((g.body||"").split("\n")[0].slice(0,80)) + ((g.body||"").length>80 ? "…" : "") + '</div>'
-        + '<div style="font-size:11px; color:var(--sub); margin-top:3px">'
+        + '<div style="font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:3px">'
         + gs.map(x=>'L' + x.lesson).join(" · ") + '</div>';
       b.onclick = ()=>openGrammarPopup(g, b.getBoundingClientRect());
       c.appendChild(b);
@@ -2896,7 +2904,7 @@ function prismStudyDecor(card, lang, word, detail){
     const hits = prismHits(lang, word);
     if(!hits.length) return;
     const meta = card.querySelector(".meta");
-    if(meta && !meta.querySelector(".wprism")) meta.insertAdjacentHTML("beforeend", ' · <span class="wprism" style="font-size:11px;margin:0">🔺</span>Prism');
+    if(meta && !meta.querySelector(".wprism")) meta.insertAdjacentHTML("beforeend", ' · <span class="wprism" style="font-size:calc(11px * var(--fs,1));margin:0">🔺</span>Prism');
     if(!detail || card.querySelector(".tr-prism")) return;
     const pl = document.createElement("div");
     pl.className = "tr-prism";
@@ -3209,7 +3217,7 @@ function renderLesson(){
       const b = document.createElement("button");
       const n = tagLangCount(t);
       // 2言語以上にまたがるタグは「橋」。何言語つながっているかを肩に出す
-      b.innerHTML = "#" + esc(t) + (n > 1 ? '<span style="font-size:10px; vertical-align:super; margin-left:2px">' + n + '</span>' : '');
+      b.innerHTML = "#" + esc(t) + (n > 1 ? '<span style="font-size:calc(10px * var(--fs,1)); vertical-align:super; margin-left:2px">' + n + '</span>' : '');
       b.onclick = ()=>openTagPage(t);
       tr.appendChild(b);
     });
@@ -3230,9 +3238,9 @@ function appendObsCard(box){
     const b = document.createElement("button");
     b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:11px 13px;"
       + "border-radius:10px; background:var(--bg); border:1px solid var(--border); color:var(--text);"
-      + "font-size:14px; line-height:1.6";
+      + "font-size:calc(14px * var(--fs,1)); line-height:1.6";
     b.innerHTML = '<div style="white-space:pre-wrap">' + esc(o.text) + '</div>'
-      + '<div style="color:var(--sub); font-size:11.5px; margin-top:4px">' + esc(o.lang || "全言語")
+      + '<div style="color:var(--sub); font-size:calc(11.5px * var(--fs,1)); margin-top:4px">' + esc(o.lang || "全言語")
       + (o.date ? ' · ' + new Date(o.date).toLocaleDateString("ja-JP") : '') + '</div>';
     b.onclick = ()=>openObsPopup(o, b.getBoundingClientRect());
     c.appendChild(b);
@@ -3250,7 +3258,7 @@ function appendGrammarCard(box){
     const b = document.createElement("button");
     b.style.cssText = "display:block; width:100%; text-align:left; margin-bottom:8px; padding:12px 14px;"
       + "border-radius:10px; background:var(--bg); border:1px solid var(--border); color:var(--text);"
-      + "font-size:15px; font-weight:600";
+      + "font-size:calc(15px * var(--fs,1)); font-weight:600";
     b.textContent = gMark(g) + " " + g.topic;
     b.onclick = ()=>openGrammarPopup(g, b.getBoundingClientRect());
     c.appendChild(b);
@@ -3397,13 +3405,13 @@ function openTagPage(tag){
   const nLang = new Set(Ls.map(L=>L.lang)).size;
   const panel = $("mapPanel");
   panel.innerHTML = '<div class="map-head"><b>#' + esc(tag) + '</b>'
-    + '<span style="font-size:12px; color:var(--sub); flex:none">' + nLang + ' 言語 / ' + Ls.length + ' 課</span>'
+    + '<span style="font-size:calc(12px * var(--fs,1)); color:var(--sub); flex:none">' + nLang + ' 言語 / ' + Ls.length + ' 課</span>'
     + '<button class="btn soft" id="mapClose" style="padding:10px 16px">閉じる</button></div>';
   // 今日のタグなら、このページからも「見た」を付けられる(2026-11-15)
   if(db.tagDay.tag === tag && db.tagDay.seen[tag] !== studyToday()){
     const sb = document.createElement("button");
     sb.className = "btn soft";
-    sb.style.cssText = "display:block; margin:0 0 12px; padding:9px 14px; font-size:14px";
+    sb.style.cssText = "display:block; margin:0 0 12px; padding:9px 14px; font-size:calc(14px * var(--fs,1))";
     sb.textContent = "✓ 今日のタグを見た";
     sb.onclick = ()=>{ tagDayMarkSeen(tag); sb.textContent = "✓ 見ました"; sb.disabled = true;
       if($("pageStudy").style.display !== "none") renderStudy(); };
@@ -3416,7 +3424,7 @@ function openTagPage(tag){
     const tNote = L.title ? getNote(L.lang, L.lesson, L.title, "title") : null;
     let html = '<h2>' + esc(L.lang) + ' · L' + L.lesson + '</h2>';
     if(L.title){
-      html += '<div style="font-size:16px; font-weight:700; line-height:1.5" dir="auto">' + esc(L.title) + '</div>';
+      html += '<div style="font-size:calc(16px * var(--fs,1)); font-weight:700; line-height:1.5" dir="auto">' + esc(L.title) + '</div>';
       if(tNote && tNote.roman) html += '<div class="lesson-heading-roman">' + esc(tNote.roman) + '</div>';
       if(tNote && tNote.ja) html += '<div class="lesson-heading-ja">' + esc(tNote.ja) + '</div>';
     }
@@ -3427,10 +3435,10 @@ function openTagPage(tag){
       const b = document.createElement("button");
       b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; padding:9px 11px;"
         + "border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--text);"
-        + "font-size:14px; line-height:1.55";
+        + "font-size:calc(14px * var(--fs,1)); line-height:1.55";
       b.innerHTML = '<span dir="auto" style="unicode-bidi:plaintext">' + esc(p) + '</span>'
-        + (n && n.roman ? '<div style="color:var(--sub); font-size:11.5px; font-style:italic; margin-top:2px">' + esc(n.roman) + '</div>' : '')
-        + (n && n.ja ? '<div style="color:var(--sub); font-size:12px; margin-top:2px">' + esc(n.ja) + '</div>' : '');
+        + (n && n.roman ? '<div style="color:var(--sub); font-size:calc(11.5px * var(--fs,1)); font-style:italic; margin-top:2px">' + esc(n.roman) + '</div>' : '')
+        + (n && n.ja ? '<div style="color:var(--sub); font-size:calc(12px * var(--fs,1)); margin-top:2px">' + esc(n.ja) + '</div>' : '');
       b.onclick = ()=>{ tagReturnNext = {tag, y: panel.scrollTop}; closeMap(); jumpTo(L.lang, L.lesson, p); };
       c.appendChild(b);
     });
@@ -3483,7 +3491,7 @@ function openTopicPage(topic, type){
      戻すなら wk を "" にする。 */
   const WAKAREME = {"過去":"past", "進行形":"prog", "未来":"fut", "複数形":"plural"};
   const wk = (entries[0].type === "concept" && WAKAREME[topic])
-    ? '<a href="./wakareme.html#' + WAKAREME[topic] + '" style="font-size:13px; color:var(--accent); text-decoration:none;'
+    ? '<a href="./wakareme.html#' + WAKAREME[topic] + '" style="font-size:calc(13px * var(--fs,1)); color:var(--accent); text-decoration:none;'
       + 'border:1px solid var(--border); border-radius:8px; padding:7px 10px; white-space:nowrap">🪾文法の分かれ目</a>'
     : "";
   panel.innerHTML = '<div class="map-head"><b>' + gMark(entries[0]) + ' ' + esc(topic) + '</b>' + wk
@@ -3495,7 +3503,7 @@ function openTopicPage(topic, type){
     const pb = document.createElement("a");
     pb.href = "./prism.html#theme=" + encodeURIComponent(topic);
     pb.textContent = "🔺 Prism の「" + topic + "」";
-    pb.style.cssText = "display:inline-block; margin:2px 0 10px; font-size:13px; color:var(--accent);"
+    pb.style.cssText = "display:inline-block; margin:2px 0 10px; font-size:calc(13px * var(--fs,1)); color:var(--accent);"
       + "text-decoration:none; border:1px solid var(--border); border-radius:8px; padding:7px 11px";
     panel.appendChild(pb);
   }
@@ -3504,13 +3512,13 @@ function openTopicPage(topic, type){
     c.className = "card";
     c.style.background = "var(--bg)";
     c.innerHTML = '<h2>' + esc(g.lang) + (g.lesson!=null ? ' · L' + g.lesson : '') + '</h2>'
-      + '<div style="white-space:pre-wrap; font-size:14px; line-height:1.75">' + esc(g.body||"") + '</div>';
+      + '<div style="white-space:pre-wrap; font-size:calc(14px * var(--fs,1)); line-height:1.75">' + esc(g.body||"") + '</div>';
     (g.examples||[]).forEach(e=>{
       const b = document.createElement("button");
       b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; padding:9px 11px;"
         + "border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--text);"
-        + "font-size:14px; line-height:1.5";
-      b.innerHTML = esc(e.text) + '<span style="color:var(--sub); font-size:11.5px"> — L' + e.lesson + '</span>';
+        + "font-size:calc(14px * var(--fs,1)); line-height:1.5";
+      b.innerHTML = esc(e.text) + '<span style="color:var(--sub); font-size:calc(11.5px * var(--fs,1))"> — L' + e.lesson + '</span>';
       b.onclick = ()=>{ tagReturnNext = {topic, type: isCon ? "concept" : "grammar", y: panel.scrollTop}; closeMap(); jumpTo(e.lang, e.lesson, e.text); };
       c.appendChild(b);
     });
@@ -3590,7 +3598,7 @@ function renderSearch(){
         tr.style.margin = "0";
         bridges.forEach(t=>{
           const b = document.createElement("button");
-          b.innerHTML = "#" + esc(t) + '<span style="font-size:10px; vertical-align:super; margin-left:2px">'
+          b.innerHTML = "#" + esc(t) + '<span style="font-size:calc(10px * var(--fs,1)); vertical-align:super; margin-left:2px">'
             + tagLangCount(t) + '</span>';
           b.onclick = ()=>openTagPage(t);
           tr.appendChild(b);
@@ -4475,6 +4483,27 @@ $("importBtn").onclick = ()=>{
 };
 
 /* ---------- settings ---------- */
+/* 文字の大きさ。localStorage に倍率を持ち、起動時とボタンで :root の --fs に入れる */
+const FS_STEPS = [["標準", 1], ["少し大きく", 1.1], ["大きく", 1.2], ["もっと大きく", 1.3], ["最大", 1.45]];
+function fontScale(){
+  const v = parseFloat(localStorage.getItem(KEY + ".fs"));
+  return (v >= 0.8 && v <= 2) ? v : 1;
+}
+function applyFontScale(){ document.documentElement.style.setProperty("--fs", String(fontScale())); }
+applyFontScale();
+function renderFontScale(){
+  const bar = $("fsBar");
+  if(!bar) return;
+  bar.innerHTML = "";
+  const cur = fontScale();
+  FS_STEPS.forEach(([name, v])=>{
+    const b = document.createElement("button");
+    b.textContent = name;
+    b.className = Math.abs(cur - v) < 0.001 ? "on" : "";
+    b.onclick = ()=>{ lsSet(KEY + ".fs", String(v)); applyFontScale(); renderFontScale(); };
+    bar.appendChild(b);
+  });
+}
 function renderLangs(){
   const box = $("langList");
   box.innerHTML = "";
@@ -4894,7 +4923,7 @@ function viewBox(){
 let trPopRect = null;   // 開いている間、画面サイズが変わったら置き直すために覚えておく
 function placeTrPop(rect){
   trPopRect = rect;
-  const w = Math.min(320, window.innerWidth - 16), pad = 8;
+  const w = Math.min(Math.round(320 * fontScale()), window.innerWidth - 16), pad = 8;
   const vb = viewBox();
   const padT = Math.max(safeTopPad(), vb.top + pad);
   const bottomLimit = vb.top + vb.height - pad;
@@ -5504,12 +5533,12 @@ function openGrammarPopup(g, anchorRect){
   trPop.className = "tr-pop";
   let html = '<div class="tr-src">' + gMark(g) + ' ' + esc(g.topic) + ' — ' + esc(g.lang)
     + (g.lesson!=null ? ' · L' + g.lesson : '') + '</div>'
-    + '<div style="white-space:pre-wrap; font-size:14px; line-height:1.75; margin-bottom:10px">' + esc(g.body||"") + '</div>';
+    + '<div style="white-space:pre-wrap; font-size:calc(14px * var(--fs,1)); line-height:1.75; margin-bottom:10px">' + esc(g.body||"") + '</div>';
   if((g.examples||[]).length){
     html += '<div class="tr-label" style="margin-bottom:6px">例文(タップでレッスンへ)</div>';
     g.examples.forEach((e,i)=>{
-      html += '<button class="gx" data-i="' + i + '" style="display:block; width:100%; text-align:left; margin-bottom:6px; padding:9px 11px; border-radius:9px; background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:14px; line-height:1.5">'
-        + esc(e.text) + '<span style="color:var(--sub); font-size:11.5px"> — ' + esc(e.lang) + ' L' + e.lesson + '</span></button>';
+      html += '<button class="gx" data-i="' + i + '" style="display:block; width:100%; text-align:left; margin-bottom:6px; padding:9px 11px; border-radius:9px; background:var(--bg); border:1px solid var(--border); color:var(--text); font-size:calc(14px * var(--fs,1)); line-height:1.5">'
+        + esc(e.text) + '<span style="color:var(--sub); font-size:calc(11.5px * var(--fs,1))"> — ' + esc(e.lang) + ' L' + e.lesson + '</span></button>';
     });
   }
   // 同じtopicの他言語エントリ(横断比較の入口)
@@ -5517,7 +5546,7 @@ function openGrammarPopup(g, anchorRect){
   if(siblings.length){
     html += '<div class="tr-label" style="margin:8px 0 6px">同じtopicの他言語</div><div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px">';
     siblings.forEach((s,i)=>{
-      html += '<button class="gsib" data-i="' + i + '" style="padding:8px 12px; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-size:13px; font-weight:600">' + esc(s.lang) + '</button>';
+      html += '<button class="gsib" data-i="' + i + '" style="padding:8px 12px; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-size:calc(13px * var(--fs,1)); font-weight:600">' + esc(s.lang) + '</button>';
     });
     html += '</div>';
   }
@@ -5527,10 +5556,10 @@ function openGrammarPopup(g, anchorRect){
     g.related.forEach((name,i)=>{
       const target = db.grammar.find(x=>x.topic===name && x.lang===g.lang) || db.grammar.find(x=>x.topic===name);
       if(target){
-        html += '<button class="grel" data-i="' + i + '" style="padding:8px 12px; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-size:13px; font-weight:600">'
+        html += '<button class="grel" data-i="' + i + '" style="padding:8px 12px; border-radius:14px; background:var(--accent-soft); color:var(--accent); font-size:calc(13px * var(--fs,1)); font-weight:600">'
           + gMark(target) + ' ' + esc(name) + '</button>';
       } else {
-        html += '<span style="padding:8px 12px; border-radius:14px; background:var(--bg); border:1px dashed var(--border); color:var(--sub); font-size:13px">' + esc(name) + '</span>';
+        html += '<span style="padding:8px 12px; border-radius:14px; background:var(--bg); border:1px dashed var(--border); color:var(--sub); font-size:calc(13px * var(--fs,1))">' + esc(name) + '</span>';
       }
     });
     html += '</div>';
