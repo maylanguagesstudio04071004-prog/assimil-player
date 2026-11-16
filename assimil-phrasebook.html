@@ -764,7 +764,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-17c";
+const BUILD = "2026-11-17d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -5758,6 +5758,20 @@ function studyNewUsed(){
     return v[0] === studyToday() ? (Number(v[1]) || 0) : 0; }catch(e){ return 0; }
 }
 function studyNewUsedAdd(){ lsSet(KEY + ".studyNewDay", studyToday() + "|" + (studyNewUsed() + 1)); }
+/* 「出なかった」の回数をその日のうちだけ数える(2026-11-17、Mayの依頼「思い出せなかったものが延々と出続ける。2回やってダメなら翌日に」)。
+   それまでは「出なかった」を押すたびに列の最後へ戻していたので、思い出せるまで何度でも出た。
+   今は1回目は今までどおり列の最後へ、2回目で今日の列から外して期限を明日にする。
+   端末ごとの数(localStorage)で、日が替わると0に戻る。戻すなら grade の again の分岐を「push だけ」に戻す */
+const STUDY_AGAIN_MAX = 2;
+function studyAgainCounts(){
+  try{ const o = JSON.parse(localStorage.getItem(KEY + ".studyAgainDay") || "{}");
+    return (o && o.date === studyToday() && o.n && typeof o.n === "object") ? o.n : {}; }catch(e){ return {}; }
+}
+function studyAgainAdd(k){
+  const n = studyAgainCounts(); n[k] = (n[k] || 0) + 1;
+  lsSet(KEY + ".studyAgainDay", JSON.stringify({date: studyToday(), n}));
+  return n[k];
+}
 /* 今日出すぶんを選ぶ。復習は「出なかった回数」の多い順(2026-11-06、Mayの依頼)。
    lapses は2026-10-16から数えるだけで、どこからも読まれていなかった。 */
 function studyPick(){
@@ -6135,7 +6149,12 @@ function renderStudy(){
       rec.reps = (rec.reps||0) + 1; rec.last = Date.now();
       if(g === "again") rec.lapses = (rec.lapses||0) + 1;
       const k = studyQueue.shift();
-      if(g === "again") studyQueue.push(k);      // その場でもう一度
+      if(g === "again"){
+        if(studyAgainAdd(k) >= STUDY_AGAIN_MAX){
+          rec.due = studyAddDays(1);             // 今日2回出なかった → 今日はもう出さず、明日また
+          showToast("「" + word + "」は今日2回出なかったので、明日また出します。");
+        } else studyQueue.push(k);               // 1回目はその場でもう一度(列の最後へ)
+      }
       studyShown = 0; studyEarKey = null;        // もう一度のときも、耳から先に
       studyInk = {key: null, strokes: []};       // 答えたら、書いた字は消す
       save();
