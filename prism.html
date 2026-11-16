@@ -20,7 +20,7 @@
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
-  background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
+  background:var(--bg); color:var(--ink); font-size:calc(16px * var(--fs,1)); line-height:1.6;
   font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
   padding-bottom:env(safe-area-inset-bottom);
 }
@@ -29,84 +29,96 @@ header{
   padding:calc(8px + env(safe-area-inset-top)) 12px 8px; display:flex; align-items:baseline; gap:8px;
   position:sticky; top:0; z-index:20;
 }
-header b{font-size:17px}
-header small{color:var(--sub); font-size:11px; flex:1}
-header a.hlink{color:var(--accent); text-decoration:none; font-size:12px; white-space:nowrap;
+header b{font-size:calc(17px * var(--fs,1))}
+header small{color:var(--sub); font-size:calc(11px * var(--fs,1)); flex:1}
+header a.hlink{color:var(--accent); text-decoration:none; font-size:calc(12px * var(--fs,1)); white-space:nowrap;
   border:1px solid var(--line); border-radius:6px; padding:3px 7px}
 /* 検索バー(2026-09-26。Mayの依頼で「語」をタブから出して、いつでも検索できる窓にした) */
 #searchBar{background:var(--card); border-bottom:1px solid var(--line); padding:7px 12px}
 #searchBar input{width:100%; box-sizing:border-box}
-header a.hlink.icon{font-size:14px; padding:3px 8px}
+header a.hlink.icon{font-size:calc(14px * var(--fs,1)); padding:3px 8px}
 nav{display:flex; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:19}
 nav button{
-  flex:1; min-width:0; border:0; background:none; color:var(--sub); font:inherit; font-size:14px;
+  flex:1; min-width:0; border:0; background:none; color:var(--sub); font:inherit; font-size:calc(14px * var(--fs,1));
   padding:9px 2px; border-bottom:2px solid transparent; cursor:pointer;
 }
 nav button.on{color:var(--accent); border-bottom-color:var(--accent); font-weight:600}
-main{padding:12px 12px 60px; max-width:760px; margin:0 auto}
+/* 文字の大きさ(2026-11-17、Mayの依頼。Atlasと同じ作り)。font-size はすべて calc(Npx * var(--fs,1)) に
+   してあり、設定で --fs を変える。本文の幅も同じ倍率で広げる(広げないと1行に入る字数が減る)。
+   戻すなら --fs を 1 のままにする */
+main{padding:12px 12px 60px; max-width:calc(760px * var(--fs,1)); margin:0 auto}
 section{display:none}
 section.on{display:block}
-h2{font-size:16px; margin:0 0 10px}
+h2{font-size:calc(16px * var(--fs,1)); margin:0 0 10px}
 .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:11px 12px; margin-bottom:9px}
 .card.tap{cursor:pointer}
 .row{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
 .grow{flex:1; min-width:0}
-.sub{color:var(--sub); font-size:12.5px}
-.tag{display:inline-block; font-size:11px; color:var(--accent); background:var(--accent-bg);
+/* 題が1文字ずつ縦に折り返すのを防ぐ(2026-11-17。文字を大きくしたときに出た)。
+   .grow は min-width:0 なので、横に並ぶ印(⭐・チェック済み・観察の軸)に押されると
+   題の幅が 42px まで痩せる。題にだけ最低幅を持たせると、入らないときは
+   行ごと次の行に落ちる(.row は flex-wrap:wrap)。印の側は縮めない */
+.row > b.grow{min-width:9em}
+.sub{color:var(--sub); font-size:calc(12.5px * var(--fs,1))}
+.tag{display:inline-block; font-size:calc(11px * var(--fs,1)); color:var(--accent); background:var(--accent-bg);
   border-radius:5px; padding:1px 6px; margin:0 4px 3px 0; white-space:nowrap}
 .tag.plain{color:var(--sub); background:transparent; border:1px solid var(--line)}
-.tag.tap{cursor:pointer}
-.term{font-size:20px; line-height:1.45; word-break:break-word}
-.reading{color:var(--sub); font-size:13.5px}
+/* 中身の名前を載せるタグ(本の見開き・反対の語・観察)は長くなるので折り返す(2026-11-17。
+   文字を大きくしたら「particles and antonyms / …」が458pxになり、設定の画面が横にはみ出した)。
+   短い印(✓チェック済み・観察の軸・集め先)は今までどおり nowrap のまま途中で切れない */
+.tag{max-width:100%}
+.tag.tap{cursor:pointer; white-space:normal; overflow-wrap:anywhere}
+.term{font-size:calc(20px * var(--fs,1)); line-height:1.45; word-break:break-word}
+.reading{color:var(--sub); font-size:calc(13.5px * var(--fs,1))}
 .reading .added{color:var(--accent)}
-.ja{font-size:14px}
-.back{background:none;border:0;color:var(--accent);font:inherit;font-size:14px;padding:6px 0;cursor:pointer}
-button.btn{font:inherit; font-size:14px; padding:7px 12px; border-radius:8px; cursor:pointer;
+.ja{font-size:calc(14px * var(--fs,1))}
+.back{background:none;border:0;color:var(--accent);font:inherit;font-size:calc(14px * var(--fs,1));padding:6px 0;cursor:pointer}
+button.btn{font:inherit; font-size:calc(14px * var(--fs,1)); padding:7px 12px; border-radius:8px; cursor:pointer;
   border:1px solid var(--line); background:var(--card); color:var(--ink)}
 button.btn.pri{background:var(--accent); color:var(--card); border-color:var(--accent)}
 button.btn.warn{color:var(--danger); border-color:var(--danger)}
 input[type=text],input[type=search],input[type=date],textarea,select{
-  font:inherit; font-size:16px; width:100%; padding:8px 10px; border:1px solid var(--line);
+  font:inherit; font-size:calc(16px * var(--fs,1)); width:100%; padding:8px 10px; border:1px solid var(--line);
   border-radius:8px; background:var(--card); color:var(--ink)}
 textarea{min-height:90px; line-height:1.5}
-textarea.code{font-family:ui-monospace,Menlo,monospace; font-size:12.5px; min-height:150px}
+textarea.code{font-family:ui-monospace,Menlo,monospace; font-size:calc(12.5px * var(--fs,1)); min-height:150px}
 .langblock{border-top:1px solid var(--line); padding:9px 0 3px}
 .langblock:first-of-type{border-top:0}
-.langname{font-size:12px; color:var(--sub); letter-spacing:.02em; margin-bottom:3px}
-.state{font-size:13px; padding:3px 0}
+.langname{font-size:calc(12px * var(--fs,1)); color:var(--sub); letter-spacing:.02em; margin-bottom:3px}
+.state{font-size:calc(13px * var(--fs,1)); padding:3px 0}
 .state.gap{color:var(--gap)}
 .state.miss{color:var(--miss)}
 .state.none{color:var(--miss)}
 .state b{font-weight:600}
-.srcline{font-size:11.5px; color:var(--sub); margin-top:2px}
-.srcline button{background:none;border:0;color:var(--accent);font:inherit;font-size:11.5px;
+.srcline{font-size:calc(11.5px * var(--fs,1)); color:var(--sub); margin-top:2px}
+.srcline button{background:none;border:0;color:var(--accent);font:inherit;font-size:calc(11.5px * var(--fs,1));
   padding:0;text-decoration:underline;cursor:pointer}
 .entry{padding:5px 0 7px}
 .entry + .entry{border-top:1px dashed var(--line)}
-.msg{font-size:13px; padding:8px 0; white-space:pre-wrap}
+.msg{font-size:calc(13px * var(--fs,1)); padding:8px 0; white-space:pre-wrap}
 .msg.err{color:var(--danger)}
 .msg.ok{color:var(--ok)}
 #warn{position:fixed; left:0; right:0; bottom:0; background:var(--danger); color:#fff;
-  font-size:13px; padding:8px 12px; display:none; z-index:50}
-.legend{font-size:11.5px; color:var(--sub); border:1px dashed var(--line); border-radius:8px;
+  font-size:calc(13px * var(--fs,1)); padding:8px 12px; display:none; z-index:50}
+.legend{font-size:calc(11.5px * var(--fs,1)); color:var(--sub); border:1px dashed var(--line); border-radius:8px;
   padding:7px 9px; margin-bottom:10px}
 .legend span{display:inline-block; margin-right:10px}
 details{border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:9px; background:var(--card)}
-summary{cursor:pointer; font-size:14px}
-pre{overflow-x:auto; font-size:12px; background:var(--bg); padding:8px; border-radius:6px}
-.empty{color:var(--sub); font-size:14px; padding:18px 2px}
+summary{cursor:pointer; font-size:calc(14px * var(--fs,1))}
+pre{overflow-x:auto; font-size:calc(12px * var(--fs,1)); background:var(--bg); padding:8px; border-radius:6px}
+.empty{color:var(--sub); font-size:calc(14px * var(--fs,1)); padding:18px 2px}
 img.page{max-width:100%; border:1px solid var(--line); border-radius:8px}
-.mini{font-size:12px; color:var(--sub)}
-.flag{font-size:12px; color:var(--danger); margin-top:3px; line-height:1.5}
-.kindmark{font-size:11px; color:var(--accent); background:var(--accent-bg);
+.mini{font-size:calc(12px * var(--fs,1)); color:var(--sub)}
+.flag{font-size:calc(12px * var(--fs,1)); color:var(--danger); margin-top:3px; line-height:1.5}
+.kindmark{font-size:calc(11px * var(--fs,1)); color:var(--accent); background:var(--accent-bg);
   display:inline-block; border-radius:5px; padding:1px 6px; margin-bottom:3px}
-.solo{font-size:11.5px; color:var(--sub)}
-.ghead{font-size:12px; color:var(--sub); letter-spacing:.04em; font-weight:600;
+.solo{font-size:calc(11.5px * var(--fs,1)); color:var(--sub)}
+.ghead{font-size:calc(12px * var(--fs,1)); color:var(--sub); letter-spacing:.04em; font-weight:600;
   margin:16px 2px 7px; padding-bottom:4px; border-bottom:1px solid var(--line)}
 #themeList .ghead:first-child{margin-top:2px}
 /* 語タブの段。畳んだ見出しは押せるので、少し大きく取る */
 details.sect{border:0; background:none; padding:0; margin:0 0 4px}
-details.sect > summary.ghead{margin:10px 2px 0; padding:10px 2px; font-size:14px;
+details.sect > summary.ghead{margin:10px 2px 0; padding:10px 2px; font-size:calc(14px * var(--fs,1));
   color:var(--ink); cursor:pointer}
 details.sect[open] > summary.ghead{color:var(--accent)}
 hr{border:0; border-top:1px solid var(--line); margin:16px 0}
@@ -114,7 +126,7 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
 .colitem{display:flex; gap:8px; align-items:center; padding:9px 2px; border-top:1px solid var(--line)}
 .colitem:first-of-type{border-top:0}
 .iconbtn{border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit;
-  font-size:15px; line-height:1.1; border-radius:8px; padding:6px 10px; cursor:pointer}
+  font-size:calc(15px * var(--fs,1)); line-height:1.1; border-radius:8px; padding:6px 10px; cursor:pointer}
 .iconbtn[disabled]{opacity:.35; cursor:default}
 .iconbtn.warn{color:var(--danger); border-color:var(--danger)}
 .iconbtn.on{color:var(--accent); border-color:var(--accent); background:var(--accent-bg)}
@@ -125,9 +137,9 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
   .colgrid > .card{margin-bottom:0}
 }
 /* ズレの候補(2026-09-11) */
-.sameterm{font-size:12.5px; color:var(--sub); margin-top:4px}
-.sameterm .tag{font-size:12.5px; padding:3px 8px}
-.chip{display:inline-block; font:inherit; font-size:13px; padding:5px 10px; border-radius:14px;
+.sameterm{font-size:calc(12.5px * var(--fs,1)); color:var(--sub); margin-top:4px}
+.sameterm .tag{font-size:calc(12.5px * var(--fs,1)); padding:3px 8px}
+.chip{display:inline-block; font:inherit; font-size:calc(13px * var(--fs,1)); padding:5px 10px; border-radius:14px;
   border:1px solid var(--line); background:var(--card); color:var(--ink); margin:0 5px 6px 0; cursor:pointer}
 .chip.on{background:var(--accent); border-color:var(--accent); color:var(--card)}
 .riftrow{display:flex; gap:8px; align-items:baseline; padding:8px 2px; border-top:1px solid var(--line); cursor:pointer}
@@ -137,13 +149,13 @@ hr{border:0; border-top:1px solid var(--line); margin:16px 0}
 .sndrow{display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px 10px;
   border-top:1px solid var(--line); padding:8px 0 6px}
 .sndrow.off{opacity:.75}
-.sndhead{flex:0 0 100%; font-size:11.5px; color:var(--sub); letter-spacing:.02em}
+.sndhead{flex:0 0 100%; font-size:calc(11.5px * var(--fs,1)); color:var(--sub); letter-spacing:.02em}
 .sndchip{display:inline-block; line-height:1.25; padding:2px 0}
-.sndchip b{font-weight:600; font-size:16px}
-.sndrom{color:var(--sub); font-size:12.5px}
-.sndchip .sndlang{display:block; font-size:10.5px; color:var(--sub)}
+.sndchip b{font-weight:600; font-size:calc(16px * var(--fs,1))}
+.sndrom{color:var(--sub); font-size:calc(12.5px * var(--fs,1))}
+.sndchip .sndlang{display:block; font-size:calc(10.5px * var(--fs,1)); color:var(--sub)}
 .axwrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:10px}
-table.ax{border-collapse:collapse; font-size:13px; white-space:nowrap}
+table.ax{border-collapse:collapse; font-size:calc(13px * var(--fs,1)); white-space:nowrap}
 table.ax th,table.ax td{border:1px solid var(--line); padding:6px 8px; text-align:center}
 table.ax th{color:var(--sub); font-weight:600; background:var(--card)}
 table.ax th.axname{text-align:left; position:sticky; left:0; background:var(--card); z-index:1}
@@ -201,6 +213,12 @@ table.ax td.off{color:var(--line)}
 -->
 
 <section id="pageSettings">
+  <!-- 文字の大きさ(2026-11-17、Mayの依頼)。この端末だけの設定(書き出しには入らない) -->
+  <h2>文字の大きさ</h2>
+  <div class="row" id="fsBar" style="flex-wrap:wrap; margin-bottom:6px"></div>
+  <div class="sub" style="margin-bottom:6px">アプリ全体の文字が変わります。この端末だけの設定で、書き出しには入りません。</div>
+
+  <hr>
   <h2>本</h2>
   <div class="sub" style="margin-bottom:6px">取り込んだ本と、その見開き。語の出典行からも開けます。</div>
   <div id="bookList"></div>
@@ -233,7 +251,7 @@ table.ax td.off{color:var(--line)}
   <div class="row" style="margin-bottom:6px">
     <select id="imgBt" class="grow"></select>
   </div>
-  <input type="file" id="imgFile" accept="image/*" style="font-size:14px">
+  <input type="file" id="imgFile" accept="image/*" style="font-size:calc(14px * var(--fs,1))">
   <div id="imgMsg" class="msg"></div>
   <div id="imgList" style="margin-top:8px"></div>
   -->
@@ -308,7 +326,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-17a";
+const BUILD = "2026-11-17c";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -415,6 +433,29 @@ const bookTheme = id => byId(db.bookThemes,id);
 const STORE = {mode:"?", lastOk:0, lastErr:"", lsOk:true, bytes:0};
 
 function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+/* 文字の大きさ(2026-11-17、Mayの依頼。Atlasと同じ段と同じ倍率)。
+   倍率は localStorage に持つので**この端末だけ**。db(書き出し)には入らない。
+   起動時にも当てる。戻すなら、この3つの関数と設定の #fsBar を消す */
+const FS_STEPS = [["標準",1],["少し大きく",1.1],["大きく",1.2],["もっと大きく",1.3],["最大",1.45]];
+function fontScale(){
+  const v = parseFloat(localStorage.getItem(KEY + ".fs"));
+  return (v >= 0.8 && v <= 2) ? v : 1;
+}
+function applyFontScale(){ document.documentElement.style.setProperty("--fs", String(fontScale())); }
+applyFontScale();
+function renderFontScale(){
+  const bar = $("fsBar");
+  if(!bar) return;
+  bar.innerHTML = "";
+  const cur = fontScale();
+  FS_STEPS.forEach(([name, v])=>{
+    const b = document.createElement("button");
+    b.className = "chip" + (Math.abs(cur - v) < 0.001 ? " on" : "");
+    b.textContent = name;
+    b.onclick = ()=>{ lsSet(KEY + ".fs", String(v)); applyFontScale(); renderFontScale(); };
+    bar.appendChild(b);
+  });
+}
 function warnBar(msg){
   const w = $("warn");
   if(!msg){ w.style.display="none"; return; }
@@ -1018,7 +1059,7 @@ function colEntryPlusHtml(e){
   const c = activeCol();
   if(!c || !e.id) return "";
   const has = (c.items||[]).includes(e.id);
-  return '<div class="sameterm"><button class="iconbtn'+(has?" on":"")+'" style="font-size:12.5px; padding:3px 8px"'
+  return '<div class="sameterm"><button class="iconbtn'+(has?" on":"")+'" style="font-size:calc(12.5px * var(--fs,1)); padding:3px 8px"'
     + ' onclick="event.stopPropagation();colQuickEntry(this,\''+esc(e.id)+'\')">'
     + (has ? '✓ この語だけ入れている' : '＋ この語だけ「'+esc(c.title)+'」へ')+'</button></div>';
 }
@@ -1050,7 +1091,7 @@ function themeCard(t){
     + '<div class="row"><b class="grow">'+esc(t.name)+'</b>'
     + '<span class="sub">'+senses.length+'語 ／ '+langs.size+'言語</span></div>'
     + (t.note?'<div class="sub">'+esc(t.note)+'</div>':'')
-    + (t.notes||[]).map(n=>'<div class="state miss" style="font-size:12px">'
+    + (t.notes||[]).map(n=>'<div class="state miss" style="font-size:calc(12px * var(--fs,1))">'
         + esc(n.lang) + '：' + esc(naLabel(n)) + '</div>').join("")
     + '</div>';
 }
@@ -1079,12 +1120,12 @@ function renderThemes(){
   // ? obs.slice().sort(colSort).map(c =>
   // '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
   // /* テーマタブの一覧でも⭐を付け外しできる(2026-09-16b。Mayがこの一覧のスクリーンショットで依頼) */
-  // + '<div class="row"><button class="iconbtn" title="⭐を付ける／外す" style="font-size:18px; line-height:1"'
+  // + '<div class="row"><button class="iconbtn" title="⭐を付ける／外す" style="font-size:calc(18px * var(--fs,1)); line-height:1"'
   // + ' onclick="event.stopPropagation();colToggleStar(\''+esc(c.id)+'\',this)">'+(c.starred ? "⭐" : "☆")+'</button>'
   // + '<b class="grow">'+esc(c.title)+'</b>'
   // + '<span class="tag plain">'+esc(colKindLabel(c))+'</span>'
   // + '<span class="sub">'+((c.items||[]).length)+'項目</span></div>'
-  // + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
+  // + (c.question ? '<div class="sub" style="font-size:calc(13.5px * var(--fs,1)); color:var(--ink)">'+esc(c.question)+'</div>' : '')
   // + '</div>').join("")
   // : '<div class="empty">まだありません。「観察」タブから作れます。</div>';
   // h += '<div class="row" style="margin:0 0 14px">'
@@ -1146,7 +1187,7 @@ function senseCard(s, mode){
   return '<div class="card tap" onclick="openSense(\''+esc(s.id)+'\')">'
     + '<div class="row"><b class="grow">'+esc(s.name)+'</b>'
     + '<span class="sub">'+esc(right)+'</span>' + colPlusHtml(s.id) + '</div>'
-    + (preview ? '<div class="sub" style="font-size:13.5px">'+preview+'</div>' : '')
+    + (preview ? '<div class="sub" style="font-size:calc(13.5px * var(--fs,1))">'+preview+'</div>' : '')
     + '</div>';
 }
 /* テーマ一覧の3段組み。
@@ -1326,7 +1367,7 @@ function renderSense(id){
       if(e.status !== "present" || !e.term) return;
       rows.push('<div class="entry" style="cursor:pointer" onclick="openSense(\''+esc(o.id)+'\')">'
         + '<div class="langname">'+esc(e.lang)+'</div>'
-        + '<div class="term" style="font-size:17px">'+esc(e.term)+'</div>'
+        + '<div class="term" style="font-size:calc(17px * var(--fs,1))">'+esc(e.term)+'</div>'
         + readingHtml(e)
         + '<div class="srcline">'+esc((source(e.sourceId)||{}).title||"")+'</div></div>');
     }));
@@ -1419,7 +1460,7 @@ function riftChipRefresh(){
 }
 /* 候補1枚の右肩に出す ⭐ と ✕（消したものを見ているときは「戻す」） */
 function riftMarkBtns(k){
-  return '<button class="iconbtn" title="⭐を付ける／外す" style="font-size:18px; line-height:1"'
+  return '<button class="iconbtn" title="⭐を付ける／外す" style="font-size:calc(18px * var(--fs,1)); line-height:1"'
     + ' onclick="event.stopPropagation();riftToggleStar(\''+esc(k)+'\',this)">'+(riftStarred(k) ? "⭐" : "☆")+'</button>'
     + '<button class="iconbtn" title="'+(riftHidden(k) ? "一覧に戻す" : "この候補を消す")+'"'
     + ' onclick="event.stopPropagation();riftToggleHide(\''+esc(k)+'\')">'+(riftHidden(k) ? "戻す" : "✕")+'</button>';
@@ -1483,7 +1524,7 @@ function riftSplitCard(x){
     + x.langs.length+'言語が言い分け ›</span>' + riftMarkBtns("s:"+x.s.id) + '</div>'
     + ls.map(v => '<div class="langblock"><div class="langname">'+esc(v.lang)
         + '<span class="sub"> ／ '+esc((source(v.srcId)||{}).title||"")+'</span></div>'
-        + v.es.map(e => '<div><span style="font-size:16px">'+esc(e.term)+'</span>'
+        + v.es.map(e => '<div><span style="font-size:calc(16px * var(--fs,1))">'+esc(e.term)+'</span>'
             + (e.ja && e.ja !== x.s.name ? ' <span class="sub">'+esc(e.ja)+'</span>' : '') + '</div>').join("")
         + '</div>').join("")
     + '</div>';
@@ -1988,7 +2029,7 @@ function colCardHtml(c){
   const n = (c.items||[]).length;
   return '<div class="card tap" onclick="openCollection(\''+esc(c.id)+'\')">'
     /* ⭐（2026-09-16。Mayが「一覧ですぐわかるよう⭐を付けたい」）。カードを開かずに1タップで付け外しする */
-    + '<div class="row"><button class="iconbtn" title="⭐を付ける／外す" style="font-size:18px; line-height:1"'
+    + '<div class="row"><button class="iconbtn" title="⭐を付ける／外す" style="font-size:calc(18px * var(--fs,1)); line-height:1"'
     + ' onclick="event.stopPropagation();colToggleStar(\''+esc(c.id)+'\',this)">'+(c.starred ? "⭐" : "☆")+'</button>'
     + '<b class="grow">'+esc(c.title)+'</b>'
     + (db.activeCol===c.id ? '<span class="tag">集め先</span>' : '')
@@ -1996,7 +2037,7 @@ function colCardHtml(c){
     + (c.checked ? '<span class="tag">✓ チェック済み</span>' : '<span class="tag plain">未チェック</span>')
     + '<span class="tag plain">'+esc(colKindLabel(c))+'</span>'
     + '<span class="sub">'+n+'項目</span></div>'
-    + (c.question ? '<div class="sub" style="font-size:13.5px; color:var(--ink)">'+esc(c.question)+'</div>' : '')
+    + (c.question ? '<div class="sub" style="font-size:calc(13.5px * var(--fs,1)); color:var(--ink)">'+esc(c.question)+'</div>' : '')
     + '<div class="sub">'+esc(fmtDate(c.date))+'</div>'
     /* 一覧では注を3行までにする(2026-09-14)。ChatGPTの観察候補は注が10行ほどあり、14件並ぶと一覧が長くなりすぎる。全文は詳細に出る */
     + (c.note ? '<div class="sub" style="margin-top:3px; white-space:pre-wrap; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden">'+esc(c.note)+'</div>' : '')
@@ -2141,7 +2182,7 @@ function colItemHtml(c, senseId, i, n){
   return '<div class="colitem tap" onclick="openSense(\''+esc(s.id)+'\')">'
     + '<div class="grow"><b>'+esc(s.name)+'</b> <span class="sub">'+ls.length+'言語'
     + (s.solo && ls.length > 1 ? '（ラベル一致）' : '')+'</span>'
-    + (preview ? '<div class="sub" style="font-size:13.5px">'+preview+'</div>' : '') + '</div>'
+    + (preview ? '<div class="sub" style="font-size:calc(13.5px * var(--fs,1))">'+preview+'</div>' : '') + '</div>'
     + btns + '</div>';
 }
 /* 観察に入れた「語」1つぶんの行(2026-09-14)。押すとその意味の比較画面へ移る。 */
@@ -2240,7 +2281,7 @@ function colBoxHtml(senseId){
   const open = colPickFor === senseId;
   h += '<details class="sect"'+(open?' open':'')
     + ' ontoggle="colPickFor = this.open ? \''+esc(senseId)+'\' : \'\'">'
-    + '<summary class="ghead" style="font-size:13px; padding:7px 2px">＋ コレクションに入れる</summary>';
+    + '<summary class="ghead" style="font-size:calc(13px * var(--fs,1)); padding:7px 2px">＋ コレクションに入れる</summary>';
   h += '<div class="card" style="margin-top:6px">';
   if(db.collections.length){
     h += db.collections.slice().sort(colSort).map(c=>{
@@ -2822,6 +2863,7 @@ function doExportAtlas(){
 
 /* ---------- 設定 ---------- */
 function renderSettings(){
+  renderFontScale();   // 文字の大きさ(2026-11-17)
   renderBooks();   // 本の一覧は設定の中(2026-09-12g)。タブから外しただけで中身は同じ
   renderStore(); renderLangOrder(); renderFmtHelp();   // renderImgPicker() は撤去(2026-09-09)
 }
