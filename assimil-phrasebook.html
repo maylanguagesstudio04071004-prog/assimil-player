@@ -204,6 +204,16 @@ input,textarea,select{font-family:inherit}
 .study-mean{font-size:calc(15px * var(--fs,1)); margin-top:10px}
 .study-ans{font-size:calc(20px * var(--fs,1)); font-weight:700; margin-top:8px; unicode-bidi:plaintext}
 .study-roman{font-size:calc(14px * var(--fs,1)); font-weight:400; color:var(--sub); font-style:italic}
+/* 単語のメモ(2026-11-18) */
+.study-memo{margin-top:10px; padding:9px 12px; border-radius:10px; background:var(--accent-soft); font-size:calc(14px * var(--fs,1)); line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere}
+.study-memo .sm-lab{font-size:calc(11px * var(--fs,1)); color:var(--sub); display:block; margin-bottom:2px}
+.study-memo-btn{margin-top:8px; font-size:calc(13px * var(--fs,1)); padding:5px 12px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--accent)}
+.study-memo-edit{margin-top:8px}
+.study-memo-edit textarea{width:100%; box-sizing:border-box; min-height:calc(64px * var(--fs,1)); font-size:calc(15px * var(--fs,1)); line-height:1.5; padding:9px 11px; border-radius:10px; border:1px solid var(--accent); background:var(--bg); color:var(--text); font-family:inherit; resize:vertical}
+.study-memo-edit .sme-acts{display:flex; gap:8px; margin-top:6px}
+.study-memo-edit .sme-acts button{font-size:calc(13px * var(--fs,1)); padding:6px 14px; border-radius:9px}
+.study-row .sr-memo{font-size:calc(13px * var(--fs,1)); line-height:1.5; margin-top:2px; white-space:pre-wrap; overflow-wrap:anywhere}
+.study-row .sr-memo::before{content:"✎ "; color:var(--accent)}
 .study-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
 .study-acts .btn{flex:1; min-width:96px}
 .study-acts .st-spd{flex:0 0 auto; min-width:64px; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:manipulation}
@@ -766,7 +776,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-18a";
+const BUILD = "2026-11-18b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2781,7 +2791,7 @@ function pickFromText(L, host, btn){
           n.updated = Date.now();
         } else {
           const rec = {lang, lesson:L.lesson, text:r.w, type:"word", updated:Date.now()};
-          fieldsFor(lang, "word").forEach(f=>rec[f.key] = "");
+          NOTE_FIELDS.forEach(f=>rec[f.key] = "");   // メモ欄は空のまま作らない
           rec.ja = r.ja; if(r.roman) rec.roman = r.roman;
           db.notes.push(rec);
         }
@@ -4612,11 +4622,15 @@ const LANGCODE = {
 // 将来ここに {key:"memo", label:"自分のメモ"} や {key:"explain", label:"Claudeの解説"} を
 // 追加すれば、ポップアップに自動で入力欄が並ぶ(データ側は既に任意フィールドを保存できる)
 // 言語・種別ごとに入力欄を出し分けたくなったらここで分岐する(2026-07-26時点は全て共通)
-function fieldsFor(lang, type){ return NOTE_FIELDS; }
+/* 単語にだけ「メモ」(2026-11-18、Mayの依頼「思い出すで、各単語に一言メモを入れたい。bleiben に『とどまる。ブレーメンの音楽隊』など」)。
+   単語の訳の記録(notes の type:"word")に memo として持つので、書き出し・取り込みにそのまま乗る。
+   単語の小窓・「思い出す」の答えのあと・「思い出す」の一覧で読み書きできる。戻すなら WORD_FIELDS を NOTE_FIELDS に戻す */
+function fieldsFor(lang, type){ return type === "word" ? WORD_FIELDS : NOTE_FIELDS; }
 const NOTE_FIELDS = [
   {key:"ja", label:"日本語訳"},
   {key:"roman", label:"読み(ローマ字)"}
 ];
+const WORD_FIELDS = NOTE_FIELDS.concat([{key:"memo", label:"メモ(覚え方など)"}]);
 // 読みの自動取得を出す言語(ラテン文字以外の文字体系)
 // タイ語は外してある(2026-08-22)。Googleの変換はタイ語にだけ発音ではなく字面変換
 // (ISO 11940系)を返し、声調も母音の長短も表さない。วันนี้ → "Wạn nī̂"(正しくは wanníi)。
@@ -4824,7 +4838,7 @@ function saveNoteField(lang, lesson, text, field, value, type){
     if(empty) db.notes.splice(i,1);
   } else if(v){
     const rec = {lang, lesson, text, type, updated: Date.now()};
-    fieldsFor(lang, type).forEach(f=>rec[f.key] = "");
+    NOTE_FIELDS.forEach(f=>rec[f.key] = "");
     rec[field] = v;
     db.notes.push(rec);
   }
@@ -5805,6 +5819,7 @@ function renderStudyList(box){
     row.innerHTML = '<div class="sr-body"><div class="sr-w" dir="auto">' + esc(x.text)
       + (wn.roman ? ' <span class="study-roman">' + esc(wn.roman) + '</span>' : '') + '</div>'
       + (wn.ja ? '<div class="sr-ja">' + esc(wn.ja) + '</div>' : '')
+      + (wn.memo ? '<div class="sr-memo">' + esc(wn.memo) + '</div>' : '')
       + '<div class="sr-meta">' + esc(x.lang) + ' · L' + x.lesson
       + ' · ' + (x.due <= t ? "今日" : "次は " + esc(x.due.slice(5).replace("-", "/")))
       + ((x.lapses||0) ? ' · <span class="sr-miss">出なかった ' + x.lapses + ' 回</span>' : '')
@@ -5820,6 +5835,29 @@ function renderStudyList(box){
   box.appendChild(wrap);
 }
 let studyEarKey = null;   // 耳から先に: 文字を見たカード
+/* 「思い出す」の答えのあとに、その単語のメモを出す。「✎ メモを書く/直す」でその場で書ける(描き直さないので、書く欄の線も消えない) */
+function studyMemoAttach(card, lang, lesson, word){
+  const slot = card.querySelector(".study-memo-slot");
+  if(!slot) return;
+  const paint = ()=>{
+    const memo = String((getNote(lang, lesson, word, "word") || {}).memo || "").trim();
+    slot.innerHTML = (memo ? '<div class="study-memo"><span class="sm-lab">メモ</span></div>' : '')
+      + '<button class="study-memo-btn">' + (memo ? "✎ メモを直す" : "✎ メモを書く") + '</button>';
+    if(memo) slot.querySelector(".study-memo").appendChild(document.createTextNode(memo));
+    slot.querySelector(".study-memo-btn").onclick = edit;
+  };
+  const edit = ()=>{
+    const memo = String((getNote(lang, lesson, word, "word") || {}).memo || "");
+    slot.innerHTML = '<div class="study-memo-edit"><textarea dir="auto" placeholder="例: とどまる。ブレーメンの音楽隊"></textarea>'
+      + '<div class="sme-acts"><button class="btn sme-save">保存</button><button class="btn soft sme-cancel">やめる</button></div></div>';
+    const ta = slot.querySelector("textarea");
+    ta.value = memo;
+    ta.focus();
+    slot.querySelector(".sme-save").onclick = ()=>{ saveNoteField(lang, lesson, word, "memo", ta.value, "word"); paint(); };
+    slot.querySelector(".sme-cancel").onclick = paint;
+  };
+  paint();
+}
 function studyEarMode(){ try{ return localStorage.getItem(KEY + ".studyEar") === "1"; }catch(e){ return false; } }
 /* ---------- 書く欄 ----------
    2026-11-17、Mayの依頼(iPad mini と Apple Pencil を使い始めた。「単語の抜け部分を書き込み対応に」)。
@@ -6152,6 +6190,7 @@ function renderStudy(){
   if(studyShown >= 2){
     html += '<div class="study-ans" dir="auto">' + esc(word)
       + (wn.roman ? ' <span class="study-roman">' + esc(wn.roman) + '</span>' : '') + '</div>';
+    html += '<div class="study-memo-slot"></div>';   // メモ(答えを見たあとだけ。先に出すと意味のヒントになる)
   }
   html += '<div class="study-acts">';
   if(studyShown < 2){
@@ -6173,6 +6212,7 @@ function renderStudy(){
   card.innerHTML = html;
   box.appendChild(card);
   prismStudyDecor(card, lang, word, studyShown >= 2);
+  studyMemoAttach(card, lang, lesson, word);
   studyInkAttach(card, cardKey);
   showTop();
   const play = ()=>{ if(hasVoice) playSpan(lang, lesson, sen.i, null); };
