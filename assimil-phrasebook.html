@@ -362,6 +362,8 @@ textarea{width:100%; min-height:120px; padding:11px; border:1px solid var(--bord
 .study-ink .ink-hint{position:absolute; left:12px; top:9px; font-size:calc(12px * var(--fs,1)); color:var(--sub); pointer-events:none}
 .study-ink .ink-btns{position:absolute; right:6px; top:6px; display:flex; gap:6px}
 .study-ink .ink-btns button{font-size:calc(12px * var(--fs,1)); padding:4px 10px; border-radius:8px; background:var(--card); border:1px solid var(--border); color:var(--sub)}
+.study-ink .ink-btns button.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+.study-ink.erasing canvas{cursor:cell}
 .study-ear-toggle{font-size:calc(12px * var(--fs,1)); padding:4px 10px; border-radius:9px; background:var(--card); border:1px solid var(--border); color:var(--sub); margin-left:8px}
 .study-ear-toggle.on{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
 .study-ear{font-size:calc(15px * var(--fs,1)); color:var(--sub); line-height:1.7; margin:12px 0 4px}
@@ -764,7 +766,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-17d";
+const BUILD = "2026-11-18a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2010,7 +2012,8 @@ function showTab(t){
   if(t==="tabLesson") renderLesson();
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
-  if(t==="tabStudy"){ studyQueue = null; studyShown = 0; studyEarKey = null; renderStudy(); window.scrollTo(0,0); }
+  // 頭へ戻してから描く(2026-11-18)。描いたあとに戻すと、画面が低いときにカードの文が下に隠れたままになる
+  if(t==="tabStudy"){ studyQueue = null; studyShown = 0; studyEarKey = null; studyShownKey = null; window.scrollTo(0,0); renderStudy(); }
   if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); renderFontScale(); }
   if(t!=="tabLesson") tagReturn = null;   // ほかのタブへ移ったら「#タグに戻る」は片付ける
   paintTagReturn();
@@ -5828,7 +5831,12 @@ function studyEarMode(){ try{ return localStorage.getItem(KEY + ".studyEar") ===
    - 既定は、短い辺が700以上の画面(iPad)でオン、それより小さい画面でオフ。上の「書く欄」で切り替える(端末ごと)。
    戻すなら renderStudy の studyInkAttach の2か所と、頭のボタンを外す */
 let studyInk = {key: null, strokes: []};
+let studyShownKey = null;   // いま画面にあるカード。替わったときだけ頭へ戻す
 let inkPenSeen = false, inkResize = null;
+/* 消しゴム(2026-11-18、Mayの依頼「一度書いた文字を消すことはできませんか」)。
+   オンのあいだは、ペンでなぞった線を一画ずつ消す(線の一部ではなく、触れた画をまるごと)。
+   オン・オフはカードが替わっても覚えておく(端末のあいだだけ。保存はしない) */
+let inkEraser = false;
 function studyInkMode(){
   try{ const v = localStorage.getItem(KEY + ".studyInk");
     if(v === "1") return true;
@@ -5845,7 +5853,7 @@ function studyInkAttach(card, key){
   const wrap = document.createElement("div");
   wrap.className = "study-ink";
   wrap.innerHTML = '<canvas></canvas><div class="ink-hint">ここに書けます</div>'
-    + '<div class="ink-btns"><button class="ink-undo">1つ戻す</button><button class="ink-clear">消す</button></div>';
+    + '<div class="ink-btns"><button class="ink-erase">消しゴム</button><button class="ink-undo">1つ戻す</button><button class="ink-clear">全部消す</button></div>';
   acts.before(wrap);
   const cv = wrap.querySelector("canvas"), hint = wrap.querySelector(".ink-hint"), ctx = cv.getContext("2d");
   const H = Math.round(150 * fontScale());
@@ -5872,6 +5880,27 @@ function studyInkAttach(card, key){
   if(!wrap.clientWidth) requestAnimationFrame(setup);
   inkResize = ()=>{ if(wrap.isConnected) setup(); };
   let cur = null;
+  const eraseBtn = wrap.querySelector(".ink-erase");
+  const paintEraser = ()=>{ eraseBtn.classList.toggle("on", inkEraser); wrap.classList.toggle("erasing", inkEraser);
+    eraseBtn.textContent = inkEraser ? "消しゴム中" : "消しゴム"; };
+  paintEraser();
+  eraseBtn.onclick = ()=>{ inkEraser = !inkEraser; paintEraser(); };
+  // 点 a のそばを通る画を消す(線分との距離で見る)
+  const eraseAt = a=>{
+    const R = 12 * fontScale();
+    const near = st=>{
+      if(st.length === 1) return Math.hypot(st[0].x - a.x, st[0].y - a.y) <= R;
+      for(let i = 1; i < st.length; i++){
+        const p = st[i-1], q = st[i], dx = q.x - p.x, dy = q.y - p.y, L = dx*dx + dy*dy;
+        const t = L ? Math.max(0, Math.min(1, ((a.x - p.x) * dx + (a.y - p.y) * dy) / L)) : 0;
+        if(Math.hypot(p.x + t*dx - a.x, p.y + t*dy - a.y) <= R) return true;
+      }
+      return false;
+    };
+    const before = ink.strokes.length;
+    for(let i = ink.strokes.length - 1; i >= 0; i--) if(near(ink.strokes[i])) ink.strokes.splice(i, 1);
+    if(ink.strokes.length !== before) redraw();
+  };
   const pt = e=>{ const r = cv.getBoundingClientRect();
     return {x: Math.round((e.clientX - r.left) * 10) / 10, y: Math.round((e.clientY - r.top) * 10) / 10,
             p: e.pointerType === "pen" ? (e.pressure || 0.5) : 0.5}; };
@@ -5882,6 +5911,7 @@ function studyInkAttach(card, key){
     e.preventDefault();
     try{ cv.setPointerCapture(e.pointerId); }catch(err){}
     const a = pt(e);
+    if(inkEraser){ cur = {id: e.pointerId, erase: true}; eraseAt(a); return; }
     cur = {id: e.pointerId, pts: [a]};
     ink.strokes.push(cur.pts);
     hint.style.display = "none";
@@ -5890,6 +5920,7 @@ function studyInkAttach(card, key){
   cv.addEventListener("pointermove", e=>{
     if(!cur || e.pointerId !== cur.id) return;
     e.preventDefault();
+    if(cur.erase){ (e.getCoalescedEvents ? e.getCoalescedEvents() : [e]).forEach(ev=>eraseAt(pt(ev))); return; }
     let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
     if(!evs || !evs.length) evs = [e];
     evs.forEach(ev=>{ const b = pt(ev), a = cur.pts[cur.pts.length - 1];
@@ -6076,6 +6107,15 @@ function renderStudy(){
   const hasVoice = !!sen && !!(sen.title ? titleSpan(lang, lesson) : (spansOf(lang, lesson) || [])[sen.i]);
   // 耳から先に: 文字を出す前に、まず聞く。音の無いカードはいつもどおり
   const cardKey = studyQueue[0];
+  /* 新しいカードになったら、カードの頭(文)が見える所まで戻す(2026-11-18、Mayの依頼「書く欄オンでも最初はまず文章が見えるように」)。
+     書く欄の分だけカードが長くなり、前のカードで下の「思い出せた」を押した位置のままだと、次のカードの文が画面の上に隠れていた。
+     同じカードのまま「意味を見る」「答えを見る」で描き直すときは動かさない */
+  const newCard = studyShownKey !== cardKey;
+  studyShownKey = cardKey;
+  // 描画の直後にその場で測って動かす(requestAnimationFrame は画面が裏にあると止まるので使わない)
+  const showTop = ()=>{ if(!newCard) return;
+    const r = card.getBoundingClientRect();
+    if(r.top < 8 || r.top > window.innerHeight * 0.5) window.scrollBy(0, r.top - 8); };
   if(studyEarMode() && hasVoice && studyShown === 0 && studyEarKey !== cardKey){
     card.innerHTML = html + '<div class="study-ear">文を聞いて、覚えたい語を思い出してください。</div>'
       + '<div class="study-acts"><button class="btn soft st-play">▶ もう一度聞く</button>'
@@ -6089,6 +6129,7 @@ function renderStudy(){
     card.querySelector(".st-see").onclick = ()=>{ studyEarKey = cardKey; renderStudy(); };
     prismStudyDecor(card, lang, word, false);
     studyInkAttach(card, cardKey);
+    showTop();
     play();
     return;
   }
@@ -6133,6 +6174,7 @@ function renderStudy(){
   box.appendChild(card);
   prismStudyDecor(card, lang, word, studyShown >= 2);
   studyInkAttach(card, cardKey);
+  showTop();
   const play = ()=>{ if(hasVoice) playSpan(lang, lesson, sen.i, null); };
   const q = c=>card.querySelector(c);
   if(q(".st-mean")) q(".st-mean").onclick = ()=>{ studyShown = 1; renderStudy(); };
