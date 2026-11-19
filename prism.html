@@ -161,6 +161,16 @@ table.ax th{color:var(--sub); font-weight:600; background:var(--card)}
 table.ax th.axname{text-align:left; position:sticky; left:0; background:var(--card); z-index:1}
 table.ax td.on{color:var(--accent); cursor:pointer}
 table.ax td.off{color:var(--line)}
+/* 端末どうしの同期(2026-11-20) */
+.sync-form{display:flex; flex-direction:column; gap:8px; margin:8px 0}
+.sync-form input{padding:10px; border:1px solid var(--line, #ccc); border-radius:10px; background:transparent; color:inherit; font-size:calc(15px * var(--fs,1)); font-family:inherit}
+.sync-form .sync-secret{-webkit-text-security:disc}
+.sync-ask{position:fixed; inset:0; z-index:120; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; padding:16px}
+.sync-ask .box{background:var(--card, #fff); color:inherit; border-radius:16px; padding:18px; max-width:min(92vw, calc(440px * var(--fs,1))); font-size:calc(14px * var(--fs,1)); line-height:1.7}
+.sync-ask .box h3{margin:0 0 8px; font-size:calc(16px * var(--fs,1))}
+.sync-ask .box .btn{display:block; width:100%; margin-top:10px}
+.sync-toast{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(18px + env(safe-area-inset-bottom)); z-index:110; max-width:92vw;
+  background:var(--card, #fff); color:inherit; border:1px solid var(--line, #ccc); border-radius:12px; padding:10px 14px; font-size:calc(13px * var(--fs,1)); box-shadow:0 6px 24px rgba(0,0,0,.25)}
 </style>
 </head>
 <body>
@@ -277,6 +287,23 @@ table.ax td.off{color:var(--line)}
     素材のJSONは、こちらではなく「取り込み」に貼ってください。</div>
   <div id="expMsg" class="msg"></div>
 
+  <!-- 端末どうしの同期(2026-11-20、Mayの依頼「PrismもAtlas同様にiPadとiPhoneで同期したい」)。Atlasと同じ置き場所・同じ鍵 -->
+  <hr>
+  <h2>端末どうしの同期</h2>
+  <div id="syncInfo" class="sub" style="margin-bottom:6px; white-space:pre-line"></div>
+  <div class="sync-form">
+    <input id="syncRepo" type="text" inputmode="url" placeholder="置き場所(例: ユーザー名/atlas-sync)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+    <input id="syncToken" type="text" class="sync-secret" placeholder="鍵(GitHubで作ったトークン)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+    <button class="btn" id="syncPasteBtn" type="button">コピーした鍵を貼り付ける</button>
+    <input id="syncDevice" type="text" placeholder="この端末の名前(例: iPad)" autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other">
+  </div>
+  <div class="row" style="margin:8px 0">
+    <button class="btn pri" id="syncSaveBtn">保存して同期する</button>
+    <button class="btn" id="syncNowBtn">今すぐ同期</button>
+    <button class="btn" id="syncOffBtn">この端末の同期をやめる</button>
+  </div>
+  <div class="sub">Atlasと同じ置き場所と鍵を使います(Atlasで入れてあれば、ここにも入っています)。開いたときに相手の端末の記録を受け取り、手が止まって10秒たつと自分の記録を送ります。文字の大きさなど端末ごとの設定は送りません。</div>
+
   <hr>
   <h2>言語の表示順</h2>
   <div id="langOrder"></div>
@@ -326,7 +353,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-17c";
+const BUILD = "2026-11-20a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -507,6 +534,7 @@ async function idbDel(store, key){
 let saveTimer = null;
 function save(){
   db.savedAt = Date.now();
+  if(typeof syncTouched === "function") syncTouched();   // 同期: 送るものがある印。手が止まったら送る(2026-11-20)
   const text = JSON.stringify(db);
   STORE.bytes = text.length;
   STORE.lsOk = lsSet(KEY, text);
@@ -539,6 +567,230 @@ async function bootStorage(){
   if(STORE.mode !== "IndexedDB")
     warnBar("IndexedDBが使えません。localStorageは約5MBで一杯になります。設定→書き出しでこまめに控えを取ってください。");
 }
+/* ---------- 端末どうしの同期(2026-11-20、Mayの依頼) ----------
+   Atlas(assimil-phrasebook.html)の同期と同じ作り。置き場所は May の GitHub の非公開リポジトリ、鍵は May が各端末で入れる。
+   鍵・置き場所・端末名は localStorage の ghsync.*(Atlasと同じ名前。同じサイトなので、同じ入れ物で開けば入力は1回で済む)。
+   置くもの: prism/data.json.gz と prism/meta.json(Atlas は atlas/…。同じ置き場所に並ぶ)。画像(img の入れ物)は送らない。
+   開いたとき・戻ったとき: 向こうが新しければ受け取って入れ替える(前の状態は「直前の取り込みを戻す」で戻せる)。
+   保存すると送るものあり。手が止まって10秒で送る。両方で変わっていたら、どちらを残すか聞く。
+   戻すなら save の syncTouched・boot の syncStart・設定の欄を外す */
+const SYNC = {repo:"ghsync.repo", token:"ghsync.token", device:"ghsync.device"};
+const SYNC_PATH = {data:"prism/data.json.gz", meta:"prism/meta.json"};
+const SYNC_IDLE_MS = 10000;
+let syncTimer = null, syncBusy = false, syncSeq = 0, syncLastPull = 0, syncSuppress = false, syncState = "", syncToastT = null;
+function syncApi(){ return window.SYNC_API || "https://api.github.com"; }
+function syncGet(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
+function syncConf(){ return {repo: syncGet(SYNC.repo).trim(), token: syncGet(SYNC.token).trim(), device: syncGet(SYNC.device).trim() || syncGuessDevice()}; }
+function syncOn(){ const c = syncConf(); return !!(c.repo && c.token); }
+function syncGuessDevice(){
+  const ua = navigator.userAgent || "";
+  if(/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return "iPad";
+  if(/iPhone/.test(ua)) return "iPhone";
+  return "Mac";
+}
+function syncBaseGet(){ return Number(syncGet(KEY + ".sync.base")) || 0; }
+function syncDirty(){ return syncGet(KEY + ".sync.dirty") === "1"; }
+function syncStamp(t){ if(!t) return "—"; const d = new Date(t);
+  return (d.getMonth()+1) + "/" + d.getDate() + " " + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0"); }
+function syncToast(msg){
+  let el = document.querySelector(".sync-toast");
+  if(!el){ el = document.createElement("div"); el.className = "sync-toast"; el.onclick = ()=>el.remove(); document.body.appendChild(el); }
+  el.textContent = msg; clearTimeout(syncToastT); syncToastT = setTimeout(()=>el.remove(), 7000);
+}
+function syncTouched(){
+  if(syncSuppress || !syncOn()) return;
+  syncSeq++;
+  lsSet(KEY + ".sync.dirty", "1");
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>syncRun("push"), SYNC_IDLE_MS);
+}
+async function gh(path, opt){
+  const c = syncConf();
+  opt = opt || {};
+  const headers = Object.assign({"Authorization": "Bearer " + c.token, "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"}, opt.headers || {});
+  let res;
+  try{ res = await fetch(syncApi() + path, {method: opt.method || "GET", headers, body: opt.body, cache: "no-store"}); }
+  catch(e){ const err = new Error("つながりません(通信が切れているかもしれません)"); err.net = true; throw err; }
+  if(res.status === 401) throw new Error("鍵が違うか、期限が切れています");
+  if(res.status === 403) throw new Error("鍵に書き込みの許可がありません(Contents を Read and write に)");
+  if(res.status === 404 && !opt.ok404) throw new Error("置き場所が見つかりません(名前と、鍵がその置き場所を使えるかを確かめてください)");
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error("GitHub がエラーを返しました(" + res.status + ")");
+  return opt.raw ? res : res.json();
+}
+function syncB64(bytes){
+  let s = "";
+  for(let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function syncUnB64(b64){ const s = atob(String(b64).replace(/\s/g, "")); const u = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+async function syncGzip(text){
+  if(typeof CompressionStream === "undefined") return {bytes: new TextEncoder().encode(text), gz: false};
+  const buf = await new Response(new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer();
+  return {bytes: new Uint8Array(buf), gz: true};
+}
+async function syncGunzip(bytes, gz){
+  if(!gz) return new TextDecoder().decode(bytes);
+  return await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+}
+async function syncReadMeta(){
+  const c = syncConf();
+  const r = await gh("/repos/" + c.repo + "/contents/" + SYNC_PATH.meta, {ok404: true});
+  if(!r) return null;
+  try{ return JSON.parse(new TextDecoder().decode(syncUnB64(r.content))); }catch(e){ return null; }
+}
+async function syncReadData(meta){
+  const c = syncConf();
+  const res = await gh("/repos/" + c.repo + "/contents/" + SYNC_PATH.data, {raw: true, headers: {"Accept": "application/vnd.github.raw"}});
+  const raw = JSON.parse(await syncGunzip(new Uint8Array(await res.arrayBuffer()), meta.gz !== false));
+  if(!raw || !Array.isArray(raw.entries)) throw new Error("受け取った記録の中身を読めませんでした");
+  return raw;
+}
+async function syncWrite(text, meta){
+  const c = syncConf();
+  const info = await gh("/repos/" + c.repo);
+  const branch = info.default_branch || "main";
+  const ref = await gh("/repos/" + c.repo + "/git/ref/heads/" + encodeURIComponent(branch));
+  const head = ref.object.sha;
+  const commit = await gh("/repos/" + c.repo + "/git/commits/" + head);
+  const z = await syncGzip(text);
+  meta.gz = z.gz; meta.size = z.bytes.length;
+  const b1 = await gh("/repos/" + c.repo + "/git/blobs", {method: "POST", body: JSON.stringify({content: syncB64(z.bytes), encoding: "base64"})});
+  const b2 = await gh("/repos/" + c.repo + "/git/blobs", {method: "POST", body: JSON.stringify({content: JSON.stringify(meta), encoding: "utf-8"})});
+  const tree = await gh("/repos/" + c.repo + "/git/trees", {method: "POST", body: JSON.stringify({base_tree: commit.tree.sha, tree: [
+    {path: SYNC_PATH.data, mode: "100644", type: "blob", sha: b1.sha},
+    {path: SYNC_PATH.meta, mode: "100644", type: "blob", sha: b2.sha}]})});
+  const nc = await gh("/repos/" + c.repo + "/git/commits", {method: "POST",
+    body: JSON.stringify({message: "Prism: " + meta.device + " " + new Date(meta.savedAt).toISOString(), tree: tree.sha, parents: []})});
+  // 送る直前に、向こう(Atlas や別の端末)が変えていないかをもう一度見る
+  const ref2 = await gh("/repos/" + c.repo + "/git/ref/heads/" + encodeURIComponent(branch));
+  if(ref2.object.sha !== head) throw Object.assign(new Error("ちょうど向こうも送っていたので、やり直します"), {retry: true});
+  await gh("/repos/" + c.repo + "/git/refs/heads/" + encodeURIComponent(branch), {method: "PATCH", body: JSON.stringify({sha: nc.sha, force: true})});
+}
+function syncPaint(){
+  const el = $("syncInfo");
+  if(!el) return;
+  const c = syncConf();
+  if(!syncOn()){ el.textContent = "まだ設定していません。"; return; }
+  el.textContent = "置き場所: " + c.repo + " / この端末: " + c.device
+    + "\n最後に送った: " + syncStamp(Number(syncGet(KEY + ".sync.pushedAt")))
+    + " / 最後に受け取った: " + syncStamp(Number(syncGet(KEY + ".sync.pulledAt")))
+    + (syncDirty() ? "\nまだ送っていない変更があります" : "")
+    + (syncState ? "\n" + syncState : "");
+}
+function syncAsk(meta){
+  return new Promise(res=>{
+    const w = document.createElement("div");
+    w.className = "sync-ask";
+    w.innerHTML = '<div class="box"><h3>どちらの記録を残しますか?</h3><div class="sa-msg"></div>'
+      + '<button class="btn pri sa-there"></button><button class="btn sa-here">この端末の記録を残す(向こうに送る)</button>'
+      + '<button class="btn sa-later">あとで決める(今は同期しない)</button></div>';
+    w.querySelector(".sa-msg").textContent = "前回の同期のあと、" + (meta.device || "もう1台") + "(" + syncStamp(meta.savedAt)
+      + ")とこの端末の両方でPrismの記録が変わっています。片方を残すと、もう片方のその間の変更は消えます"
+      + "(向こうの記録を使った場合、この端末の記録は「設定 → 直前の取り込みを戻す」で戻せます)。";
+    w.querySelector(".sa-there").textContent = (meta.device || "向こう") + "の記録を使う";
+    const done = v=>{ w.remove(); res(v); };
+    w.querySelector(".sa-there").onclick = ()=>done("there");
+    w.querySelector(".sa-here").onclick = ()=>done("here");
+    w.querySelector(".sa-later").onclick = ()=>done("later");
+    document.body.appendChild(w);
+  });
+}
+async function syncTake(meta){
+  const raw = await syncReadData(meta);
+  await makeUndo();                             // 入れ替える前の状態を控える(直前の取り込みを戻すで戻せる)
+  db = normalizeDb(raw);
+  labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
+  syncSuppress = true; try{ save(); }finally{ syncSuppress = false; }
+  lsSet(KEY + ".sync.base", String(meta.savedAt)); lsSet(KEY + ".sync.dirty", ""); lsSet(KEY + ".sync.pulledAt", String(Date.now()));
+  showTab(curTab);
+  syncToast((meta.device || "もう1台") + "のPrismの記録を受け取りました(" + syncStamp(meta.savedAt) + ")");
+}
+async function syncSend(){
+  const seq = syncSeq, text = JSON.stringify(db), savedAt = Number(db.savedAt) || Date.now();
+  await syncWrite(text, {savedAt, device: syncConf().device, at: Date.now(), app: "prism", build: BUILD});
+  lsSet(KEY + ".sync.base", String(savedAt)); lsSet(KEY + ".sync.pushedAt", String(Date.now()));
+  if(seq === syncSeq) lsSet(KEY + ".sync.dirty", "");
+}
+async function syncRun(mode){
+  if(!syncOn()) return;
+  if(syncBusy){ if(mode !== "pull"){ clearTimeout(syncTimer); syncTimer = setTimeout(()=>syncRun("push"), 3000); } return; }
+  syncBusy = true; syncState = mode === "push" ? "送っています…" : "向こうを見ています…"; syncPaint();
+  try{
+    for(let tryNo = 0; tryNo < 2; tryNo++){
+      try{
+        const meta = await syncReadMeta();
+        syncLastPull = Date.now();
+        const base = syncBaseGet(), dirty = syncDirty();
+        const thereNew = !!meta && Number(meta.savedAt) > base;
+        if(!meta){ await syncSend(); syncState = "初めて送りました"; break; }
+        if(thereNew && !dirty && base){ await syncTake(meta); syncState = ""; break; }
+        if(thereNew){
+          if(!base && !(db.entries || []).length){ await syncTake(meta); syncState = ""; break; }
+          syncBusy = false;
+          const v = await syncAsk(meta);
+          syncBusy = true;
+          if(v === "there"){ await syncTake(meta); syncState = ""; }
+          else if(v === "here"){ await syncSend(); syncState = ""; }
+          else syncState = "どちらを残すか決めるまで、同期を止めています";
+          break;
+        }
+        if(dirty){ syncState = "送っています…"; syncPaint(); await syncSend(); }
+        syncState = "";
+        break;
+      }catch(e){
+        if(e.retry && tryNo === 0) continue;
+        throw e;
+      }
+    }
+  }catch(e){
+    syncState = "同期できませんでした: " + e.message;
+    if(!e.net) syncToast("同期できませんでした: " + e.message);
+  }finally{
+    syncBusy = false; syncPaint();
+  }
+}
+function syncStart(){
+  if($("syncRepo")) $("syncRepo").value = syncGet(SYNC.repo);
+  if($("syncDevice")) $("syncDevice").value = syncGet(SYNC.device);
+  const tk = $("syncToken");
+  if(tk) tk.placeholder = syncGet(SYNC.token) ? "鍵は入っています(変えるときだけ入力)" : "鍵(GitHubで作ったトークン)";
+  if($("syncDevice") && !$("syncDevice").value) $("syncDevice").placeholder = "この端末の名前(例: " + syncGuessDevice() + ")";
+  if($("syncSaveBtn")) $("syncSaveBtn").onclick = ()=>{
+    const repo = $("syncRepo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, "");
+    if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){ syncToast("置き場所は「ユーザー名/リポジトリ名」の形で入れてください"); return; }
+    const tok = $("syncToken").value.trim();
+    if(!tok && !syncGet(SYNC.token)){ syncToast("鍵を入れてください"); return; }
+    if(repo !== syncGet(SYNC.repo)) lsSet(KEY + ".sync.base", "");
+    lsSet(SYNC.repo, repo);
+    if(tok) lsSet(SYNC.token, tok);
+    lsSet(SYNC.device, $("syncDevice").value.trim());
+    $("syncToken").value = "";
+    syncStart(); syncRun("now");
+  };
+  if($("syncNowBtn")) $("syncNowBtn").onclick = ()=>syncRun("now");
+  if($("syncPasteBtn")) $("syncPasteBtn").onclick = async ()=>{
+    let t = "";
+    try{ t = String(await navigator.clipboard.readText() || "").trim(); }catch(e){ t = ""; }
+    if(!t){ syncToast("コピーした鍵を読めませんでした。鍵の欄を長押しして「ペースト」してください"); return; }
+    if(!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t)){ syncToast("コピーしたものが鍵の形ではありません(github_pat_ で始まるはずです)"); return; }
+    $("syncToken").value = t;
+    syncToast("鍵を入れました。「保存して同期する」を押してください");
+  };
+  if($("syncOffBtn")) $("syncOffBtn").onclick = ()=>{
+    if(!confirm("この端末の同期をやめますか?(鍵をこの端末から消します。Atlasの同期も止まります。置き場所の記録とこの端末の記録はそのまま残ります)")) return;
+    try{ localStorage.removeItem(SYNC.token); }catch(e){}
+    lsSet(KEY + ".sync.base", ""); lsSet(KEY + ".sync.dirty", "");
+    syncState = ""; syncStart();
+  };
+  syncPaint();
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(!syncOn()) return;
+  if(document.hidden){ if(syncDirty()){ clearTimeout(syncTimer); syncRun("push"); } }
+  else if(Date.now() - syncLastPull > 60000) syncRun("pull");
+});
 function normalizeDb(d){
   const e = emptyDb();
   for(const k in e) if(Array.isArray(e[k]) && !Array.isArray(d[k])) d[k] = [];
@@ -2865,7 +3117,7 @@ function doExportAtlas(){
 function renderSettings(){
   renderFontScale();   // 文字の大きさ(2026-11-17)
   renderBooks();   // 本の一覧は設定の中(2026-09-12g)。タブから外しただけで中身は同じ
-  renderStore(); renderLangOrder(); renderFmtHelp();   // renderImgPicker() は撤去(2026-09-09)
+  renderStore(); renderLangOrder(); renderFmtHelp(); if(typeof syncPaint === "function") syncPaint();   // renderImgPicker() は撤去(2026-09-09)
 }
 function renderStore(){
   $("storeInfo").innerHTML =
@@ -3036,6 +3288,7 @@ if($("restoreFile")) $("restoreFile").onchange = e=>{
   catch(e){ db = emptyDb(); warnBar("読み込みに失敗しました: " + (e && e.message)); }
   showTab("Collections");   // 起動時はいちばん左の観察(2026-09-18)。#theme= で来たときは openFromHash がテーマへ移す
   openFromHash();
+  syncStart(); if(syncOn()) syncRun("pull");   // 端末どうしの同期(2026-11-20)
 })();
 window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
 </script>
