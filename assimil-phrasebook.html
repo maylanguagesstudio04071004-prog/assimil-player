@@ -395,6 +395,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 .add-lang{display:flex; gap:8px; margin-top:12px}
 /* 同期(2026-11-20) */
 .sync-form{display:flex; flex-direction:column; gap:8px; margin:10px 0}
+.sync-form .sync-secret{-webkit-text-security:disc}
 .sync-form input{padding:11px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font-size:calc(15px * var(--fs,1)); font-family:inherit}
 .sync-ask{position:fixed; inset:0; z-index:120; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; padding:16px}
 .sync-ask .box{background:var(--card); color:var(--text); border-radius:16px; padding:18px; max-width:min(92vw, calc(440px * var(--fs,1))); font-size:calc(14px * var(--fs,1)); line-height:1.7}
@@ -713,9 +714,13 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
     <h2>端末どうしの同期</h2>
     <div id="syncInfo" class="small-note" style="margin-top:0"></div>
     <div class="sync-form">
-      <input id="syncRepo" placeholder="置き場所(例: ユーザー名/atlas-sync)" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <input id="syncToken" type="password" placeholder="鍵(GitHubで作ったトークン)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <input id="syncDevice" placeholder="この端末の名前(例: iPad)">
+      <!-- 2026-11-20: 鍵の欄を type="password" にしていたら、iPadで押すと画面が暗くなって入力できなくなった(Mayの報告)。
+           iOS のパスワード自動入力(や 1Password)が、前の欄を「ユーザー名」、鍵の欄を「パスワード」と見てログインの画面を出していたと考えられる。
+           パスワードの欄にせず、文字を伏せる表示だけにした。あわせて「コピーした鍵を貼り付ける」ボタンを足した(欄に打たずに済む) -->
+      <input id="syncRepo" type="text" inputmode="url" placeholder="置き場所(例: ユーザー名/atlas-sync)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+      <input id="syncToken" type="text" class="sync-secret" placeholder="鍵(GitHubで作ったトークン)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+      <button class="btn soft" id="syncPasteBtn" type="button">コピーした鍵を貼り付ける</button>
+      <input id="syncDevice" type="text" placeholder="この端末の名前(例: iPad)" autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other">
     </div>
     <button class="btn full" id="syncSaveBtn">保存して同期する</button>
     <button class="btn soft full" id="syncNowBtn">今すぐ同期</button>
@@ -797,7 +802,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-20b";
+const BUILD = "2026-11-20c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1334,6 +1339,15 @@ function syncStart(){
     syncStart(); syncRun("now");
   };
   if($("syncNowBtn")) $("syncNowBtn").onclick = ()=>syncRun("now");
+  // コピーした鍵をそのまま入れる(欄に打たなくてよい)。中身は画面に出さない
+  if($("syncPasteBtn")) $("syncPasteBtn").onclick = async ()=>{
+    let t = "";
+    try{ t = String(await navigator.clipboard.readText() || "").trim(); }catch(e){ t = ""; }
+    if(!t){ showToast("コピーした鍵を読めませんでした。鍵の欄を長押しして「ペースト」してください"); return; }
+    if(!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t)){ showToast("コピーしたものが鍵の形ではありません(github_pat_ で始まるはずです)"); return; }
+    $("syncToken").value = t;
+    showToast("鍵を入れました。「保存して同期する」を押してください");
+  };
   if($("syncOffBtn")) $("syncOffBtn").onclick = ()=>{
     if(!confirm("この端末の同期をやめますか?(鍵をこの端末から消します。置き場所の記録とこの端末の記録はそのまま残ります)")) return;
     try{ localStorage.removeItem(SYNC.token); }catch(e){}
