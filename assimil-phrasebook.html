@@ -776,7 +776,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-18b";
+const BUILD = "2026-11-20a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2703,13 +2703,50 @@ function pickFromText(L, host, btn){
     const table = pickTable(lang);
     const have = new Set((L.words || []).map(w=>selNorm(w, lang)));
     const seen = new Set(), rows = [];
+    /* 中国語は語の間に空白が無いので、辞書と単語登録の語を長いほうから当てて区切る(2026-11-20、Mayの依頼)。
+       1字の語(远・车)も拾う。読みは辞書に無ければ本文の読みから取り出す */
+    const zh = lang === "中文";
+    /* 区切りは「語の数がいちばん少ない分け方」(動的計画法)。辞書には本文から取った切れ端(我去=私は行く、我爸=私の父、
+       去了=行った)も入っているので、そういう語には重みを足して、我|去|了・我|爸爸|妈妈 のほうを選ばせる。
+       - 訳に 私・あなた・彼・彼女 が入る2字以上の語(我们・他们のように 们 で終わる語は除く)
+       - 了 で終わり、訳が「た」で終わる2字以上の語(为了・除了 は訳が「た」で終わらないので残る) */
+    const zhCost = w=>{
+      const h = table.get(selNorm(w, lang)); if(!h) return Infinity;
+      let c = 1;
+      if(w.length >= 2 && /私|あなた|彼/.test(h.ja) && !w.endsWith("们")) c += 1.1;
+      if(w.length >= 2 && w.endsWith("了") && /た$/.test(String(h.ja).trim())) c += 1.1;
+      return c;
+    };
+    const zhSplit = p=>{
+      const out = [];
+      // 漢字が続く所ごとに分けてから区切る
+      (p.match(/[\u3400-\u9fff]+/g) || []).forEach(run=>{
+        const n = run.length, best = new Array(n + 1).fill(null);
+        best[0] = {c: 0, ws: []};
+        for(let i = 0; i < n; i++){
+          if(!best[i]) continue;
+          // どの語にも当たらない字は飛ばす(重め)
+          const skip = {c: best[i].c + 3, ws: best[i].ws};
+          if(!best[i + 1] || skip.c < best[i + 1].c) best[i + 1] = skip;
+          for(let L = 1; L <= Math.min(6, n - i); L++){
+            const w = run.slice(i, i + L), c = zhCost(w);
+            if(c === Infinity) continue;
+            const cand = {c: best[i].c + c, ws: best[i].ws.concat([w])};
+            if(!best[i + L] || cand.c < best[i + L].c) best[i + L] = cand;
+          }
+        }
+        out.push(...best[n].ws);
+      });
+      return out;
+    };
     [...(L.phrases || []), L.title || ""].forEach(p=>{
-      String(p || "").split(/\s+/).forEach(raw=>{
+      (zh ? zhSplit(String(p || "")) : String(p || "").split(/\s+/)).forEach(raw=>{
         const k = selNorm(raw, lang);
-        if(!k || k.length < 2 || seen.has(k) || have.has(k)) return;
+        if(!k || (!zh && k.length < 2) || seen.has(k) || have.has(k)) return;
         seen.add(k);
         const hit = table.get(k);
-        if(hit) rows.push({w: pickTrim(raw) || raw, ja: hit.ja, roman: hit.roman, src: hit.src});
+        if(hit) rows.push({w: pickTrim(raw) || raw, ja: hit.ja,
+          roman: hit.roman || (zh ? zhReadingFromText(lang, L.lesson, raw) : ""), src: hit.src});
       });
     });
     const box = document.createElement("div");
@@ -4801,6 +4838,99 @@ function ruRoman(text){
 }
 /* 規則で読みを作る言語(2026-09-16)。通信しない。ここに無い言語は今までどおり。Türkçe は 2026-10-24、Русский は 10-26 から */
 const RULE_ROMAN = {"Tiếng Việt": viRoman, "Nederlands": nlRoman, "Türkçe": trRoman, "Русский": ruRoman};
+/* ---------- 中国語の単語のピンインを、本文の行の読みから取り出す(2026-11-20、Mayの依頼) ----------
+   中国語は1字=1音節なので、行の漢字と行の読み(ピンイン)の音節を順に対応させ、単語の字の位置の音節をつなぐ。
+   読みの語は jiǔdiàn のように続けて書いてあるので、ピンインの音節表で割る(声調記号を外して照合)。
+   这儿→zhèr のような儿化は、1音節を2字に掛ける。数字(19617…)を含む行は対応が取れないので使わない。
+   2026-11-17の書き出しで、読みのある1,399行のうち1,391行がそろい、辞書に読みのある1,743語では
+   1,537語が辞書と同じ・203語は声調だけ違う(本文は文中の読み: 是→shi、不→bú など)・3語が違う(得 de/děi)。
+   辞書に読みがあれば辞書を先に使い、無いときだけこれで入れる。 */
+const ZH_SYL = (()=>{
+  const ini = ["zh","ch","sh","b","p","m","f","d","t","n","l","g","k","h","j","q","x","r","z","c","s","y","w",""];
+  const fin = ["iang","iong","uang","ueng","ang","eng","ing","ong","ian","iao","uai","uan","van","üan","ai","ei","ao","ou","an","en","er","in","un","ün",
+               "ia","ie","iu","ua","uo","ue","üe","ui","a","o","e","i","u","ü","v","n","ng","m"];
+  const set = new Set(["r","er","ng","hm","hng","n","m","ê"]);
+  ini.forEach(a=>fin.forEach(b=>set.add(a + b)));
+  return set;
+})();
+const ZH_HAN = /[\u3400-\u9fff]/;
+function zhBase(s){ return String(s).normalize("NFD").replace(/[\u0300-\u0307\u0309-\u036f]/g, "").normalize("NFC").toLowerCase(); }
+function zhSplitWord(w){
+  const out = [];
+  for(const part of w.split("'")){
+    if(!part) continue;
+    const p = part.normalize("NFC"), b = zhBase(p);
+    if(b.length !== p.length) return null;
+    const n = b.length, best = new Array(n + 1).fill(null);
+    best[0] = [];
+    for(let i = 0; i < n; i++){
+      if(!best[i]) continue;
+      for(let L = 6; L >= 1; L--){
+        if(i + L <= n && ZH_SYL.has(b.slice(i, i + L))){
+          const c = best[i].concat([[i, i + L]]);
+          if(!best[i + L] || c.length < best[i + L].length) best[i + L] = c;
+        }
+      }
+    }
+    if(!best[n]) return null;
+    best[n].forEach(([a, c])=>out.push(p.slice(a, c)));
+  }
+  return out;
+}
+function zhSyllables(roman){
+  const toks = String(roman || "").replace(/’/g, "'").match(/[A-Za-z\u00C0-\u024F\u0300-\u036F']+/g) || [];
+  const out = [];
+  for(const t of toks){ const s = zhSplitWord(t); if(!s) return null; out.push(...s); }
+  return out;
+}
+// 行の字の位置 → 音節。そろわなければ null
+function zhAlign(text, roman){
+  if(/\d/.test(text)) return null;
+  const sy = zhSyllables(roman);
+  if(!sy) return null;
+  const chars = [];
+  for(let i = 0; i < text.length; i++) if(ZH_HAN.test(text[i])) chars.push(i);
+  const out = new Map();
+  let k = 0;
+  for(let j = 0; j < chars.length; j++){
+    if(k >= sy.length) return null;
+    const i = chars[j], s = sy[k], nx = chars[j + 1];
+    const b = zhBase(s);
+    if(nx === i + 1 && text[nx] === "儿" && text[i] !== "儿" && b.endsWith("r") && b !== "er"){
+      out.set(i, s); out.set(nx, ""); j++; k++; continue;
+    }
+    out.set(i, s); k++;
+  }
+  return k === sy.length ? out : null;
+}
+// その課の本文(と題)から、単語のピンインを取り出す。見つからなければ ""
+function zhReadingFromText(lang, lesson, word){
+  if(lang !== "中文" || !word) return "";
+  const L = findLesson(lang, lesson);
+  if(!L) return "";
+  // 文頭に来る行は大文字かどうか分からない(北京 Běijīng を文頭の Běijīng と区別できない)ので、文の途中に出てくる行を先に見る
+  const firstHan = p=>[...p].findIndex(c=>ZH_HAN.test(c));
+  const lines = [...(L.phrases || []).map(p=>[p, "phrase"]), [L.title || "", "title"]]
+    .filter(([p])=>p.includes(word))
+    .sort((x, y)=>(x[0].indexOf(word) === firstHan(x[0])) - (y[0].indexOf(word) === firstHan(y[0])));
+  for(const [p, type] of lines){
+    const at = p.indexOf(word);
+    if(at < 0) continue;
+    const r = (getNote(lang, lesson, p, type) || {}).roman;
+    if(!r) continue;
+    const m = zhAlign(p, r);
+    if(!m) continue;
+    const parts = [];
+    for(let i = at; i < at + word.length; i++) if(ZH_HAN.test(p[i])){ const v = m.get(i); if(v == null) { parts.length = 0; break; } parts.push(v); }
+    if(!parts.length) continue;
+    // 母音で始まる2つ目以降の音節の前には ' を入れる(哪儿 nǎ'er、天安门 Tiān'ānmén)
+    let out = parts.filter(Boolean).map((x, i)=>i && /^[aoeāáǎàōóǒòēéěè]/i.test(x) ? "'" + x : x).join("");
+    // 文頭の大文字だけ小文字に戻す(固有名詞の Běijīng はそのまま)
+    if(at === firstHan(p) && out) out = out[0].toLowerCase() + out.slice(1);
+    return out;
+  }
+  return "";
+}
 async function fetchRoman(text, lang){
   /* 読みを Google から取るのを外した(2026-10-22。Mayの依頼「翻訳のAPIを外してください」)。
      押せるボタンは2か所とも外したので、ここには来ない。
@@ -5162,6 +5292,21 @@ function openNotePopup(lang, lesson, text, anchorEl, type){
      単語だけでなくダイアログの行・タイトル・例文も（Mayが「ダイアログと単語の両方に」）。
      辞書・他の課の単語登録から読みが入っていれば、そちらのまま（上の lookupWordNote が先に入れる）。
      近い語の候補の「入れる」は、読みが空のときしか読みを入れないので、ここで入れた読みは上書きされない。 */
+  // 中国語の単語は、読みの欄がまだ空なら、本文の行の読みからピンインを入れる(2026-11-20)。辞書・他の課の登録で入っていればそのまま
+  if(type === "word" && lang === "中文"){
+    const rmTa = trPop.querySelector('[data-field="roman"]');
+    if(rmTa && !rmTa.value.trim()){
+      const rm = zhReadingFromText(lang, lesson, text);
+      if(rm){
+        rmTa.value = rm;
+        fitTextareas(trPop);
+        const hint = document.createElement("div");
+        hint.className = "tr-hint";
+        hint.textContent = "読みは本文の読みから入れました。文の中での読み(是→shi、不→bú など)なので、辞書の形と違うことがあります";
+        rmTa.parentNode.appendChild(hint);
+      }
+    }
+  }
   if(RULE_ROMAN[lang]){
     const rmTa = trPop.querySelector('[data-field="roman"]');
     if(rmTa && !rmTa.value.trim()){
