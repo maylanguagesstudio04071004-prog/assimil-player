@@ -184,6 +184,10 @@ input,textarea,select{font-family:inherit}
 .words button .wprism{font-size:calc(9px * var(--fs,1)); margin-left:3px; vertical-align:2px}
 /* 本のページの写真(2026-11-21) */
 .page-thumbs{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+.page-float{float:right; flex-direction:column; flex-wrap:nowrap; width:min(38%, calc(210px * var(--fs,1))); margin:0 0 8px 12px}
+.page-float .pt{width:100% !important; height:auto !important; aspect-ratio:4/3}
+.page-float .pt-note{margin-top:0}
+.study-card .study-ink, .study-card .study-acts, .study-card .st-drop{clear:right}
 .page-thumbs .pt{width:calc(150px * var(--fs,1)); height:calc(112px * var(--fs,1)); padding:0; border-radius:8px; overflow:hidden;
   border:1px solid var(--border); background:var(--bg); display:flex; align-items:center; justify-content:center}
 .page-thumbs .pt img{width:100%; height:100%; object-fit:cover; display:block}
@@ -816,7 +820,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-21a";
+const BUILD = "2026-11-21b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3289,18 +3293,22 @@ function pageViewer(file, caption){
     .catch(e=>{ w.querySelector(".pv-msg").textContent = "写真を読めませんでした: " + e.message; });
   setZ(1);
 }
+/* 2026-11-21b: 写真はカードの右上に浮かせる(Mayの依頼。下に出すと書く欄が画面の下へ押し出されていた)。
+   文はその左に回り込む。書く欄とボタンは写真より下から始める(clear) */
 function pageThumbs(host, hits){
   if(!syncOn()) return;
   pageIndex().then(idx=>{
     if(!idx || !host.isConnected) return;
+    const card = host.closest(".study-card") || host;
     const seen = new Set(), shots = [];
     hits.forEach(h=>{
       (idx[h.page] || []).forEach(f=>{ if(!seen.has(f)){ seen.add(f); shots.push({f, cap: h.src + " ・ " + String(h.page).split("/").slice(1).join("/")}); } });
     });
     if(!shots.length) return;
+    const old = card.querySelector(".page-float"); if(old) old.remove();
     const row = document.createElement("div");
-    row.className = "page-thumbs";
-    shots.slice(0, 4).forEach(x=>{
+    row.className = "page-thumbs page-float";
+    shots.slice(0, 3).forEach(x=>{
       const b = document.createElement("button");
       b.className = "pt";
       b.innerHTML = '<span class="pt-wait">写真…</span>';
@@ -3312,9 +3320,10 @@ function pageThumbs(host, hits){
     });
     const note = document.createElement("div");
     note.className = "pt-note";
-    note.textContent = "本のページ(押すと大きくなります)";
-    host.appendChild(note);
-    host.appendChild(row);
+    note.textContent = "本のページ(押すと拡大)" + (shots.length > 3 ? "・ほか" + (shots.length - 3) + "枚" : "");
+    row.appendChild(note);
+    // カードの頭(言語・課の行の前)に入れて、右に浮かせる
+    card.insertBefore(row, card.firstChild);
   });
 }
 function prismStudyDecor(card, lang, word, detail){
