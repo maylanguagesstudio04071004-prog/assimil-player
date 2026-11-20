@@ -55,6 +55,11 @@ html.pwa header .hlink{top:max(calc(8px + env(safe-area-inset-top)), 58px)}
   color:var(--sub); border-radius:12px; font-size:calc(14px * var(--fs,1)); font-weight:600; white-space:nowrap}
 .tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff}
 .tabs .tab-n{font-size:calc(10px * var(--fs,1)); margin-left:2px; vertical-align:super}
+/* 2段のタブ(2026-11-21)。下の段は上の段より小さく、つながって見えるように */
+.tabs-top{padding-bottom:6px}
+.tabs-sub{padding-top:0; gap:6px}
+.tabs-sub button{padding:9px 2px; font-size:calc(13px * var(--fs,1)); border-radius:10px}
+.tabs-sub button.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
 /* 文字の大きさ(2026-11-17、Mayの依頼)。font-size はすべて calc(Npx * var(--fs,1)) にしてあり、設定で --fs を変える。
    本文の幅と小窓の幅も同じ倍率で広げる(広げないと1行に入る字数が減る)。戻すなら --fs を 1 のままにする */
 main{padding:0 16px 40px; max-width:calc(560px * var(--fs,1)); margin:0 auto}
@@ -466,16 +471,27 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <body>
 <header>Language Atlas<small>レッスンのフレーズと単語を呼び出す</small><a class="hlink" href="./index.html">▶ Player</a></header>
 
-<div class="tabs">
+<!-- タブを2段にした(2026-11-21、Mayの依頼)。上の段が「復習 / Assimil / 設定」、下の段がその中身。
+     復習 = タグ(今日のタグ。前は「思い出す」の上にあった) / 単語/フレーズ(前の「思い出す」)
+     Assimil = レッスン / 検索 / §
+     戻すなら、この2段を前の1段(思い出す・レッスン・検索・§・設定)に戻し、TAB_GROUPS を外す -->
+<div class="tabs tabs-top">
+  <button id="grpReview">復習<span class="tab-n" id="grpReviewN"></span></button>
+  <button id="grpAssimil" class="on">Assimil</button>
+  <button id="tabSettings">設定</button>
+</div>
+<div class="tabs tabs-sub" id="subReview" style="display:none">
+  <button id="tabTag">タグ<span class="tab-n" id="tabTagN"></span></button>
   <!-- 「思い出す」は2026-10-16bでは§タブの中にあったが、使いにくいので独立したタブにした(Mayの依頼、16c) -->
-  <button id="tabStudy">思い出す<span class="tab-n" id="tabStudyN"></span></button>
+  <button id="tabStudy">単語/フレーズ<span class="tab-n" id="tabStudyN"></span></button>
+</div>
+<div class="tabs tabs-sub" id="subAssimil">
   <button id="tabLesson" class="on">レッスン</button>
   <button id="tabSearch">検索</button>
   <button id="tabFav">§</button>
   <!-- 「取込」タブは2026-09-29に設定の中へ移した(Mayの依頼。全言語の取り込みが終わり、あまり使わないため)。
        ボタンは隠しただけで、画面(pageImport)と切り替えの仕組みはそのまま。戻すなら style を外す -->
   <button id="tabImport" style="display:none">取込</button>
-  <button id="tabSettings">設定</button>
 </div>
 
 <main>
@@ -546,6 +562,11 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <!-- 単語を思い出す(2026-10-16c) -->
 <section id="pageStudy" style="display:none">
   <div id="studyList"></div>
+</section>
+
+<!-- 復習 → タグ(2026-11-21)。今日のタグと、言語をまたぐタグの一覧 -->
+<section id="pageTag" style="display:none">
+  <div id="tagDayBox"></div>
 </section>
 
 <!-- ◇概念 / §文法 -->
@@ -820,7 +841,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-21b";
+const BUILD = "2026-11-21c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2289,7 +2310,21 @@ function renderCmp(lang){
 
 /* ---------- tabs ---------- */
 const pages = {tabStudy:"pageStudy", tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
-               tabImport:"pageImport", tabSettings:"pageSettings"};
+               tabImport:"pageImport", tabSettings:"pageSettings", tabTag:"pageTag"};
+/* タブの組(2026-11-21)。上の段のボタン → 下の段とその中のタブ。設定・取込はどの組にも入らない(下の段を出さない) */
+const TAB_GROUPS = {grpReview: {sub: "subReview", tabs: ["tabTag", "tabStudy"]},
+                    grpAssimil: {sub: "subAssimil", tabs: ["tabLesson", "tabSearch", "tabFav", "tabImport"]}};
+const tabGroupLast = {grpReview: "tabStudy", grpAssimil: "tabLesson"};   // 上の段を押したら、その組で最後に開いていたタブへ
+function tabGroupOf(t){ return Object.keys(TAB_GROUPS).find(g=>TAB_GROUPS[g].tabs.includes(t)) || ""; }
+function paintTabGroups(t){
+  const g = tabGroupOf(t === "tabImport" ? "tabSettings" : t);
+  Object.keys(TAB_GROUPS).forEach(k=>{
+    $(k).classList.toggle("on", k === g);
+    $(TAB_GROUPS[k].sub).style.display = k === g ? "" : "none";
+  });
+  if(g) tabGroupLast[g] = t;
+}
+Object.keys(TAB_GROUPS).forEach(g=>{ $(g).onclick = ()=>showTab(tabGroupLast[g]); });
 // タブを持たない画面。レッスン画面から開き、戻るとレッスンに帰る
 // (タブ列は1画面に収めたいので、語根・接辞はここに置く。2026-07-26に移設)
 const subPages = ["pageEdit", "pageRoots", "pageWf", "pageSuf", "pageCmp", "pagePre", "pageCase", "pageStack", "pageAdd", "pageProf", "pageWords"];
@@ -2305,8 +2340,10 @@ function showTab(t){
   // 頭へ戻してから描く(2026-11-18)。描いたあとに戻すと、画面が低いときにカードの文が下に隠れたままになる
   if(t==="tabStudy"){ studyQueue = null; studyShown = 0; studyEarKey = null; studyShownKey = null; window.scrollTo(0,0); renderStudy(); }
   if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); renderFontScale(); syncPaint(); }
+  if(t==="tabTag"){ window.scrollTo(0,0); renderTagPage(); }
   if(t!=="tabLesson") tagReturn = null;   // ほかのタブへ移ったら「#タグに戻る」は片付ける
   paintTagReturn();
+  paintTabGroups(t);
 }
 Object.keys(pages).forEach(t=>{ $(t).onclick = ()=>showTab(t); });
 // 取込画面は設定から開く(2026-09-29)。開いている間もタブは「設定」を光らせておく
@@ -2321,6 +2358,7 @@ function openSubPage(id){
   subPages.forEach(p=>$(p).style.display = (p===id) ? "" : "none");
   window.scrollTo(0,0);
   paintTagReturn();   // 語根などの画面では「#タグに戻る」を隠す(覚えてはおく)
+  paintTabGroups("tabLesson");
 }
 /* ---------- 足すもの・量詞(中国語) ----------
    語形成の第8言語目。語形が一切変わらないので、変化のかわりに語を足す。
@@ -3843,7 +3881,8 @@ function openTagPage(tag){
     sb.style.cssText = "display:block; margin:0 0 12px; padding:9px 14px; font-size:calc(14px * var(--fs,1))";
     sb.textContent = "✓ 今日のタグを見た";
     sb.onclick = ()=>{ tagDayMarkSeen(tag); sb.textContent = "✓ 見ました"; sb.disabled = true;
-      if($("pageStudy").style.display !== "none") renderStudy(); };
+      if($("pageTag").style.display !== "none") renderTagPage();
+      updateTagTab(); };
     panel.appendChild(sb);
   }
   Ls.forEach(L=>{
@@ -6251,6 +6290,7 @@ function updateStudyTab(){
   const el = $("tabStudyN"); if(!el) return;
   const n = studyPick().list.length;   // 上限を掛けたあとの数(2026-11-06)。出る数と札の数を合わせる
   el.textContent = n ? String(n) : "";
+  if(typeof updateTagTab === "function") updateTagTab();
 }
 // 文の読みを、隠した語の分だけ伏せて(hide)、または印を付けて返す(2026-10-24、Mayの依頼)。
 // 本文と読みの空白区切りの数がそろうときだけ語の位置が分かる。そろわない(中・泰・亜の一部)ときは null
@@ -6572,14 +6612,47 @@ function tagDayCard(box){
     + '</div>';
   box.appendChild(c);
   c.querySelector(".td-open").onclick = ()=>openTagPage(t.cur.tag);
-  if(c.querySelector(".td-seen")) c.querySelector(".td-seen").onclick = ()=>{ tagDayMarkSeen(t.cur.tag); renderStudy(); };
-  if(c.querySelector(".td-skip")) c.querySelector(".td-skip").onclick = ()=>{ tagDaySkip(); renderStudy(); };
+  if(c.querySelector(".td-seen")) c.querySelector(".td-seen").onclick = ()=>{ tagDayMarkSeen(t.cur.tag); renderTagPage(); updateTagTab(); };
+  if(c.querySelector(".td-skip")) c.querySelector(".td-skip").onclick = ()=>{ tagDaySkip(); renderTagPage(); updateTagTab(); };
+}
+/* 復習 → タグ(2026-11-21、Mayの依頼で「思い出す」から独立)。今日のタグのカードと、言語をまたぐタグの一覧(見た日つき) */
+function renderTagPage(){
+  const box = $("tagDayBox");
+  if(!box) return;
+  box.innerHTML = "";
+  tagDayCard(box);
+  const list = bridgeTagList(), st = db.tagDay;
+  if(!list.length) return;
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = '<h2>言語をまたぐタグ(' + list.length + ')</h2><div class="small-note" style="margin:0 0 10px">押すと、そのタグが付いた各言語のレッスンが並びます。✓ は見たタグ(日付は見た日)。</div>';
+  const tr = document.createElement("div");
+  tr.className = "tagrow";
+  tr.style.margin = "0";
+  list.slice().sort((a,b)=>b.langs - a.langs || b.n - a.n || a.tag.localeCompare(b.tag, "ja")).forEach(x=>{
+    const b = document.createElement("button");
+    const seen = st.seen[x.tag];
+    b.innerHTML = (seen ? "✓ " : "") + "#" + esc(x.tag) + '<span style="font-size:calc(10px * var(--fs,1)); vertical-align:super; margin-left:2px">' + x.langs + '</span>'
+      + (seen ? '<span style="font-size:calc(10px * var(--fs,1)); color:var(--sub); margin-left:4px">' + esc(seen.slice(5).replace("-", "/")) + '</span>' : "");
+    b.onclick = ()=>openTagPage(x.tag);
+    tr.appendChild(b);
+  });
+  c.appendChild(tr);
+  box.appendChild(c);
+}
+// 上の段・下の段の札。タグは「今日のタグをまだ見ていない」とき1、復習の札は2つの合計
+function updateTagTab(){
+  const el = $("tabTagN"); if(!el) return;
+  let n = 0;
+  try{ const t = tagDayToday(); n = t && !t.done ? 1 : 0; }catch(e){}
+  el.textContent = n ? "1" : "";
+  const g = $("grpReviewN");
+  if(g){ const s = Number(($("tabStudyN") || {}).textContent || 0) + n; g.textContent = s ? String(s) : ""; }
 }
 function renderStudy(){
   updateStudyTab();
   const box = $("studyList");
   box.innerHTML = "";
-  tagDayCard(box);
   if(!db.study.length){
     box.insertAdjacentHTML("beforeend", '<div class="empty-msg">覚えたい単語はまだありません。<br>レッスンの下の単語を押して、小窓の「☆ 覚えたい」を押すと、ここに出ます。</div>');
     return;
