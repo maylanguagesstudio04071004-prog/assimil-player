@@ -841,7 +841,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-21d";
+const BUILD = "2026-11-21e";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1057,6 +1057,11 @@ function lockStore(why){
   el.onclick = ()=>location.reload();
   document.body.appendChild(el);
 }
+/* 古い控えを片付ける(2026-11-21、Mayの了承)。記録が約5MBを超えると localStorage の控えは更新できず古いまま残り、
+   (1) 本体が空になったとき、その古い控えが送られた(2026-11-21の事故)
+   (2) Atlas・Prism・Player で共用の localStorage を埋めて、同期の印や設定が書けなくなるおそれがある。
+   本体(IndexedDB)へ書けたときだけ消す。戻すなら lsDropStale の呼び出し(save・bootStorage)を外す */
+function lsDropStale(){ try{ localStorage.removeItem(KEY); }catch(e){} }
 function save(){
   if(storeLocked) return;    // 本体を読めていないあいだは書かない
   db.savedAt = Date.now();   // どちらの保存先が新しいかの判定に使う
@@ -1071,6 +1076,7 @@ function save(){
   adbBusy = true;
   atlasWrite(text).then(ok=>{
     if(ok){
+      if(!STORE.lsOk) lsDropStale();   // 本体には入った。入りきらなかった控えの古い中身を残さない
       STORE.mode = "idb"; STORE.lastOk = Date.now(); STORE.lastErr = "";
       warnBar("");
     } else if(STORE.lsOk){
@@ -1183,6 +1189,7 @@ async function bootStorage(){
   const here = Number(db.savedAt) || 0;
   const there = raw ? (Number(raw.savedAt) || 0) : -1;
   if(raw && there >= here){
+    if(here && here < there) lsDropStale();   // 手元の控えが本体より古い = 入りきらずに止まった控え
     db = load(raw);
     STORE.mode = "idb";
     renderLangbar(); renderLesson();
@@ -5947,8 +5954,9 @@ async function renderStoreInfo(){
     "データの大きさ: <b>" + mb(size) + "</b>"
       + "(レッスン " + db.lessons.length + " 課 / 注 " + db.notes.length + " 件 / § " + db.grammar.length + " 件)",
     "主な保存先: <b>" + (idbAlive ? "IndexedDB(容量に余裕あり)" : "IndexedDBが使えません") + "</b>",
-    "控えのlocalStorage: <b>" + (lsOk ? "書けています" : "満杯で書けません(約5MBが上限)") + "</b>"
-      + (lsOk ? "" : " ── 控えなので、これが満杯でも本体には影響しません"),
+    // 控えの行は出さない(2026-11-21、Mayの希望)。戻すなら次の2行を生かす
+    // "控えのlocalStorage: <b>" + (lsOk ? "書けています" : "満杯で書けません(約5MBが上限)") + "</b>"
+    //   + (lsOk ? "" : " ── 控えなので、これが満杯でも本体には影響しません"),
     STORE.lastOk ? "最後に保存できた時刻: " + new Date(STORE.lastOk).toLocaleString() : "",
     quota
   ].filter(Boolean);

@@ -353,7 +353,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-21b";
+const BUILD = "2026-11-21c";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -543,6 +543,8 @@ function save(){
   saveTimer = setTimeout(async ()=>{
     try{
       await idbPut(ST_DB,"main",text);
+      // 本体に入った。入りきらなかった控え(localStorage)の古い中身は消す(2026-11-21、Atlasと同じ。戻すならこの行と boot の同じ行を外す)
+      if(!STORE.lsOk){ try{ localStorage.removeItem(KEY); }catch(e){} }
       STORE.mode = "IndexedDB"; STORE.lastOk = Date.now(); STORE.lastErr = "";
       warnBar("");
     }catch(e){
@@ -566,7 +568,8 @@ async function bootStorage(){
      古い控えが同期で送られて、もう1台の記録まで入れ替わった。
      同期を設定してあれば、控えは使わず置き場所から受け取り直す(それまで save しない)。
      戻すなら、この if と save() 先頭の bootHold、boot() の syncRescue を外す */
-  if(STORE.mode === "IndexedDB" && !there && here && (here.entries || []).length && syncOn()) bootHold = true;
+  if(STORE.mode === "IndexedDB" && !there && syncOn() && ((here && (here.entries || []).length) || syncBaseGet())) bootHold = true;
+  if(there && here && (here.savedAt || 0) < (there.savedAt || 0)){ try{ localStorage.removeItem(KEY); }catch(e){} }   // 本体より古い控え
   const d = pick(here, there);
   db = normalizeDb(d || emptyDb());
   labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
@@ -3225,7 +3228,8 @@ function renderStore(){
   $("storeInfo").innerHTML =
     "版: <b>"+BUILD+"</b><br>"
     + "主な保存先: <b>"+esc(STORE.mode)+"</b><br>"
-    + "控えのlocalStorage: <b>"+(STORE.lsOk?"書けています":"満杯で書けません")+"</b><br>"
+    // 控えの行は出さない(2026-11-21、Mayの希望)。戻すなら次の行を生かす
+    // + "控えのlocalStorage: <b>"+(STORE.lsOk?"書けています":"満杯で書けません")+"</b><br>"
     + "いまの大きさ: 約"+Math.round(STORE.bytes/1024)+" KB<br>"
     + "本"+db.sources.length+" ／ 本のテーマ"+db.bookThemes.length+" ／ 共通テーマ"+db.themes.length
     + " ／ 意味"+db.senses.length+" ／ 語"+db.entries.length+" ／ 画像"+db.images.length
