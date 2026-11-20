@@ -353,7 +353,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-21a";
+const BUILD = "2026-11-21b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -531,8 +531,9 @@ async function idbDel(store, key){
   h.close();
 }
 
-let saveTimer = null;
+let saveTimer = null, bootHold = false;
 function save(){
+  if(bootHold) return;   // 起動時に保存先が空で、置き場所から受け取り直しているあいだは書かない(2026-11-21)
   db.savedAt = Date.now();
   if(typeof syncTouched === "function") syncTouched();   // 同期: 送るものがある印。手が止まったら送る(2026-11-20)
   const text = JSON.stringify(db);
@@ -560,6 +561,12 @@ async function bootStorage(){
     STORE.mode = "IndexedDB";
   }catch(e){ STORE.mode = "localStorageのみ"; STORE.lastErr = String(e && e.message || e); }
   const pick = (a,b) => (b && (b.savedAt||0) >= ((a&&a.savedAt)||0)) ? b : a;
+  /* 保存先(IndexedDB)が空なのに手元の控え(localStorage)に中身があるとき(2026-11-21、Atlasのセッションが足した)。
+     Prismの記録は約7MBで、控え(約5MBまで)はもう更新されていない古いもの。Atlasでは iPhone の保存先が空になり、
+     古い控えが同期で送られて、もう1台の記録まで入れ替わった。
+     同期を設定してあれば、控えは使わず置き場所から受け取り直す(それまで save しない)。
+     戻すなら、この if と save() 先頭の bootHold、boot() の syncRescue を外す */
+  if(STORE.mode === "IndexedDB" && !there && here && (here.entries || []).length && syncOn()) bootHold = true;
   const d = pick(here, there);
   db = normalizeDb(d || emptyDb());
   labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
@@ -704,8 +711,91 @@ function syncAsk(meta){
     document.body.appendChild(w);
   });
 }
-async function syncTake(meta){
+/* 減りすぎの見張り(2026-11-21、Atlasと同じ)。送る前・受け取る前に件数を比べ、目立って減るときは聞く。meta に counts を入れる。
+   戻すなら syncRun と syncTake の syncShrink の呼び出しを外す */
+const SYNC_COUNT_KEYS = [["entries","語"],["senses","意味"],["memos","メモ"],["bookThemes","本のテーマ"],["themes","テーマ"],["sources","本"]];
+function syncCounts(d){
+  const o = {};
+  for(const [k] of SYNC_COUNT_KEYS){ const v = d && d[k]; o[k] = Array.isArray(v) ? v.length : (v && typeof v === "object") ? Object.keys(v).length : 0; }
+  return o;
+}
+function syncShrink(after, before){
+  const out = [];
+  for(const [k, label] of SYNC_COUNT_KEYS){
+    const a = Number(after[k]) || 0, b = Number(before[k]) || 0;
+    if(b - a >= Math.max(10, b * 0.05)) out.push(label + " " + b + " → " + a);
+  }
+  return out;
+}
+function syncAskShrink(meta, lines, dir){
+  return new Promise(res=>{
+    const who = (meta.device || "もう1台") + "(" + syncStamp(meta.savedAt) + ")";
+    const w = document.createElement("div");
+    w.className = "sync-ask";
+    w.innerHTML = '<div class="box"><h3>Prismの記録が大きく減ります</h3><div class="sa-msg"></div><div class="sa-list"></div><div class="sa-msg2"></div>'
+      + '<button class="btn pri sa-a"></button><button class="btn sa-b"></button>'
+      + '<button class="btn sa-later">あとで決める(今は同期しない)</button></div>';
+    w.querySelector(".sa-msg").textContent = dir === "send"
+      ? "この端末の記録を送ると、置き場所の記録(" + who + ")から次のものが減ります。"
+      : who + "の記録を受け取ると、この端末の記録から次のものが減ります。";
+    const ul = w.querySelector(".sa-list");
+    ul.style.cssText = "margin:8px 0; padding:8px 12px; background:rgba(127,127,127,.12); border-radius:10px; white-space:pre-line";
+    ul.textContent = lines.join("\n");
+    w.querySelector(".sa-msg2").textContent = "どちらかの端末の中身が消えて、古い控えに戻っているのかもしれません。"
+      + "少ない方を選ぶ前に、両方の端末の画面を確かめてください。";
+    const a = w.querySelector(".sa-a"), b = w.querySelector(".sa-b");
+    const done = v=>{ w.remove(); res(v); };
+    if(dir === "send"){
+      a.textContent = "置き場所の記録を使う(この端末を入れ替える)"; a.onclick = ()=>done("there");
+      b.textContent = "それでも、この端末の記録を送る"; b.onclick = ()=>done("here");
+    } else {
+      a.textContent = "この端末の記録を残す(向こうに送る)"; a.onclick = ()=>done("here");
+      b.textContent = "それでも受け取る"; b.onclick = ()=>done("there");
+    }
+    w.querySelector(".sa-later").onclick = ()=>done("later");
+    document.body.appendChild(w);
+  });
+}
+const SYNC_HOLD = "どちらを残すか決めるまで、同期を止めています";
+async function syncSendChecked(meta){
+  const there = meta.counts || syncCounts(await syncReadData(meta));
+  const lines = syncShrink(syncCounts(db), there);
+  if(lines.length){
+    const v = await syncAskShrink(meta, lines, "send");
+    if(v === "there") return (await syncTake(meta, true)) === "later" ? SYNC_HOLD : "";
+    if(v === "later") return SYNC_HOLD;
+  }
+  await syncSend();
+  return "";
+}
+// 起動時に保存先が空だった端末で、置き場所の記録を受け取り直す。画面の古い控えは取り消し用にも残さない
+async function syncRescue(){
+  try{
+    const meta = await syncReadMeta();
+    if(!meta) throw new Error("置き場所に記録がありません");
+    const raw = await syncReadData(meta);
+    db = normalizeDb(raw);
+    labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
+    bootHold = false;
+    syncSuppress = true; try{ save(); }finally{ syncSuppress = false; }
+    lsSet(KEY + ".sync.base", String(meta.savedAt)); lsSet(KEY + ".sync.dirty", ""); lsSet(KEY + ".sync.pulledAt", String(Date.now()));
+    showTab(curTab);
+    syncToast("保存先が空だったので、" + (meta.device || "置き場所") + "のPrismの記録(" + syncStamp(meta.savedAt) + "・語 " + (db.entries || []).length + ")を受け取りました");
+  }catch(e){
+    warnBar("この端末の保存先が空で、同期の置き場所からも受け取れませんでした(" + e.message + ")。古い控えを出していますが、保存はしません。開き直してください。");
+  }
+  syncPaint();
+}
+async function syncTake(meta, force){
   const raw = await syncReadData(meta);
+  if(!force){
+    const lines = syncShrink(syncCounts(raw), syncCounts(db));
+    if(lines.length){
+      const v = await syncAskShrink(meta, lines, "take");
+      if(v === "here"){ await syncSend(); return ""; }
+      if(v === "later") return "later";
+    }
+  }
   await makeUndo();                             // 入れ替える前の状態を控える(直前の取り込みを戻すで戻せる)
   db = normalizeDb(raw);
   labelIndex = null; entryIndex = null; termIndex = null; axisIndex = null; soundIndex = null;
@@ -713,15 +803,16 @@ async function syncTake(meta){
   lsSet(KEY + ".sync.base", String(meta.savedAt)); lsSet(KEY + ".sync.dirty", ""); lsSet(KEY + ".sync.pulledAt", String(Date.now()));
   showTab(curTab);
   syncToast((meta.device || "もう1台") + "のPrismの記録を受け取りました(" + syncStamp(meta.savedAt) + ")");
+  return "";
 }
 async function syncSend(){
   const seq = syncSeq, text = JSON.stringify(db), savedAt = Number(db.savedAt) || Date.now();
-  await syncWrite(text, {savedAt, device: syncConf().device, at: Date.now(), app: "prism", build: BUILD});
+  await syncWrite(text, {savedAt, device: syncConf().device, at: Date.now(), app: "prism", build: BUILD, counts: syncCounts(db)});
   lsSet(KEY + ".sync.base", String(savedAt)); lsSet(KEY + ".sync.pushedAt", String(Date.now()));
   if(seq === syncSeq) lsSet(KEY + ".sync.dirty", "");
 }
 async function syncRun(mode){
-  if(!syncOn()) return;
+  if(!syncOn() || bootHold) return;
   if(syncBusy){ if(mode !== "pull"){ clearTimeout(syncTimer); syncTimer = setTimeout(()=>syncRun("push"), 3000); } return; }
   syncBusy = true; syncState = mode === "push" ? "送っています…" : "向こうを見ています…"; syncPaint();
   try{
@@ -732,18 +823,17 @@ async function syncRun(mode){
         const base = syncBaseGet(), dirty = syncDirty();
         const thereNew = !!meta && Number(meta.savedAt) > base;
         if(!meta){ await syncSend(); syncState = "初めて送りました"; break; }
-        if(thereNew && !dirty && base){ await syncTake(meta); syncState = ""; break; }
+        if(thereNew && !dirty && base){ syncState = (await syncTake(meta)) === "later" ? SYNC_HOLD : ""; break; }
         if(thereNew){
-          if(!base && !(db.entries || []).length){ await syncTake(meta); syncState = ""; break; }
-          syncBusy = false;
+          if(!base && !(db.entries || []).length){ syncState = (await syncTake(meta)) === "later" ? SYNC_HOLD : ""; break; }
+          // 聞いているあいだも syncBusy は立てたまま(2026-11-21。外すと別の同期が走って確認が2つ重なった)
           const v = await syncAsk(meta);
-          syncBusy = true;
-          if(v === "there"){ await syncTake(meta); syncState = ""; }
-          else if(v === "here"){ await syncSend(); syncState = ""; }
-          else syncState = "どちらを残すか決めるまで、同期を止めています";
+          if(v === "there"){ syncState = (await syncTake(meta)) === "later" ? SYNC_HOLD : ""; }
+          else if(v === "here"){ syncState = await syncSendChecked(meta); }
+          else syncState = SYNC_HOLD;
           break;
         }
-        if(dirty){ syncState = "送っています…"; syncPaint(); await syncSend(); }
+        if(dirty){ syncState = "送っています…"; syncPaint(); syncState = await syncSendChecked(meta); break; }
         syncState = "";
         break;
       }catch(e){
@@ -3300,9 +3390,9 @@ if($("restoreFile")) $("restoreFile").onchange = e=>{
   catch(e){ db = emptyDb(); warnBar("読み込みに失敗しました: " + (e && e.message)); }
   showTab("Collections");   // 起動時はいちばん左の観察(2026-09-18)。#theme= で来たときは openFromHash がテーマへ移す
   openFromHash();
-  syncStart(); if(syncOn()) syncRun("pull");   // 端末どうしの同期(2026-11-20)
+  syncStart(); if(bootHold) syncRescue(); else if(syncOn()) syncRun("pull");   // 端末どうしの同期(2026-11-20)。保存先が空だったら受け取り直す(2026-11-21)
 })();
-window.addEventListener("pagehide", ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
+window.addEventListener("pagehide", ()=>{ if(bootHold) return; try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){} });
 </script>
 </body>
 </html>
