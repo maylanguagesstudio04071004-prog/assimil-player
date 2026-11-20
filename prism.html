@@ -242,7 +242,7 @@ table.ax td.off{color:var(--line)}
     <button class="btn" onclick="doUndo()">直前の取り込みを戻す</button>
   </div>
   <div class="row" style="margin:0 0 8px">
-    <button class="btn" onclick="loadBundled()">同梱データ（prism-data.json）を読み込む</button>
+    <button class="btn" onclick="loadBundled()">同梱データを読み込む（同期の置き場所から）</button>
   </div>
   <div class="sub" style="margin-bottom:8px">
     大きいJSONをスマホに貼るのは無理があるので、アプリと同じ場所に置いたファイルから読みます。</div>
@@ -353,7 +353,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-20a";
+const BUILD = "2026-11-21a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -639,6 +639,13 @@ async function syncReadMeta(){
   const r = await gh("/repos/" + c.repo + "/contents/" + SYNC_PATH.meta, {ok404: true});
   if(!r) return null;
   try{ return JSON.parse(new TextDecoder().decode(syncUnB64(r.content))); }catch(e){ return null; }
+}
+// 同期の置き場所から、そのパスのファイルをそのまま読む(Uint8Array)
+async function syncFetchRaw(path){
+  const c = syncConf();
+  const res = await gh("/repos/" + c.repo + "/contents/" + path.split("/").map(encodeURIComponent).join("/"),
+    {raw: true, headers: {"Accept": "application/vnd.github.raw"}});
+  return new Uint8Array(await res.arrayBuffer());
 }
 async function syncReadData(meta){
   const c = syncConf();
@@ -2937,15 +2944,20 @@ function importData(text){
 async function loadBundled(){
   const m = $("impMsg");
   m.className = "msg"; m.textContent = "読み込み中…";
+  /* 2026-11-21: 同梱データは公開のサイトから外し、非公開の同期の置き場所(atlas-sync)の prism/bundled.json へ移した
+     (Mayの依頼。本から書き写した語の一覧を、誰でも開ける場所に置かないため)。読むには同期の鍵が要る。
+     戻すなら、prism-data.json をサイトに戻して、下の syncFetchRaw を fetch("./prism-data.json") に戻す */
   let text;
+  if(!syncOn()){
+    m.className = "msg err";
+    m.textContent = "同梱データは、非公開の同期の置き場所に移しました。\n下の「端末どうしの同期」で置き場所と鍵を入れると読み込めます。";
+    return;
+  }
   try{
-    const res = await fetch("./prism-data.json", {cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    text = await res.text();
+    text = new TextDecoder().decode(await syncFetchRaw("prism/bundled.json"));
   }catch(e){
     m.className = "msg err";
-    m.textContent = "prism-data.json を読めません（" + e.message + "）。\n"
-      + "アプリと同じ場所にファイルが置かれているか確認してください。";
+    m.textContent = "同梱データを読めません（" + e.message + "）。";
     return;
   }
   await makeUndo();

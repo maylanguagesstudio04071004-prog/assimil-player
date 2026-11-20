@@ -182,6 +182,20 @@ input,textarea,select{font-family:inherit}
 .words button.learn{box-shadow:0 0 0 1.5px var(--accent) inset}   /* 覚えたい単語(2026-10-16) */
 /* Prismの本にもある語(2026-11-09) */
 .words button .wprism{font-size:calc(9px * var(--fs,1)); margin-left:3px; vertical-align:2px}
+/* 本のページの写真(2026-11-21) */
+.page-thumbs{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+.page-thumbs .pt{width:calc(150px * var(--fs,1)); height:calc(112px * var(--fs,1)); padding:0; border-radius:8px; overflow:hidden;
+  border:1px solid var(--border); background:var(--bg); display:flex; align-items:center; justify-content:center}
+.page-thumbs .pt img{width:100%; height:100%; object-fit:cover; display:block}
+.page-thumbs .pt-wait{font-size:calc(11px * var(--fs,1)); color:var(--sub)}
+.pt-note{font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:8px}
+.page-view{position:fixed; inset:0; z-index:130; background:rgba(0,0,0,.92); display:flex; flex-direction:column}
+.page-view .pv-bar{display:flex; align-items:center; gap:8px; padding:calc(10px + env(safe-area-inset-top)) 12px 10px; color:#fff}
+.page-view .pv-cap{flex:1; font-size:calc(13px * var(--fs,1)); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.page-view .pv-bar button{font-size:calc(15px * var(--fs,1)); padding:8px 14px; border-radius:10px; background:rgba(255,255,255,.15); color:#fff}
+.page-view .pv-scroll{flex:1; overflow:auto; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y pinch-zoom}
+.page-view .pv-scroll img{display:block; width:100%; height:auto}
+.page-view .pv-msg{color:#ddd; padding:20px; font-size:calc(14px * var(--fs,1))}
 .tr-prism{margin:-4px 0 10px; font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.6}
 .tr-prism a{display:inline-block; margin-top:4px; color:var(--accent); text-decoration:none;
   border:1px solid var(--border); border-radius:8px; padding:3px 9px}
@@ -802,7 +816,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-20d";
+const BUILD = "2026-11-21a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -1203,6 +1217,13 @@ async function syncReadMeta(){
   const r = await gh("/repos/" + c.repo + "/contents/" + SYNC_PATH.meta, {ok404: true});
   if(!r) return null;
   try{ return JSON.parse(new TextDecoder().decode(syncUnB64(r.content))); }catch(e){ return null; }
+}
+// 同期の置き場所から、そのパスのファイルをそのまま読む(Uint8Array)。無ければエラー
+async function syncFetchRaw(path){
+  const c = syncConf();
+  const res = await gh("/repos/" + c.repo + "/contents/" + path.split("/").map(encodeURIComponent).join("/"),
+    {raw: true, headers: {"Accept": "application/vnd.github.raw"}});
+  return new Uint8Array(await res.arrayBuffer());
 }
 async function syncReadData(meta){
   const c = syncConf();
@@ -3103,6 +3124,9 @@ function pickFromText(L, host, btn){
 /* Prism(別アプリ)の本にも載っている語に🔺を付ける(2026-11-09、Mayの依頼「Prismでも出てきた単語に印を」)。
    同じサイトなので、この端末のPrismの保存(IndexedDB "prismDB")を読むだけ。書き込まない。
    Prismを一度も開いていない端末では、配っている prism-data.json を読む。
+   → 2026-11-21: prism-data.json は公開のサイトから外し、非公開の同期の置き場所(atlas-sync)へ移した(Mayの依頼)。
+     この端末のPrismが無ければ、同期の置き場所の prism/data.json.gz(May の Prism の記録)→ prism/bundled.json(同梱データ)の順に読む。
+     どちらも鍵(同期の設定)が要る。鍵が無ければ🔺は出ない。
    Atlasの辞書から埋めた語と補い(Claudeが足した語)は数えない(Atlas→Prism→Atlasの堂々巡りになるので)。
    照合は綴りだけ: 大文字小文字・句読点・冠詞(der/le/il/el/the/de…)・亜の母音記号・露の強勢記号・( )内を無視。
    戻すなら prismIndex 以下の関数と、wordChip の markPrismChip・openNotePopup の prismLine を外す */
@@ -3154,14 +3178,14 @@ function prismIndex(){
         if(!prismNorm(lang, t)) return;
         const k = prismKey(lang, t);
         const a = map.get(k) || [];
-        if(!a.some(x=>x.ja === info.ja && x.src === info.src)) a.push(info);
+        if(!a.some(x=>x.ja === info.ja && x.src === info.src && x.page === info.page)) a.push(info);
         map.set(k, a);
       });
     };
     const ok = e => (!e.status || e.status === "present") && e.kind !== "pattern"
       && !(e.flags || []).includes("supplement");
-    const live = await prismReadLive();
-    if(live && Array.isArray(live.entries) && live.entries.length){
+    // Prism の記録(db の形)から足す。page は本の見開き(本の id/本のテーマ名)。ページの写真を引くのに使う
+    const addDb = live=>{
       const src = new Map((live.sources || []).map(s=>[s.id, s.title || s.id]));
       const th = new Map((live.themes || []).map(t=>[t.id, t.name]));
       const sen = new Map((live.senses || []).map(s=>[s.id, s]));
@@ -3172,23 +3196,35 @@ function prismIndex(){
         // 入口はその語が載っている本のテーマを先に(無ければ意味のテーマ)
         const ids = [...((bt.get(e.bookThemeId) || {}).themeIds || []), ...(s.themeIds || [])];
         add(e.lang, e.term, {ja: e.ja || s.name || "", src: src.get(e.sourceId) || e.sourceId || "",
-          themes: [...new Set(ids.map(id=>th.get(id)).filter(Boolean))]});
+          themes: [...new Set(ids.map(id=>th.get(id)).filter(Boolean))],
+          page: String(e.bookThemeId || "").replace(/^bt:/, "")});
       });
+    };
+    const live = await prismReadLive();
+    if(live && Array.isArray(live.entries) && live.entries.length){
+      addDb(live);
       prismFrom = "この端末のPrism";
-    }else{
+    }else if(syncOn()){
       try{
-        const res = await fetch("./prism-data.json", {cache: "no-store"});
-        const data = await res.json();
-        (data.imports || []).forEach(imp=>{
-          if(!imp.items || !imp.source || PRISM_SKIP_SRC.has(imp.source.id)) return;
-          imp.items.forEach(e=>{
-            if(!ok(e)) return;
-            add(e.lang, e.term, {ja: e.ja || e.sense || "", src: imp.source.title || imp.source.id,
-              themes: [...new Set([...((imp.bookTheme || {}).themes || []), ...(e.themes || [])])]});
+        const synced = JSON.parse(await syncGunzip(await syncFetchRaw("prism/data.json.gz"), true));
+        if(!synced || !Array.isArray(synced.entries) || !synced.entries.length) throw new Error("空");
+        addDb(synced);
+        prismFrom = "同期しているPrism";
+      }catch(e){
+        try{
+          const data = JSON.parse(new TextDecoder().decode(await syncFetchRaw("prism/bundled.json")));
+          (data.imports || []).forEach(imp=>{
+            if(!imp.items || !imp.source || PRISM_SKIP_SRC.has(imp.source.id)) return;
+            imp.items.forEach(e=>{
+              if(!ok(e)) return;
+              add(e.lang, e.term, {ja: e.ja || e.sense || "", src: imp.source.title || imp.source.id,
+                themes: [...new Set([...((imp.bookTheme || {}).themes || []), ...(e.themes || [])])],
+                page: imp.source.id + "/" + ((imp.bookTheme || {}).name || "")});
+            });
           });
-        });
-        prismFrom = "配っているPrismのデータ";
-      }catch(e){ prismFrom = ""; }
+          prismFrom = "Prismの同梱データ";
+        }catch(e2){ prismFrom = ""; }
+      }
     }
     prismIdx = map;
     return map;
@@ -3209,6 +3245,78 @@ function markPrismChip(b){
 /* 「思い出す」のカードにも🔺(2026-11-09、Mayの依頼)。上の行(言語・課)に印だけ出し、
    どの本のどの意味かとPrismへの入口は、答えを見たあとに出す(先に出すと意味が答えのヒントになる)。
    索引の読み込みが後から終わっても、カードを描き直さずに足す(描き直すと「耳から先に」の音がもう一度鳴る) */
+/* ---------- 本のページの写真(2026-11-21、Mayの依頼「思い出すで、Prismの本のページの画像を小さく出し、押すと拡大」) ----------
+   写真は非公開の同期の置き場所 atlas-sync の pages/ にある(公開のサイトには置かない。市販の本のページなので)。
+   pages/index.json が「本の id/本のテーマ名」→ 写真のファイル名。カードには pages/small/(幅700px)、拡大は pages/(幅2000px)。
+   一度取った写真は端末の Cache に取っておく(2回目からは通信しない)。鍵(同期の設定)が無い端末では出さない */
+let pageIdx = null, pageIdxLoading = null;
+function pageIndex(){
+  if(pageIdx) return Promise.resolve(pageIdx);
+  if(pageIdxLoading) return pageIdxLoading;
+  pageIdxLoading = syncFetchRaw("pages/index.json").then(b=>{ pageIdx = JSON.parse(new TextDecoder().decode(b)); return pageIdx; })
+    .catch(()=>{ pageIdxLoading = null; return null; });
+  return pageIdxLoading;
+}
+const pageURLs = new Map();
+async function pageImageURL(path){
+  if(pageURLs.has(path)) return pageURLs.get(path);
+  const key = "https://atlas-pages.invalid/" + path;
+  let blob = null, cache = null;
+  try{ cache = await caches.open("atlas-pages-v1"); const hit = await cache.match(key); if(hit) blob = await hit.blob(); }catch(e){ cache = null; }
+  if(!blob){
+    const bytes = await syncFetchRaw(path);
+    blob = new Blob([bytes], {type: "image/jpeg"});
+    try{ if(cache) await cache.put(key, new Response(blob, {headers: {"Content-Type": "image/jpeg"}})); }catch(e){}
+  }
+  const url = URL.createObjectURL(blob);
+  pageURLs.set(path, url);
+  return url;
+}
+function pageViewer(file, caption){
+  const w = document.createElement("div");
+  w.className = "page-view";
+  w.innerHTML = '<div class="pv-bar"><span class="pv-cap"></span><button class="pv-zoom" data-d="-1">−</button><button class="pv-zoom" data-d="1">＋</button><button class="pv-close">閉じる</button></div>'
+    + '<div class="pv-scroll"><div class="pv-msg">読み込んでいます…</div><img alt=""></div>';
+  w.querySelector(".pv-cap").textContent = caption || "";
+  const img = w.querySelector("img"), sc = w.querySelector(".pv-scroll");
+  let z = 1;
+  const setZ = v=>{ z = Math.max(1, Math.min(4, v)); img.style.width = (z * 100) + "%"; };
+  w.querySelectorAll(".pv-zoom").forEach(b=>b.onclick = ()=>setZ(z + Number(b.dataset.d)));
+  img.ondblclick = ()=>setZ(z >= 2 ? 1 : 2.5);
+  w.querySelector(".pv-close").onclick = ()=>w.remove();
+  document.body.appendChild(w);
+  pageImageURL("pages/" + file).then(u=>{ img.src = u; w.querySelector(".pv-msg").remove(); })
+    .catch(e=>{ w.querySelector(".pv-msg").textContent = "写真を読めませんでした: " + e.message; });
+  setZ(1);
+}
+function pageThumbs(host, hits){
+  if(!syncOn()) return;
+  pageIndex().then(idx=>{
+    if(!idx || !host.isConnected) return;
+    const seen = new Set(), shots = [];
+    hits.forEach(h=>{
+      (idx[h.page] || []).forEach(f=>{ if(!seen.has(f)){ seen.add(f); shots.push({f, cap: h.src + " ・ " + String(h.page).split("/").slice(1).join("/")}); } });
+    });
+    if(!shots.length) return;
+    const row = document.createElement("div");
+    row.className = "page-thumbs";
+    shots.slice(0, 4).forEach(x=>{
+      const b = document.createElement("button");
+      b.className = "pt";
+      b.innerHTML = '<span class="pt-wait">写真…</span>';
+      b.title = x.cap;
+      b.onclick = ()=>pageViewer(x.f, x.cap);
+      row.appendChild(b);
+      pageImageURL("pages/small/" + x.f).then(u=>{ b.innerHTML = '<img alt="">'; b.querySelector("img").src = u; })
+        .catch(()=>{ b.innerHTML = '<span class="pt-wait">写真を読めません</span>'; });
+    });
+    const note = document.createElement("div");
+    note.className = "pt-note";
+    note.textContent = "本のページ(押すと大きくなります)";
+    host.appendChild(note);
+    host.appendChild(row);
+  });
+}
 function prismStudyDecor(card, lang, word, detail){
   const paint = ()=>{
     if(!card.isConnected) return;
@@ -3232,6 +3340,7 @@ function prismStudyDecor(card, lang, word, detail){
     }
     const acts = card.querySelector(".study-acts");
     if(acts) acts.before(pl); else card.appendChild(pl);
+    pageThumbs(pl, hits);   // 本のページの写真(2026-11-21)
   };
   if(prismIdx) paint(); else prismIndex().then(paint);
 }
