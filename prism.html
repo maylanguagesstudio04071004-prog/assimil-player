@@ -353,7 +353,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-21c";
+const BUILD = "2026-11-22a";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -2795,6 +2795,11 @@ function importData(text){
   const pendingCols = [];   // コレクションも同じ理由で後から(2026-09-12)
   const emptied = new Set(); // 語を差し替えた意味。最後に中身が無くなっていたら片付ける(2026-09-14)
   const colRemove = [];      // 同梱で配った観察を端末から消す id(2026-09-15)。配るのをやめただけでは端末に残るため
+  /* 本の見開きごと消す id(2026-11-22)。写真で入れた本をKindle版で取り直すとき、
+     紙面の見出しが変わるので「同じ本×同じ見開き名」の差し替えが効かず、古い見開きが二重に残る。
+     語は見開きにぶら下がっているので、見開きを消せばその語も消える。
+     **名指しした見開きだけ。** メモ・観察・テーマは消さない（空になった意味は下の emptied で片付く）。 */
+  const btRemove = [];
 
   blocks.forEach((b, bi)=>{
     const where = "ブロック" + (bi+1);
@@ -2829,6 +2834,7 @@ function importData(text){
     (b.memos||[]).forEach(mm => pendingMemos.push({mm, where}));
     (b.collections||[]).forEach(cc => pendingCols.push({cc, where}));
     (b.removeCollections||[]).forEach(id => colRemove.push(String(id||"").trim()));
+    (b.removeBookThemes||[]).forEach(id => btRemove.push(String(id||"").trim()));
 
     if(!b.source && !b.items) return;
     if(!b.source || !b.source.id || !b.source.title){
@@ -2991,6 +2997,25 @@ function importData(text){
     });
   });
 
+  /* 本の見開きを消す(2026-11-22)。Kindle版で取り直すときの古い見開きの片付け。
+     その見開きの語も一緒に消える。空になった意味は、下の emptied の片付けに任せる
+     （メモや観察が指している意味は残る）。本（source）自体は、見開きが1つも無くなったときだけ消す。 */
+  btRemove.filter(Boolean).forEach(id => {
+    const bt = db.bookThemes.find(x => x.id === id);
+    if(!bt) return;
+    const gone = db.entries.filter(e => e.bookThemeId === id);
+    gone.forEach(e => emptied.add(e.senseId));
+    db.entries = db.entries.filter(e => e.bookThemeId !== id);
+    db.bookThemes = db.bookThemes.filter(x => x.id !== id);
+    c.btGone = (c.btGone||0) + 1;
+    c.btWords = (c.btWords||0) + gone.length;
+    // その本の見開きが全部無くなったら、本も消す（語が無い本が一覧に残らないように）
+    if(!db.bookThemes.some(x => x.sourceId === bt.sourceId)){
+      db.sources = db.sources.filter(x => x.id !== bt.sourceId);
+      c.srcGone = (c.srcGone||0) + 1;
+    }
+  });
+
   /* 同梱で配っていた観察を消す(2026-09-15。Mayが「観察軸も問いも削除して」)。
      取り込みの collections は「すでにある枠には触らない」ので、配るのをやめても端末に残る。
      消すのは removeCollections に書かれた id だけ。利用者が作った観察（c:<ランダム>）は名指ししないかぎり残る。
@@ -3027,7 +3052,9 @@ function importData(text){
     + (c.col || c.colKept ? " / コレクション " + c.col + "（項目 " + c.colItem + "件"
         + (c.colKept ? "・すでにある " + c.colKept + "件はそのまま" : "") + "）" : "")
     + (c.senseGone ? "\n語が別の意味へ移って空になった意味 " + c.senseGone + "件を片付けた" : "")
-    + (c.colGone ? "\n同梱で配っていた観察 " + c.colGone + "件を消した（自分で作った観察は残っている）" : "");
+    + (c.colGone ? "\n同梱で配っていた観察 " + c.colGone + "件を消した（自分で作った観察は残っている）" : "")
+    + (c.btGone ? "\n古い見開き " + c.btGone + "件（語 " + c.btWords + "件）を消した"
+                  + (c.srcGone ? "。語が無くなった本 " + c.srcGone + "冊も消した" : "") : "");
   return {summary, errors, counts:c};
 }
 
