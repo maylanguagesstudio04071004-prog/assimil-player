@@ -841,7 +841,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-21e";
+const BUILD = "2026-11-22a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3361,7 +3361,7 @@ function prismIndex(){
         const ids = [...((bt.get(e.bookThemeId) || {}).themeIds || []), ...(s.themeIds || [])];
         add(e.lang, e.term, {ja: e.ja || s.name || "", src: src.get(e.sourceId) || e.sourceId || "",
           themes: [...new Set(ids.map(id=>th.get(id)).filter(Boolean))],
-          page: String(e.bookThemeId || "").replace(/^bt:/, "")});
+          page: String(e.bookThemeId || "").replace(/^bt:/, ""), srcId: e.srcId || ""});
       });
     };
     const live = await prismReadLive();
@@ -3383,7 +3383,7 @@ function prismIndex(){
               if(!ok(e)) return;
               add(e.lang, e.term, {ja: e.ja || e.sense || "", src: imp.source.title || imp.source.id,
                 themes: [...new Set([...((imp.bookTheme || {}).themes || []), ...(e.themes || [])])],
-                page: imp.source.id + "/" + ((imp.bookTheme || {}).name || "")});
+                page: imp.source.id + "/" + ((imp.bookTheme || {}).name || ""), srcId: e.srcId || ""});
             });
           });
           prismFrom = "Prismの同梱データ";
@@ -3461,8 +3461,10 @@ function pageThumbs(host, hits){
     if(!idx || !host.isConnected) return;
     const card = host.closest(".study-card") || host;
     const seen = new Set(), shots = [];
+    /* 2026-11-22: Kindle版で取り直した本は、語が載っている1ページの画像がある(index の "@<srcId>")。
+       あればそれだけを出し、無ければ今までどおり見開きの写真。戻すなら idx["@" + …] の分を外す */
     hits.forEach(h=>{
-      (idx[h.page] || []).forEach(f=>{ if(!seen.has(f)){ seen.add(f); shots.push({f, cap: h.src + " ・ " + String(h.page).split("/").slice(1).join("/")}); } });
+      ((h.srcId && idx["@" + h.srcId]) || idx[h.page] || []).forEach(f=>{ if(!seen.has(f)){ seen.add(f); shots.push({f, cap: h.src + " ・ " + String(h.page).split("/").slice(1).join("/")}); } });
     });
     if(!shots.length) return;
     const old = card.querySelector(".page-float"); if(old) old.remove();
@@ -3475,7 +3477,12 @@ function pageThumbs(host, hits){
       b.title = x.cap;
       b.onclick = ()=>pageViewer(x.f, x.cap);
       row.appendChild(b);
-      pageImageURL("pages/small/" + x.f).then(u=>{ b.innerHTML = '<img alt="">'; b.querySelector("img").src = u; })
+      pageImageURL("pages/small/" + x.f).then(u=>{
+        b.innerHTML = '<img alt="">';
+        const im = b.querySelector("img");
+        // 縦長の Kindle のページも切らずに出す(読み込めたら、枠を写真の縦横に合わせる。2026-11-22)
+        im.onload = ()=>{ if(im.naturalWidth){ b.style.aspectRatio = im.naturalWidth + "/" + im.naturalHeight; im.style.objectFit = "contain"; } };
+        im.src = u; })
         .catch(()=>{ b.innerHTML = '<span class="pt-wait">写真を読めません</span>'; });
     });
     const note = document.createElement("div");
