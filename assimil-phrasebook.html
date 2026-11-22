@@ -198,6 +198,10 @@ input,textarea,select{font-family:inherit}
 .page-thumbs .pt img{width:100%; height:100%; object-fit:cover; display:block}
 .page-thumbs .pt-wait{font-size:calc(11px * var(--fs,1)); color:var(--sub)}
 .pt-note{font-size:calc(11px * var(--fs,1)); color:var(--sub); margin-top:8px}
+/* DKのページは文字のリンク(2026-11-23)。写真は出さない */
+.dk-pages{margin-top:6px}
+.dk-page{display:block; background:none; border:none; padding:2px 0; text-align:left;
+  color:var(--accent); font-size:calc(12px * var(--fs,1)); text-decoration:underline; line-height:1.6}
 .page-view{position:fixed; inset:0; z-index:130; background:rgba(0,0,0,.92); display:flex; flex-direction:column}
 .page-view .pv-bar{display:flex; align-items:center; gap:8px; padding:calc(10px + env(safe-area-inset-top)) 12px 10px; color:#fff}
 .page-view .pv-cap{flex:1; font-size:calc(13px * var(--fs,1)); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -841,7 +845,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-22a";
+const BUILD = "2026-11-23a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3455,17 +3459,46 @@ function pageViewer(file, caption){
 }
 /* 2026-11-21b: 写真はカードの右上に浮かせる(Mayの依頼。下に出すと書く欄が画面の下へ押し出されていた)。
    文はその左に回り込む。書く欄とボタンは写真より下から始める(clear) */
+/* DKのページは写真を出さず、文字のリンクで出す(2026-11-23、Mayの依頼)。
+   本ごとに1行。押すと今までと同じ拡大の画面が開く。**写真は押したときだけ読みに行く**ので、
+   カードを開いただけでは通信しない。戻すなら、この関数と pageThumbs の dk の振り分けを消す */
+function dkLinks(host, dk){
+  if(!host || !host.isConnected || host.querySelector(".dk-pages")) return;
+  const byBook = new Map();
+  dk.forEach(x=>{ if(!byBook.has(x.book)) byBook.set(x.book, x); });
+  const box = document.createElement("div");
+  box.className = "dk-pages";
+  [...byBook.values()].forEach(x=>{
+    const a = document.createElement("button");
+    a.className = "dk-page";
+    a.textContent = "📖 " + x.book + " のページを見る";
+    a.title = x.cap;
+    a.onclick = ()=>pageViewer(x.f, x.cap);
+    box.appendChild(a);
+  });
+  host.appendChild(box);
+}
 function pageThumbs(host, hits){
   if(!syncOn()) return;
   pageIndex().then(idx=>{
     if(!idx || !host.isConnected) return;
     const card = host.closest(".study-card") || host;
-    const seen = new Set(), shots = [];
+    /* 写真を出すのは『旅の指さし会話帳』だけにする(2026-11-23、Mayの依頼
+       「旅の指さし会話帳とDKの両方が出るのは多すぎる。DKは画像は出さずにリンクだけ文字で」)。
+       DKは文字のリンクにして、押したときだけ写真を開く。戻すなら dk の振り分けをやめて shots にまとめる */
+    const seen = new Set(), shots = [], dk = [];
     /* 2026-11-22: Kindle版で取り直した本は、語が載っている1ページの画像がある(index の "@<srcId>")。
        あればそれだけを出し、無ければ今までどおり見開きの写真。戻すなら idx["@" + …] の分を外す */
     hits.forEach(h=>{
-      ((h.srcId && idx["@" + h.srcId]) || idx[h.page] || []).forEach(f=>{ if(!seen.has(f)){ seen.add(f); shots.push({f, cap: h.src + " ・ " + String(h.page).split("/").slice(1).join("/")}); } });
+      const isDK = String(h.page || "").startsWith("dk-");
+      ((h.srcId && idx["@" + h.srcId]) || idx[h.page] || []).forEach(f=>{
+        if(seen.has(f)) return;
+        seen.add(f);
+        const cap = h.src + " ・ " + String(h.page).split("/").slice(1).join("/");
+        (isDK ? dk : shots).push({f, cap, book: h.src});
+      });
     });
+    if(dk.length) dkLinks(host, dk);
     if(!shots.length) return;
     const old = card.querySelector(".page-float"); if(old) old.remove();
     const row = document.createElement("div");
