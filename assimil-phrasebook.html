@@ -845,7 +845,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-23a";
+const BUILD = "2026-11-24a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3305,6 +3305,14 @@ const PRISM_ART = {
   "English": /^(the|a|an|to)\s+/, "Nederlands": /^(de|het|een)\s+/
 };
 let prismIdx = null, prismFrom = "", prismLoading = null;
+/* 会話帳の言い回しの中(2026-11-24、Mayの「旅の指さし会話帳の画像が少なすぎない?」)。
+   見出しと完全に同じ語でしか出していなかったので、登録語の約26%にしか会話帳のページが出なかった。
+   完全に同じ語が会話帳に無いとき、会話帳の言い回し(〜の型も含む)の中に語として入っていれば、そのページを出す。
+   ただし散らばる語(die・có・не など)はページがでたらめになるので、ページが3つ以内に収まるときだけ。🔺(Prismにもある語)には数えない。
+   戻すなら prismStudyDecor の inside を空にする */
+let prismPhr = null;                       // 言語 → [{n, t(語の並び), c(空白なし), info}]
+const PRISM_NOSPACE = new Set(["ไทย", "中文"]);
+const PRISM_INSIDE_MAX = 3;
 function prismLang(lang){ return lang === "Advanced English" ? "English" : lang; }
 function prismNorm(lang, s){
   lang = prismLang(lang);
@@ -3341,6 +3349,18 @@ function prismIndex(){
   if(prismLoading) return prismLoading;
   prismLoading = (async ()=>{
     const map = new Map();
+    const phr = new Map();
+    const addPhr = (lang, term, info)=>{
+      String(term || "").split(/\s*[\/／]\s*/).forEach(t=>{   // 言い回しは読点では切らない(文が途中で切れる)
+        const n = prismNorm(lang, t);
+        if(!n) return;
+        const L = prismLang(lang);
+        const a = phr.get(L) || [];
+        a.push({n, t: n.replace(/[~〜○□]/g, " ").split(/\s+/).filter(Boolean), c: n.replace(/[\s~〜○□]/g, ""), info: Object.assign({term: t}, info)});
+        phr.set(L, a);
+      });
+    };
+    const okPhr = e => (!e.status || e.status === "present") && !(e.flags || []).includes("supplement");
     const add = (lang, term, info)=>{
       String(term || "").split(/\s*[\/／,、]\s*/).forEach(t=>{
         if(!prismNorm(lang, t)) return;
@@ -3367,6 +3387,12 @@ function prismIndex(){
           themes: [...new Set(ids.map(id=>th.get(id)).filter(Boolean))],
           page: String(e.bookThemeId || "").replace(/^bt:/, ""), srcId: e.srcId || ""});
       });
+      live.entries.forEach(e=>{
+        if(!/^sashi-/.test(e.sourceId || "") || !okPhr(e)) return;
+        addPhr(e.lang, e.term, {ja: e.ja || "", src: src.get(e.sourceId) || e.sourceId,
+          themes: [...new Set(((bt.get(e.bookThemeId) || {}).themeIds || []).map(id=>th.get(id)).filter(Boolean))],
+          page: String(e.bookThemeId || "").replace(/^bt:/, ""), srcId: e.srcId || ""});
+      });
     };
     const live = await prismReadLive();
     if(live && Array.isArray(live.entries) && live.entries.length){
@@ -3383,6 +3409,12 @@ function prismIndex(){
           const data = JSON.parse(new TextDecoder().decode(await syncFetchRaw("prism/bundled.json")));
           (data.imports || []).forEach(imp=>{
             if(!imp.items || !imp.source || PRISM_SKIP_SRC.has(imp.source.id)) return;
+            if(/^sashi-/.test(imp.source.id)) imp.items.forEach(e=>{
+              if(!okPhr(e)) return;
+              addPhr(e.lang, e.term, {ja: e.ja || e.sense || "", src: imp.source.title || imp.source.id,
+                themes: [...((imp.bookTheme || {}).themes || [])],
+                page: imp.source.id + "/" + ((imp.bookTheme || {}).name || ""), srcId: e.srcId || ""});
+            });
             imp.items.forEach(e=>{
               if(!ok(e)) return;
               add(e.lang, e.term, {ja: e.ja || e.sense || "", src: imp.source.title || imp.source.id,
@@ -3395,11 +3427,38 @@ function prismIndex(){
       }
     }
     prismIdx = map;
+    prismPhr = phr;
     return map;
   })();
   return prismLoading;
 }
 function prismHits(lang, w){ return prismIdx ? (prismIdx.get(prismKey(lang, w)) || []) : []; }
+// 会話帳に完全に同じ語が無いとき、会話帳の言い回しの中に語として入っているもの
+function prismInside(lang, w){
+  if(!prismPhr) return [];
+  if(prismHits(lang, w).some(h=>/^sashi-/.test(h.page || ""))) return [];
+  const L = prismLang(lang), n = prismNorm(lang, w);
+  if(!n) return [];
+  const list = prismPhr.get(L) || [];
+  if(PRISM_NOSPACE.has(L)){
+    const c = n.replace(/\s/g, "");
+    if(c.length < 2) return [];
+    return list.filter(p=>p.c.includes(c)).map(p=>p.info);
+  }
+  const wt = n.split(" ");
+  return list.filter(p=>{
+    for(let i = 0; i + wt.length <= p.t.length; i++){
+      let same = true;
+      for(let j = 0; j < wt.length; j++) if(p.t[i + j] !== wt[j]){ same = false; break; }
+      if(same) return true;
+    }
+    return false;
+  }).map(p=>p.info);
+}
+// ページの数(語ごとのページがあればその画像、無ければ見開き)
+function prismPageCount(hits, idx){
+  return new Set(hits.map(h=>(idx && h.srcId && (idx["@" + h.srcId] || [])[0]) || h.page)).size;
+}
 function markPrismChip(b){
   const hits = prismHits(b.dataset.lang, b.dataset.w);
   const t = b.querySelector(".wtxt");
@@ -3527,19 +3586,37 @@ function pageThumbs(host, hits){
   });
 }
 function prismStudyDecor(card, lang, word, detail){
-  const paint = ()=>{
-    if(!card.isConnected) return;
-    const hits = prismHits(lang, word);
-    if(!hits.length) return;
+  const mark = ()=>{
+    if(!card.isConnected || !prismHits(lang, word).length) return;
     const meta = card.querySelector(".meta");
     if(meta && !meta.querySelector(".wprism")) meta.insertAdjacentHTML("beforeend", ' · <span class="wprism" style="font-size:calc(11px * var(--fs,1));margin:0">🔺</span>Prism');
+  };
+  const paint = idx=>{
+    if(!card.isConnected) return;
+    const hits = prismHits(lang, word);
+    let inside = prismInside(lang, word);
+    if(inside.length && prismPageCount(inside, idx) > PRISM_INSIDE_MAX) inside = [];
+    if(!hits.length && !inside.length) return;
     if(!detail || card.querySelector(".tr-prism")) return;
     const pl = document.createElement("div");
     pl.className = "tr-prism";
     pl.style.margin = "8px 0 4px";
-    pl.innerHTML = "🔺 Prismの本では<br>" + hits.slice(0, 4).map(h=>"・" + esc(h.ja || "(訳なし)") + " — " + esc(h.src)).join("<br>")
+    let html = "";
+    if(hits.length) html = "🔺 Prismの本では<br>" + hits.slice(0, 4).map(h=>"・" + esc(h.ja || "(訳なし)") + " — " + esc(h.src)).join("<br>")
       + (hits.length > 4 ? "<br>ほか" + (hits.length - 4) + "件" : "");
-    const th = hits.map(h=>(h.themes || [])[0]).find(Boolean);
+    if(inside.length){
+      const seen = new Set(), lines = [];
+      inside.forEach(h=>{
+        const k = prismNorm(lang, h.term) + "\u0001" + h.src;   // 大文字・小文字だけ違う同じ言い回しは1行に
+        if(seen.has(k)) return;
+        seen.add(k);
+        lines.push("・「" + esc(h.term) + "」の中" + (h.ja ? "(" + esc(h.ja) + ")" : "") + " — " + esc(h.src));
+      });
+      html += (html ? "<br>" : "") + "会話帳の言い回しの中では<br>" + lines.slice(0, 3).join("<br>")
+        + (lines.length > 3 ? "<br>ほか" + (lines.length - 3) + "件" : "");
+    }
+    pl.innerHTML = html;
+    const th = hits.concat(inside).map(h=>(h.themes || [])[0]).find(Boolean);
     if(th){
       const a = document.createElement("a");
       a.href = "./prism.html#theme=" + encodeURIComponent(th);
@@ -3549,9 +3626,14 @@ function prismStudyDecor(card, lang, word, detail){
     }
     const acts = card.querySelector(".study-acts");
     if(acts) acts.before(pl); else card.appendChild(pl);
-    pageThumbs(pl, hits);   // 本のページの写真(2026-11-21)
+    pageThumbs(pl, hits.concat(inside));   // 本のページの写真(2026-11-21)。言い回しの中のページも(2026-11-24)
   };
-  if(prismIdx) paint(); else prismIndex().then(paint);
+  const go = ()=>{
+    mark();
+    if(!detail) return;
+    if(syncOn()) pageIndex().then(idx=>paint(idx), ()=>paint(null)); else paint(null);
+  };
+  if(prismIdx) go(); else prismIndex().then(go);
 }
 function wordChip(lang, lesson, w){
   const b = document.createElement("button");
