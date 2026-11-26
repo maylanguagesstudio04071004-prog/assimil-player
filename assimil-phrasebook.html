@@ -500,6 +500,8 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
   <button id="tabTag">タグ<span class="tab-n" id="tabTagN"></span></button>
   <!-- 「思い出す」は2026-10-16bでは§タブの中にあったが、使いにくいので独立したタブにした(Mayの依頼、16c) -->
   <button id="tabStudy">単語/フレーズ<span class="tab-n" id="tabStudyN"></span></button>
+  <!-- §を思い出すのは別のタブ(2026-11-28b、Mayの依頼「§は単語/フレーズとは別タブに」)。Assimil の「§」(一覧)と紛れないよう「文法」 -->
+  <button id="tabGram">文法<span class="tab-n" id="tabGramN"></span></button>
 </div>
 <div class="tabs tabs-sub" id="subAssimil">
   <button id="tabLesson" class="on">レッスン</button>
@@ -578,6 +580,10 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 <!-- 単語を思い出す(2026-10-16c) -->
 <section id="pageStudy" style="display:none">
   <div id="studyList"></div>
+</section>
+<!-- 復習 → 文法(2026-11-28b)。§を思い出す。仕組みは単語/フレーズと同じ(renderStudy を studyMode="gram" で描く) -->
+<section id="pageGram" style="display:none">
+  <div id="gramList"></div>
 </section>
 
 <!-- 復習 → タグ(2026-11-21)。今日のタグと、言語をまたぐタグの一覧 -->
@@ -861,7 +867,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-28a";
+const BUILD = "2026-11-28b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -871,7 +877,8 @@ const NATIVE = {
   "フランス語":"Français","ドイツ語":"Deutsch","トルコ語":"Türkçe","アラビア語":"العربية",
   "ヒンディー語":"हिन्दी","インドネシア語":"Bahasa Indonesia","タイ語":"ไทย","ロシア語":"Русский",
   "オランダ語":"Nederlands","ベトナム語":"Tiếng Việt","ポルトガル語":"Português","韓国語":"한국어",
-  "हिंदी":"हिन्दी"  // ヒンディー語の別綴り(ंとन्द)を同一視
+  "हिंदी":"हिन्दी",  // ヒンディー語の別綴り(ंとन्द)を同一視
+  "Arabic":"العربية"   // 2026-11-28: アラビア語の§が英語名「Arabic」で入っていた(17件)。今後は同じ言語として扱う
 };
 function toNative(l){ return NATIVE[l] || l; }
 
@@ -2451,10 +2458,10 @@ function renderCmp(lang){
 }
 
 /* ---------- tabs ---------- */
-const pages = {tabStudy:"pageStudy", tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
+const pages = {tabStudy:"pageStudy", tabGram:"pageGram", tabLesson:"pageLesson", tabSearch:"pageSearch", tabFav:"pageFav",
                tabImport:"pageImport", tabSettings:"pageSettings", tabTag:"pageTag"};
 /* タブの組(2026-11-21)。上の段のボタン → 下の段とその中のタブ。設定・取込はどの組にも入らない(下の段を出さない) */
-const TAB_GROUPS = {grpReview: {sub: "subReview", tabs: ["tabTag", "tabStudy"]},
+const TAB_GROUPS = {grpReview: {sub: "subReview", tabs: ["tabTag", "tabStudy", "tabGram"]},
                     grpAssimil: {sub: "subAssimil", tabs: ["tabLesson", "tabSearch", "tabFav", "tabImport"]}};
 const tabGroupLast = {grpReview: "tabStudy", grpAssimil: "tabLesson"};   // 上の段を押したら、その組で最後に開いていたタブへ
 function tabGroupOf(t){ return Object.keys(TAB_GROUPS).find(g=>TAB_GROUPS[g].tabs.includes(t)) || ""; }
@@ -2480,7 +2487,8 @@ function showTab(t){
   if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
   if(t==="tabFav") renderFavs();
   // 頭へ戻してから描く(2026-11-18)。描いたあとに戻すと、画面が低いときにカードの文が下に隠れたままになる
-  if(t==="tabStudy"){ studyQueue = null; studyShown = 0; studyEarKey = null; studyShownKey = null; window.scrollTo(0,0); renderStudy(); }
+  if(t==="tabStudy" || t==="tabGram"){ studyMode = t === "tabGram" ? "gram" : "word";   // 文法タブ(2026-11-28b)
+    studyQueue = null; studyShown = 0; studyEarKey = null; studyShownKey = null; window.scrollTo(0,0); renderStudy(); }
   if(t==="tabSettings"){ renderLangs(); renderStoreInfo(); renderFontScale(); syncPaint(); }
   if(t==="tabTag"){ window.scrollTo(0,0); renderTagPage(); }
   if(t!=="tabLesson") tagReturn = null;   // ほかのタブへ移ったら「#タグに戻る」は片付ける
@@ -4810,10 +4818,16 @@ function importData(raw, msgEl){
   // 取り込みの直前を1回分だけ控えておく。上書きで消えたときに戻せるように(2026-08-15)
   makeUndo();
   const rootRes = importRoots(data.roots);
-  let gAdded = 0, gUpdated = 0;
+  let gAdded = 0, gUpdated = 0, gDeleted = 0;
   const gOverwritten = [], lReplaced = [];
   if(Array.isArray(data.grammar)){
     data.grammar.forEach(g=>{
+      // {"id":…, "delete":true} で§を消せる(2026-11-28。アラビア語の§が「Arabic」という言語名で17件、例文の無い写しとして二重に入っていた)
+      if(g && g.delete === true && g.id){
+        const j = db.grammar.findIndex(x=>x.id === String(g.id));
+        if(j >= 0){ db.grammar.splice(j, 1); gDeleted++; }
+        return;
+      }
       if(!g || !g.topic || !g.lang) return;
       const rec = {
         id: g.id || uid(),
@@ -5167,7 +5181,7 @@ function importData(raw, msgEl){
     });
   }
   save();
-  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated || aAdded || aUpdated || aDeleted;
+  const other = notesAdded || notesUpdated || notesDeleted || gAdded || gUpdated || gDeleted || rootRes.added || rootRes.updated || bAdded || bUpdated || sAdded || sUpdated || pAdded || pUpdated || cAdded || cUpdated || fAdded || fUpdated || xAdded || xUpdated || yAdded || yUpdated || zAdded || zUpdated || aAdded || aUpdated || aDeleted;
   let msg = (added || updated || merged || !other)
     ? "取り込み完了: 新規 " + added + " 件 / 差し替え " + updated + " 件"
       + (merged ? " / 足した " + merged + " 件" : "")
@@ -5179,7 +5193,7 @@ function importData(raw, msgEl){
     + (timesDeleted ? " / 取り消し " + timesDeleted + " 課" : "") + ")";
   if(dictAdded || dictUpdated || dictDeleted) msg += "(辞書: 新規 " + dictAdded + " 語 / 上書き " + dictUpdated + " 語"
     + (dictDeleted ? " / 掃除 " + dictDeleted + " 語" : "") + ")";
-  if(gAdded || gUpdated) msg += "(文法: 新規 " + gAdded + " 件 / 上書き " + gUpdated + " 件)";
+  if(gAdded || gUpdated || gDeleted) msg += "(文法: 新規 " + gAdded + " 件 / 上書き " + gUpdated + " 件" + (gDeleted ? " / 削除 " + gDeleted + " 件" : "") + ")";
   if(rootRes.added || rootRes.updated){
     msg += "(語根: 新規 " + rootRes.added + " 件 / 追記 " + rootRes.updated + " 件"
          + " · 出現箇所 " + rootRes.occAdded + " 件追加)";
@@ -6487,7 +6501,11 @@ function studySpreadDue(iv, rec){
   });
   return best.day;
 }
-function studyDue(){ const t = studyToday(); return (db.study||[]).filter(x=>x.due <= t); }
+/* 2026-11-28b: 単語(word)と§(gram)を別のタブにした。今どちらを描いているか。数・上限・列はこの種類ごと */
+let studyMode = "word";
+function studyKindOf(x){ return isGramRec(x) ? "gram" : "word"; }
+function studyMine(mode = studyMode){ return (db.study||[]).filter(x=>studyKindOf(x) === mode); }
+function studyDue(mode = studyMode){ const t = studyToday(); return studyMine(mode).filter(x=>x.due <= t); }
 // 覚えたい語の、本文・題での近い形(2026-11-06)。語の頭が長く同じ語を、似ている順に3つまで。
 // アクセントは外して比べる(préférer と préfère)。空白で語を区切らない言語(中・泰)は出さない
 function formCandidates(lang, lesson, text){
@@ -6576,8 +6594,10 @@ function studySentence(x){
 }
 function updateStudyTab(){
   const el = $("tabStudyN"); if(!el) return;
-  const n = studyPick().list.length;   // 上限を掛けたあとの数(2026-11-06)。出る数と札の数を合わせる
+  const n = studyPick("word").list.length;   // 上限を掛けたあとの数(2026-11-06)。出る数と札の数を合わせる
   el.textContent = n ? String(n) : "";
+  const ge = $("tabGramN");   // 文法タブ(2026-11-28b)
+  if(ge){ const gn = studyPick("gram").list.length; ge.textContent = gn ? String(gn) : ""; }
   if(typeof updateTagTab === "function") updateTagTab();
 }
 // 文の読みを、隠した語の分だけ伏せて(hide)、または印を付けて返す(2026-10-24、Mayの依頼)。
@@ -6608,19 +6628,23 @@ function studyRoman(roman, sen, hide){
    戻すなら次の2行を const STUDY_NEW_STEPS = [5, 10, 20, 30, 50, 0]; const STUDY_NEW_DEFAULT = 20; にする */
 const STUDY_NEW_STEPS = [30, 50, 70, 100];
 const STUDY_NEW_DEFAULT = 70;
-function studyNewCap(){
-  try{ const v = Number(localStorage.getItem(KEY + ".studyNew"));
-    return STUDY_NEW_STEPS.includes(v) ? v : STUDY_NEW_DEFAULT; }catch(e){ return STUDY_NEW_DEFAULT; }
+// §は別の上限(2026-11-28b)。§は1件が重いので、初めは30件
+const GRAM_NEW_DEFAULT = 30;
+function studyNewKey(mode){ return mode === "gram" ? ".gramNew" : ".studyNew"; }
+function studyNewCap(mode = studyMode){
+  const def = mode === "gram" ? GRAM_NEW_DEFAULT : STUDY_NEW_DEFAULT;
+  try{ const v = Number(localStorage.getItem(KEY + studyNewKey(mode)));
+    return STUDY_NEW_STEPS.includes(v) ? v : def; }catch(e){ return def; }
 }
 function studyIsNew(x){ return !(x.reps > 0); }
 /* 上限は「1回の机に向かう時間」ではなく「その日」に掛ける(2026-11-06)。
    出し渋った語は期限が今日のままなので、数えておかないとタブを開き直すたびに
    新しい語がもう20語出てしまう。実際に一度答えた語だけを、その日の数として足す */
-function studyNewUsed(){
-  try{ const v = String(localStorage.getItem(KEY + ".studyNewDay") || "").split("|");
+function studyNewUsed(mode = studyMode){
+  try{ const v = String(localStorage.getItem(KEY + studyNewKey(mode) + "Day") || "").split("|");
     return v[0] === studyToday() ? (Number(v[1]) || 0) : 0; }catch(e){ return 0; }
 }
-function studyNewUsedAdd(){ lsSet(KEY + ".studyNewDay", studyToday() + "|" + (studyNewUsed() + 1)); }
+function studyNewUsedAdd(mode = studyMode){ lsSet(KEY + studyNewKey(mode) + "Day", studyToday() + "|" + (studyNewUsed(mode) + 1)); }
 /* 「出なかった」の回数をその日のうちだけ数える(2026-11-17、Mayの依頼「思い出せなかったものが延々と出続ける。2回やってダメなら翌日に」)。
    それまでは「出なかった」を押すたびに列の最後へ戻していたので、思い出せるまで何度でも出た。
    今は1回目は今までどおり列の最後へ、2回目で今日の列から外して期限を明日にする。
@@ -6637,13 +6661,13 @@ function studyAgainAdd(k){
 }
 /* 今日出すぶんを選ぶ。復習は「出なかった回数」の多い順(2026-11-06、Mayの依頼)。
    lapses は2026-10-16から数えるだけで、どこからも読まれていなかった。 */
-function studyPick(){
-  const due = studyDue();
+function studyPick(mode = studyMode){
+  const due = studyDue(mode);
   const rev = due.filter(x=>!studyIsNew(x)).sort((a,b)=>
     (b.lapses||0)-(a.lapses||0) || a.due.localeCompare(b.due) || (a.added||0)-(b.added||0));
   const fresh = due.filter(studyIsNew).sort((a,b)=>(a.added||0)-(b.added||0));
-  const cap = studyNewCap();
-  const left = cap ? Math.max(0, cap - studyNewUsed()) : 0;
+  const cap = studyNewCap(mode);
+  const left = cap ? Math.max(0, cap - studyNewUsed(mode)) : 0;
   const take = cap ? fresh.slice(0, left) : fresh;
   return {list: rev.concat(take), held: fresh.length - take.length};
 }
@@ -6654,7 +6678,7 @@ let studyView = "card";     // card=練習 / list=一覧(2026-11-06、Mayの依�
    並びは「出なかった回数」の多い順。戻すなら studyView と この関数と 一覧ボタンを消す */
 function renderStudyList(box){
   const t = studyToday();
-  const rows = db.study.slice().sort((a,b)=>
+  const rows = studyMine().slice().sort((a,b)=>
     (b.lapses||0)-(a.lapses||0) || a.due.localeCompare(b.due) || (a.added||0)-(b.added||0));
   const wrap = document.createElement("div");
   wrap.className = "study-list";
@@ -6951,11 +6975,11 @@ function updateTagTab(){
   try{ const t = tagDayToday(); n = t && !t.done ? 1 : 0; }catch(e){}
   el.textContent = n ? "1" : "";
   const g = $("grpReviewN");
-  if(g){ const s = Number(($("tabStudyN") || {}).textContent || 0) + n; g.textContent = s ? String(s) : ""; }
+  if(g){ const s = Number(($("tabStudyN") || {}).textContent || 0) + Number(($("tabGramN") || {}).textContent || 0) + n; g.textContent = s ? String(s) : ""; }   // 文法タブの数も足す(2026-11-28b)
 }
 // 答えたときの処理(単語・§で共通。2026-11-28 に単語のカードから切り出した)
 function studyGradeApply(rec, g, label){
-  if(studyIsNew(rec)) studyNewUsedAdd();   // 今日はじめて答えた新しい語を数える(2026-11-06)
+  if(studyIsNew(rec)) studyNewUsedAdd(studyKindOf(rec));   // 今日はじめて答えた新しい語を数える(2026-11-06)。§は別に数える(11-28b)
   rec.interval = studyNext(rec.interval || 0, g);
   rec.due = rec.interval ? studySpreadDue(rec.interval, rec) : studyToday();
   rec.reps = (rec.reps||0) + 1; rec.last = Date.now();
@@ -7064,10 +7088,14 @@ function renderGramCard(box, rec, cardKey){
 }
 function renderStudy(){
   updateStudyTab();
-  const box = $("studyList");
+  const gramMode = studyMode === "gram";   // 文法タブ(2026-11-28b)
+  const U = gramMode ? "件" : "語";
+  const box = $(gramMode ? "gramList" : "studyList");
   box.innerHTML = "";
-  if(!db.study.length){
-    box.insertAdjacentHTML("beforeend", '<div class="empty-msg">覚えたい単語はまだありません。<br>レッスンの下の単語を押して、小窓の「☆ 覚えたい」を押すと、ここに出ます。</div>');
+  if(!studyMine().length){
+    box.insertAdjacentHTML("beforeend", gramMode
+      ? '<div class="empty-msg">覚えたい§はまだありません。<br>§の小窓や「全言語で見る」のページで「☆ 覚えたい」を押すと、ここに出ます(例文のある§だけ)。</div>'
+      : '<div class="empty-msg">覚えたい単語はまだありません。<br>レッスンの下の単語を押して、小窓の「☆ 覚えたい」を押すと、ここに出ます。</div>');
     return;
   }
   if(!studyQueue){
@@ -7084,11 +7112,10 @@ function renderStudy(){
   }
   const head = document.createElement("div");
   head.className = "study-head";
-  const miss = db.study.filter(x=>(x.lapses||0) >= 2).length;
+  const miss = studyMine().filter(x=>(x.lapses||0) >= 2).length;
   head.appendChild(document.createTextNode(
-    "今日の残り " + studyQueue.length + " / 覚えたい単語 " + db.study.filter(x=>!isGramRec(x)).length + " 語"
-    + (db.study.some(isGramRec) ? "・§ " + db.study.filter(isGramRec).length + " 件" : "")
-    + (miss ? " / よく出なかった語 " + miss + " 語" : "")));
+    "今日の残り " + studyQueue.length + " " + U + " / 覚えたい" + (gramMode ? "§ " : "単語 ") + studyMine().length + " " + U
+    + (miss ? " / よく出なかった" + (gramMode ? "§ " : "語 ") + miss + " " + U : "")));
   // 耳から先に(2026-11-06、Mayの依頼)。文字を隠して文を鳴らし、聞いてから文字を見る
   const earBtn = document.createElement("button");
   earBtn.className = "study-ear-toggle" + (studyEarMode() ? " on" : "");
@@ -7110,16 +7137,16 @@ function renderStudy(){
   // 1日に出す新しい語の数(2026-11-06)
   const capLab = document.createElement("label");
   capLab.style.cssText = "margin-left:4px";
-  capLab.appendChild(document.createTextNode("新しい語/日 "));
+  capLab.appendChild(document.createTextNode(gramMode ? "新しい§/日 " : "新しい語/日 "));
   const capSel = document.createElement("select");
   STUDY_NEW_STEPS.forEach(n=>{
     const o = document.createElement("option");
-    o.value = String(n); o.textContent = n ? n + "語" : "制限なし";
+    o.value = String(n); o.textContent = n ? n + U : "制限なし";
     if(n === studyNewCap()) o.selected = true;
     capSel.appendChild(o);
   });
   capSel.onchange = ()=>{
-    lsSet(KEY + ".studyNew", capSel.value);
+    lsSet(KEY + studyNewKey(studyMode), capSel.value);
     studyQueue = null; studyShown = 0; studyEarKey = null; renderStudy();
   };
   capLab.appendChild(capSel);
@@ -7128,14 +7155,14 @@ function renderStudy(){
   if(studyView === "list"){ renderStudyList(box); return; }
   if(!studyQueue.length){
     const t = studyToday();
-    const later = db.study.filter(x=>x.due > t).sort((a,b)=>a.due.localeCompare(b.due));
+    const later = studyMine().filter(x=>x.due > t).sort((a,b)=>a.due.localeCompare(b.due));
     const nx = later[0];
     const nDay = nx ? later.filter(x=>x.due===nx.due).length : 0;
     box.insertAdjacentHTML("beforeend", '<div class="empty-msg">今日の分は終わりました。'
-      + (studyHeld ? '<br>新しい語はあと ' + studyHeld + ' 語ありますが、1日 ' + studyNewCap()
-          + ' 語までにしてあるので明日に回しました(今日はもう ' + studyNewUsed()
-          + ' 語)。<br>もっとやるなら上の「新しい語/日」を変えてください。' : '')
-      + (nx ? '<br>次は ' + esc(nx.due.slice(5).replace("-", "/")) + ' に ' + nDay + ' 語です。' : '') + '</div>');
+      + (studyHeld ? '<br>新しい' + (gramMode ? '§' : '語') + 'はあと ' + studyHeld + ' ' + U + 'ありますが、1日 ' + studyNewCap()
+          + ' ' + U + 'までにしてあるので明日に回しました(今日はもう ' + studyNewUsed()
+          + ' ' + U + ')。<br>もっとやるなら上の「新しい' + (gramMode ? '§' : '語') + '/日」を変えてください。' : '')
+      + (nx ? '<br>次は ' + esc(nx.due.slice(5).replace("-", "/")) + ' に ' + nDay + ' ' + U + 'です。' : '') + '</div>');
     return;
   }
   const [lang, nStr, ...tp] = studyQueue[0].split("|");
