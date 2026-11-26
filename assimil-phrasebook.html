@@ -236,6 +236,12 @@ input,textarea,select{font-family:inherit}
 .study-ja{font-size:calc(14px * var(--fs,1)); color:var(--sub); line-height:1.6}
 .study-mean{font-size:calc(15px * var(--fs,1)); margin-top:10px}
 .study-ans{font-size:calc(20px * var(--fs,1)); font-weight:700; margin-top:8px; unicode-bidi:plaintext}
+/* §を思い出す(2026-11-28) */
+.study-gq{font-size:calc(13px * var(--fs,1)); color:var(--sub); margin-top:6px}
+.study-gbody{white-space:pre-wrap; font-size:calc(14px * var(--fs,1)); line-height:1.75; margin-top:8px; overflow-wrap:anywhere}
+.study-gex{display:block; width:100%; text-align:left; margin-top:6px; padding:8px 11px; border-radius:9px; background:var(--bg);
+  border:1px solid var(--border); color:var(--text); font-size:calc(14px * var(--fs,1)); line-height:1.5}
+.g-learn.on, .gt-learn.on{color:var(--accent); border-color:var(--accent)}
 .study-roman{font-size:calc(14px * var(--fs,1)); font-weight:400; color:var(--sub); font-style:italic}
 /* 単語のメモ(2026-11-18) */
 .study-memo{margin-top:10px; padding:9px 12px; border-radius:10px; background:var(--accent-soft); font-size:calc(14px * var(--fs,1)); line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere}
@@ -855,7 +861,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-27c";
+const BUILD = "2026-11-28a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -4235,6 +4241,14 @@ function openTopicPage(topic, type){
     c.style.background = "var(--bg)";
     c.innerHTML = '<h2>' + esc(g.lang) + (g.lesson!=null ? ' · L' + g.lesson : '') + '</h2>'
       + '<div style="white-space:pre-wrap; font-size:calc(14px * var(--fs,1)); line-height:1.75">' + esc(g.body||"") + '</div>';
+    if(gramCanStudy(g)){   // §を思い出す(2026-11-28)
+      const lb = document.createElement("button");
+      lb.className = "btn soft gt-learn" + (gramStudyRec(g) ? " on" : "");
+      lb.style.cssText = "margin-top:8px; padding:7px 12px";
+      lb.textContent = gramLearnLabel(g);
+      lb.onclick = ()=>{ toggleGramStudy(g); lb.textContent = gramLearnLabel(g); lb.classList.toggle("on", !!gramStudyRec(g)); };
+      c.appendChild(lb);
+    }
     (g.examples||[]).forEach(e=>{
       const b = document.createElement("button");
       b.style.cssText = "display:block; width:100%; text-align:left; margin-top:8px; padding:9px 11px;"
@@ -6402,6 +6416,7 @@ function openGrammarPopup(g, anchorRect){
     html += '</div>';
   }
   html += '<div class="tr-actions">'
+    + (gramCanStudy(g) ? '<button class="g-learn btn soft' + (gramStudyRec(g) ? ' on' : '') + '">' + gramLearnLabel(g) + '</button>' : '')   // §を思い出す(2026-11-28)
     + '<button class="g-page btn soft">全言語で見る</button>'
     + '<button class="g-close btn soft">閉じる</button>'
     + '<button class="g-del" style="background:none; color:var(--danger); border:1px solid var(--danger)">削除</button>'
@@ -6412,6 +6427,10 @@ function openGrammarPopup(g, anchorRect){
   trJustOpened = true;
   setTimeout(()=>{ trJustOpened = false; }, 700);
   trPop.querySelector(".g-close").onclick = hideTrPop;
+  if(trPop.querySelector(".g-learn")){
+    const lb = trPop.querySelector(".g-learn");
+    lb.onclick = ()=>{ toggleGramStudy(g); lb.textContent = gramLearnLabel(g); lb.classList.toggle("on", !!gramStudyRec(g)); };
+  }
   trPop.querySelector(".g-page").onclick = ()=>{ hideTrPop(); openTopicPage(g.topic, g.type || "grammar"); };
   trPop.querySelector(".g-del").onclick = ()=>{
     if(!confirm("§ " + g.topic + "(" + g.lang + ")を削除しますか?")) return;
@@ -6494,6 +6513,18 @@ function formCandidates(lang, lesson, text){
   });
   return [...scored.entries()].sort((x, y)=>y[1] - x[1]).slice(0, 3).map(x=>x[0]);
 }
+/* §を思い出す(2026-11-28、Mayの依頼「単語は覚え始めているが、文法を覚えきれていない」→ 案1)。
+   §(type:"grammar")に「☆ 覚えたい」を付けると、単語と同じ db.study に入り、同じ間隔・同じ1日の上限で出てくる。
+   記録は text を "§:" + §の id にして持つ(同期・書き出し・取り込みをそのまま通すため。study の取り込みは決まった欄しか写さない)。
+   カードの表は§の例文(本文の1行。音・耳から先に・書く欄が使える)、答えは§の題と説明。例文の無い§には印を付けられない。
+   戻すなら g-learn・gt-learn のボタンと renderStudy の isGramRec の分岐を外す(db.study の §: の記録は残っても害はない) */
+const GRAM_KEY = "§:";
+function isGramRec(x){ return !!x && String(x.text || "").startsWith(GRAM_KEY); }
+function gramOfRec(x){ const id = String(x.text).slice(GRAM_KEY.length); return db.grammar.find(g=>g.id === id) || null; }
+function gramStudyRec(g){ return studyRec(g.lang, g.lesson != null ? g.lesson : 0, GRAM_KEY + g.id); }
+function gramCanStudy(g){ return !!g && g.type === "grammar" && !!g.id && (g.examples || []).length > 0; }
+function toggleGramStudy(g){ toggleStudy(g.lang, g.lesson != null ? g.lesson : 0, GRAM_KEY + g.id); }
+function gramLearnLabel(g){ return gramStudyRec(g) ? "★ 覚えたい(外す)" : "☆ 覚えたい"; }
 function toggleStudy(lang, lesson, text){
   const i = db.study.findIndex(x=>x.lang===lang && x.lesson===lesson && x.text===text);
   if(i >= 0) db.study.splice(i, 1);
@@ -6628,6 +6659,22 @@ function renderStudyList(box){
   const wrap = document.createElement("div");
   wrap.className = "study-list";
   rows.forEach(x=>{
+    if(isGramRec(x)){   // §(2026-11-28)
+      const g = gramOfRec(x), t2 = studyToday();
+      const row = document.createElement("div");
+      row.className = "study-row";
+      row.innerHTML = '<div class="sr-body"><div class="sr-w">§ ' + esc(g ? g.topic : "(見つからない§)") + '</div>'
+        + '<div class="sr-meta">' + esc(x.lang) + (g && g.lesson != null ? ' · L' + g.lesson : '') + ' · '
+        + (x.due <= t2 ? "今日" : "次は " + esc(x.due.slice(5).replace("-", "/")))
+        + ((x.lapses||0) ? ' · <span class="sr-miss">出なかった ' + x.lapses + ' 回</span>' : '')
+        + ((x.reps||0) ? ' · 練習 ' + x.reps + ' 回' : ' · まだ') + '</div></div><button class="sr-x">外す</button>';
+      row.querySelector(".sr-x").onclick = ()=>{
+        if(!confirm("「§ " + (g ? g.topic : "") + "」を覚えたいから外しますか?(練習の記録も消えます)")) return;
+        toggleStudy(x.lang, x.lesson, x.text); studyQueue = null; studyShown = 0; renderStudy();
+      };
+      wrap.appendChild(row);
+      return;
+    }
     const wn = getNote(x.lang, x.lesson, x.text, "word") || {};
     const row = document.createElement("div");
     row.className = "study-row";
@@ -6906,6 +6953,115 @@ function updateTagTab(){
   const g = $("grpReviewN");
   if(g){ const s = Number(($("tabStudyN") || {}).textContent || 0) + n; g.textContent = s ? String(s) : ""; }
 }
+// 答えたときの処理(単語・§で共通。2026-11-28 に単語のカードから切り出した)
+function studyGradeApply(rec, g, label){
+  if(studyIsNew(rec)) studyNewUsedAdd();   // 今日はじめて答えた新しい語を数える(2026-11-06)
+  rec.interval = studyNext(rec.interval || 0, g);
+  rec.due = rec.interval ? studySpreadDue(rec.interval, rec) : studyToday();
+  rec.reps = (rec.reps||0) + 1; rec.last = Date.now();
+  if(g === "again") rec.lapses = (rec.lapses||0) + 1;
+  const k = studyQueue.shift();
+  if(g === "again"){
+    if(studyAgainAdd(k) >= STUDY_AGAIN_MAX){
+      rec.due = studyAddDays(1);             // 今日2回出なかった → 今日はもう出さず、明日また
+      showToast("「" + label + "」は今日2回出なかったので、明日また出します。");
+    } else studyQueue.push(k);               // 1回目はその場でもう一度(列の最後へ)
+  }
+  studyShown = 0; studyEarKey = null;        // もう一度のときも、耳から先に
+  studyInk = {key: null, strokes: []};       // 答えたら、書いた字は消す
+  save();
+  renderStudy();
+}
+// §のカード(2026-11-28)。表=例文(音・耳から先に・書く欄)、意味=例文の訳、答え=§の題と説明
+function renderGramCard(box, rec, cardKey){
+  const g = gramOfRec(rec);
+  const card = document.createElement("div");
+  card.className = "card study-card";
+  const newCard = studyShownKey !== cardKey;
+  studyShownKey = cardKey;
+  const showTop = ()=>{ if(!newCard) return;
+    const r = card.getBoundingClientRect();
+    if(r.top < 8 || r.top > window.innerHeight * 0.5) window.scrollBy(0, r.top - 8); };
+  if(!g || !(g.examples || []).length){
+    card.innerHTML = '<div class="meta">' + esc(rec.lang) + ' · §</div><div class="study-ja">この§は見つからないか、例文がなくなりました。</div>'
+      + '<button class="st-drop">覚えたいから外す</button>';
+    box.appendChild(card);
+    card.querySelector(".st-drop").onclick = ()=>{ toggleStudy(rec.lang, rec.lesson, rec.text); studyQueue.shift(); studyShown = 0; renderStudy(); };
+    return;
+  }
+  // 例文は、音の付いた行を先に、答えるたびに次の例文へ(同じ文ばかりで覚えないように)
+  const exs = g.examples.map(e=>{
+    const L = db.lessons.find(y=>y.lang===e.lang && y.lesson===e.lesson);
+    const i = L ? L.phrases.indexOf(e.text) : -1;
+    const voiced = i >= 0 && !!(spansOf(e.lang, e.lesson) || [])[i];
+    return {e, i, voiced};
+  }).sort((a,b)=>(b.voiced - a.voiced));
+  const x = exs[(rec.reps || 0) % exs.length], e = x.e;
+  const hasVoice = x.voiced;
+  const play = ()=>{ if(hasVoice) playSpan(e.lang, e.lesson, x.i, null); };
+  let html = '<div class="meta">' + esc(e.lang) + ' · L' + e.lesson + ' · §</div>';
+  if(studyEarMode() && hasVoice && studyShown === 0 && studyEarKey !== cardKey){
+    card.innerHTML = html + '<div class="study-ear">文を聞いて、この文の§(文法)を思い出してください。</div>'
+      + '<div class="study-acts"><button class="btn soft st-play">▶ もう一度聞く</button>'
+      + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(e.lang)) + '</button>'
+      + '<button class="btn st-see">文字を見る</button></div>';
+    box.appendChild(card);
+    card.querySelector(".st-play").onclick = play;
+    const sb = card.querySelector(".st-spd");
+    bindSpeedBtn(sb, d=>{ sb.textContent = speedLabel(speedStep(d, e.lang)); });
+    card.querySelector(".st-see").onclick = ()=>{ studyEarKey = cardKey; renderStudy(); };
+    studyInkAttach(card, cardKey);
+    showTop(); play();
+    return;
+  }
+  const pn = getNote(e.lang, e.lesson, e.text) || {};
+  html += '<div class="study-sen" dir="auto">' + esc(e.text) + '</div>';
+  if(pn.roman) html += '<div class="study-sroman" dir="auto">' + esc(pn.roman) + '</div>';
+  if(studyShown >= 1 && pn.ja) html += '<div class="study-ja">' + esc(pn.ja) + '</div>';
+  if(studyShown < 2) html += '<div class="study-gq">この文の§(文法)は? 題と要点を思い出してください。</div>';
+  if(studyShown >= 2){
+    html += '<div class="study-ans">§ ' + esc(g.topic) + '</div>'
+      + '<div class="study-gq">' + esc(g.lang) + (g.lesson != null ? ' · L' + g.lesson + ' の§' : '') + '</div>'
+      + '<div class="study-gbody" dir="auto">' + esc(g.body || "") + '</div>';
+    const others = g.examples.filter(o=>o !== e).slice(0, 3);
+    if(others.length){
+      html += '<div class="study-gq" style="margin-top:10px">ほかの例文(押すと原文へ)</div>';
+      others.forEach((o, k)=>{ html += '<button class="study-gex" data-k="' + k + '" dir="auto">' + esc(o.text) + '<span style="color:var(--sub); font-size:calc(11.5px * var(--fs,1))"> — L' + o.lesson + '</span></button>'; });
+    }
+  }
+  html += '<div class="study-acts">';
+  if(studyShown < 2){
+    if(hasVoice) html += '<button class="btn soft st-play">▶ 文を聞く</button>'
+      + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(e.lang)) + '</button>';
+    if(studyShown < 1 && pn.ja) html += '<button class="btn soft st-mean">訳を見る</button>';
+    html += '<button class="btn st-show">答えを見る</button>';
+  } else {
+    if(hasVoice) html += '<button class="btn soft st-play">▶ もう一度聞く</button>'
+      + '<button class="btn soft st-spd">' + speedLabel(currentSpeed(e.lang)) + '</button>';
+    html += '<button class="btn soft st-go">原文へ</button>';
+    html += '</div><div class="study-acts study-grade">'
+      + '<button class="btn st-g" data-g="good">思い出せた</button>'
+      + '<button class="btn soft st-g" data-g="hard">あやふや</button>'
+      + '<button class="btn soft st-g" data-g="again">出なかった</button>';
+  }
+  html += '</div><button class="st-drop">覚えたいから外す</button>';
+  card.innerHTML = html;
+  box.appendChild(card);
+  studyInkAttach(card, cardKey);
+  showTop();
+  const q = c=>card.querySelector(c);
+  if(q(".st-mean")) q(".st-mean").onclick = ()=>{ studyShown = 1; renderStudy(); };
+  if(q(".st-show")) q(".st-show").onclick = ()=>{ studyShown = 2; renderStudy(); play(); };
+  if(q(".st-play")) q(".st-play").onclick = play;
+  if(q(".st-spd")){ const b = q(".st-spd"); bindSpeedBtn(b, d=>{ b.textContent = speedLabel(speedStep(d, e.lang)); }); }
+  if(q(".st-go")) q(".st-go").onclick = ()=>jumpTo(e.lang, e.lesson, e.text);
+  card.querySelectorAll(".study-gex").forEach(b=>{ b.onclick = ()=>{ const o = g.examples.filter(y=>y !== e)[Number(b.dataset.k)]; jumpTo(o.lang, o.lesson, o.text); }; });
+  card.querySelectorAll(".st-g").forEach(b=>{ b.onclick = ()=>studyGradeApply(rec, b.dataset.g, "§ " + g.topic); });
+  q(".st-drop").onclick = ()=>{
+    if(!confirm("「§ " + g.topic + "」を覚えたいから外しますか?(練習の記録も消えます)")) return;
+    toggleStudy(rec.lang, rec.lesson, rec.text); studyQueue.shift(); studyShown = 0; renderStudy();
+  };
+}
 function renderStudy(){
   updateStudyTab();
   const box = $("studyList");
@@ -6930,7 +7086,8 @@ function renderStudy(){
   head.className = "study-head";
   const miss = db.study.filter(x=>(x.lapses||0) >= 2).length;
   head.appendChild(document.createTextNode(
-    "今日の残り " + studyQueue.length + " 語 / 覚えたい単語 " + db.study.length + " 語"
+    "今日の残り " + studyQueue.length + " / 覚えたい単語 " + db.study.filter(x=>!isGramRec(x)).length + " 語"
+    + (db.study.some(isGramRec) ? "・§ " + db.study.filter(isGramRec).length + " 件" : "")
     + (miss ? " / よく出なかった語 " + miss + " 語" : "")));
   // 耳から先に(2026-11-06、Mayの依頼)。文字を隠して文を鳴らし、聞いてから文字を見る
   const earBtn = document.createElement("button");
@@ -6984,6 +7141,7 @@ function renderStudy(){
   const [lang, nStr, ...tp] = studyQueue[0].split("|");
   const lesson = Number(nStr), word = tp.join("|");
   const rec = studyRec(lang, lesson, word);
+  if(isGramRec(rec)){ renderGramCard(box, rec, studyQueue[0]); return; }   // §のカード(2026-11-28)
   const wn = getNote(lang, lesson, word, "word") || {};
   const sen = studySentence(rec);
   const card = document.createElement("div");
@@ -7073,6 +7231,7 @@ function renderStudy(){
   card.querySelectorAll(".st-g").forEach(b=>{
     b.onclick = ()=>{
       const g = b.dataset.g;
+      studyGradeApply(rec, g, word); return;   // 2026-11-28: §のカードと共通にした。下は前の書き方(同じ処理)
       if(studyIsNew(rec)) studyNewUsedAdd();   // 今日はじめて答えた新しい語を数える(2026-11-06)
       rec.interval = studyNext(rec.interval || 0, g);
       rec.due = rec.interval ? studySpreadDue(rec.interval, rec) : studyToday();
