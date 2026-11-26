@@ -851,7 +851,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-27a";
+const BUILD = "2026-11-27b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -5324,7 +5324,9 @@ const LANGCODE = {
 /* 単語にだけ「メモ」(2026-11-18、Mayの依頼「思い出すで、各単語に一言メモを入れたい。bleiben に『とどまる。ブレーメンの音楽隊』など」)。
    単語の訳の記録(notes の type:"word")に memo として持つので、書き出し・取り込みにそのまま乗る。
    単語の小窓・「思い出す」の答えのあと・「思い出す」の一覧で読み書きできる。戻すなら WORD_FIELDS を NOTE_FIELDS に戻す */
-function fieldsFor(lang, type){ return type === "word" ? WORD_FIELDS : NOTE_FIELDS; }
+/* 2026-11-27 に一言メモを画面から外した(Mayの判断。使ったのは bleiben の1回だけ)。記録(notes の memo)は消さずに残し、書き出しにも乗る。
+   戻すなら、次の行を return type === "word" ? WORD_FIELDS : NOTE_FIELDS; に、studyMemoAttach の呼び出しと一覧の sr-memo を生かす */
+function fieldsFor(lang, type){ return NOTE_FIELDS; }
 const NOTE_FIELDS = [
   {key:"ja", label:"日本語訳"},
   {key:"roman", label:"読み(ローマ字)"}
@@ -6628,7 +6630,7 @@ function renderStudyList(box){
     row.innerHTML = '<div class="sr-body"><div class="sr-w" dir="auto">' + esc(x.text)
       + (wn.roman ? ' <span class="study-roman">' + esc(wn.roman) + '</span>' : '') + '</div>'
       + (wn.ja ? '<div class="sr-ja">' + esc(wn.ja) + '</div>' : '')
-      + (wn.memo ? '<div class="sr-memo">' + esc(wn.memo) + '</div>' : '')
+      // + (wn.memo ? '<div class="sr-memo">' + esc(wn.memo) + '</div>' : '')   // 一言メモは2026-11-27に外した(戻すならこの行を生かす)
       + '<div class="sr-meta">' + esc(x.lang) + ' · L' + x.lesson
       + ' · ' + (x.due <= t ? "今日" : "次は " + esc(x.due.slice(5).replace("-", "/")))
       + ((x.lapses||0) ? ' · <span class="sr-miss">出なかった ' + x.lapses + ' 回</span>' : '')
@@ -7054,7 +7056,7 @@ function renderStudy(){
   card.innerHTML = html;
   box.appendChild(card);
   prismStudyDecor(card, lang, word, studyShown >= 2);
-  studyMemoAttach(card, lang, lesson, word);
+  // studyMemoAttach(card, lang, lesson, word);   // 一言メモは2026-11-27に外した(戻すならこの行を生かす)
   studyInkAttach(card, cardKey);
   showTop();
   const play = ()=>{ if(hasVoice) playSpan(lang, lesson, sen.i, null); };
