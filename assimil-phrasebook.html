@@ -189,9 +189,15 @@ input,textarea,select{font-family:inherit}
 .words button .wprism{font-size:calc(9px * var(--fs,1)); margin-left:3px; vertical-align:2px}
 /* 本のページの写真(2026-11-21) */
 .page-thumbs{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
-.page-float{float:right; flex-direction:column; flex-wrap:nowrap; width:min(38%, calc(210px * var(--fs,1))); margin:0 0 8px 12px}
-.page-float .pt{width:100% !important; height:auto !important; aspect-ratio:4/3}
-.page-float .pt-note{margin-top:0}
+/* 2026-11-27: 写真を縦ではなく横に並べる(Mayの依頼)。枚数で枠を少し広げ、1枚ずつは等分に縮める。
+   戻すなら .page-float を flex-direction:column; flex-wrap:nowrap; width:min(38%, calc(210px * var(--fs,1))) に、.pt を width:100% に戻し、pt-n2/pt-n3 を消す */
+.page-float{float:right; flex-direction:row; flex-wrap:wrap; align-items:flex-start; gap:6px; width:min(38%, calc(210px * var(--fs,1))); margin:0 0 8px 12px}
+.page-float.pt-n2{width:min(46%, calc(260px * var(--fs,1)))}
+.page-float.pt-n3{width:min(52%, calc(300px * var(--fs,1)))}
+.page-float .pt{width:100% !important; height:auto !important; aspect-ratio:4/3; flex:0 0 auto}
+.page-float.pt-n2 .pt{width:calc((100% - 6px) / 2) !important}
+.page-float.pt-n3 .pt{width:calc((100% - 12px) / 3) !important}
+.page-float .pt-note{margin-top:0; flex-basis:100%}
 .study-card .study-ink, .study-card .study-acts, .study-card .st-drop{clear:right}
 .page-thumbs .pt{width:calc(150px * var(--fs,1)); height:calc(112px * var(--fs,1)); padding:0; border-radius:8px; overflow:hidden;
   border:1px solid var(--border); background:var(--bg); display:flex; align-items:center; justify-content:center}
@@ -845,7 +851,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-24a";
+const BUILD = "2026-11-27a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3561,7 +3567,7 @@ function pageThumbs(host, hits){
     if(!shots.length) return;
     const old = card.querySelector(".page-float"); if(old) old.remove();
     const row = document.createElement("div");
-    row.className = "page-thumbs page-float";
+    row.className = "page-thumbs page-float pt-n" + Math.min(shots.length, 3);   // 枚数で横に並べる幅を変える(2026-11-27)
     shots.slice(0, 3).forEach(x=>{
       const b = document.createElement("button");
       b.className = "pt";
