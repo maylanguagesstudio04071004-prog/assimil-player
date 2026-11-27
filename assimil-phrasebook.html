@@ -876,7 +876,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-28d";
+const BUILD = "2026-11-28e";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3540,14 +3540,16 @@ async function pageImageURL(path){
    線は db.pageInk[ファイル名] = [{c:"y", w:太さ, p:[[x,y],…]}, …]。x・y は写真の幅・高さに対する千分率(拡大してもずれない)。
    画像は保存しない(点の並びだけ)ので、同期・書き出しはほとんど増えない。同じページの別の単語のカードにも同じ線が出る。
    戻すなら、pageViewer の pv-ink・pv-erase と pageThumbs の paintThumbInk を外す(db.pageInk は残っても害はない) */
-const PAGE_INK_COLOR = {y: "rgba(255, 221, 0, 0.42)"};
+/* 2026-11-28e: 水色に変えた(Mayの依頼)。前に引いた黄色の線(c:"y")も水色で出す。黄色に戻すなら y を "rgba(255, 221, 0, 0.42)" に、
+   新しい線の c を "y" に戻す */
+const PAGE_INK_COLOR = {b: "rgba(70, 185, 255, 0.40)", y: "rgba(70, 185, 255, 0.40)"};
 const PAGE_INK_WIDTH = 22;   // 千分率(写真の幅に対して)。本文の1行がだいたい隠れる太さ
 function drawPageInk(ctx, strokes, W, H){
   ctx.clearRect(0, 0, W, H);
   (strokes || []).forEach(st=>{
     const p = st.p || [];
     if(!p.length) return;
-    ctx.strokeStyle = PAGE_INK_COLOR[st.c] || PAGE_INK_COLOR.y;
+    ctx.strokeStyle = PAGE_INK_COLOR[st.c] || PAGE_INK_COLOR.b;
     ctx.fillStyle = ctx.strokeStyle;
     ctx.lineWidth = (st.w || PAGE_INK_WIDTH) / 1000 * W;
     ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -3575,7 +3577,7 @@ function pageViewer(file, caption){
   const w = document.createElement("div");
   w.className = "page-view";
   w.innerHTML = '<div class="pv-bar"><span class="pv-cap"></span><button class="pv-erase">消しゴム</button><button class="pv-zoom" data-d="-1">−</button><button class="pv-zoom" data-d="1">＋</button><button class="pv-close">閉じる</button></div>'
-    + '<div class="pv-hint">Apple Pencil でなぞると黄色の蛍光ペンになります。指では動かす・拡大ができます。</div>'
+    + '<div class="pv-hint">Apple Pencil でなぞると水色の蛍光ペンになります。指では動かす・拡大ができます。</div>'
     + '<div class="pv-scroll"><div class="pv-msg">読み込んでいます…</div><div class="pv-wrap"><img alt=""><canvas class="pv-ink"></canvas></div></div>';
   w.querySelector(".pv-cap").textContent = caption || "";
   const img = w.querySelector("img"), sc = w.querySelector(".pv-scroll"), wrap = w.querySelector(".pv-wrap"), cv = w.querySelector(".pv-ink");
@@ -3634,7 +3636,7 @@ function pageViewer(file, caption){
     try{ cv.setPointerCapture(e.pointerId); }catch(err){}
     const a = pt(e);
     if(eraser){ cur = {id: e.pointerId, erase: true}; erased = eraseAt(a) || erased; return; }
-    cur = {id: e.pointerId, st: {c: "y", w: PAGE_INK_WIDTH, p: [a]}};
+    cur = {id: e.pointerId, st: {c: "b", w: PAGE_INK_WIDTH, p: [a]}};
     strokes.push(cur.st); redraw();
   });
   cv.addEventListener("pointermove", e=>{
