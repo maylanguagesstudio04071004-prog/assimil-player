@@ -876,7 +876,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-28f";
+const BUILD = "2026-11-29a";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3682,9 +3682,20 @@ function pageViewer(file, caption){
   cv.addEventListener("pointercancel", end);
   window.addEventListener("resize", ()=>{ if(w.isConnected) fit(); });
   document.body.appendChild(w);
-  pageImageURL("pages/" + file).then(u=>{ img.src = u; w.querySelector(".pv-msg").remove(); })
-    .catch(e=>{ w.querySelector(".pv-msg").textContent = "写真を読めませんでした: " + e.message; });
+  /* 開いた瞬間は、カードに出ている小さい画像(端末にある)をそのまま拡大して出し、大きい画像が届いたら差し替える(2026-11-29a、Mayの
+     「画像を開くのに2秒ほど待つ」)。線は写真に対する千分率なので、差し替えてもずれない。戻すなら small の分を外す */
+  let shownFull = false;
+  const msgDone = ()=>{ const m = w.querySelector(".pv-msg"); if(m) m.remove(); };
+  if(pageURLs.has("pages/small/" + file)){ img.src = pageURLs.get("pages/small/" + file); msgDone(); }
+  pageImageURL("pages/" + file).then(u=>{ shownFull = true; img.src = u; msgDone(); })
+    .catch(e=>{ if(!img.src){ const m = w.querySelector(".pv-msg"); if(m) m.textContent = "写真を読めませんでした: " + e.message; } });
   setZ(1);
+}
+/* iPad では、カードに写真が出たら大きい画像を先に取りに行っておく(2026-11-29a)。押すころには端末にある。
+   iPhone は通信量を増やさないよう、しない(書く欄の初期値と同じく画面の短い辺 700px 以上を iPad とみなす)。一度取った画像は Cache に残る */
+function pagePrefetch(file){
+  if(Math.min(screen.width, screen.height) < 700) return;
+  setTimeout(()=>{ pageImageURL("pages/" + file).catch(()=>{}); }, 300);
 }
 /* 2026-11-21b: 写真はカードの右上に浮かせる(Mayの依頼。下に出すと書く欄が画面の下へ押し出されていた)。
    文はその左に回り込む。書く欄とボタンは写真より下から始める(clear) */
@@ -3745,7 +3756,7 @@ function pageThumbs(host, hits){
         const im = b.querySelector("img");
         // 縦長の Kindle のページも切らずに出す(読み込めたら、枠を写真の縦横に合わせる。2026-11-22)
         im.onload = ()=>{ if(im.naturalWidth){ b.style.aspectRatio = im.naturalWidth + "/" + im.naturalHeight; im.style.objectFit = "contain"; }
-          paintThumbInk(b, x.f); };
+          paintThumbInk(b, x.f); pagePrefetch(x.f); };
         im.src = u; })
         .catch(()=>{ b.innerHTML = '<span class="pt-wait">写真を読めません</span>'; });
     });
