@@ -214,6 +214,13 @@ input,textarea,select{font-family:inherit}
 .page-view .pv-bar button{font-size:calc(15px * var(--fs,1)); padding:8px 14px; border-radius:10px; background:rgba(255,255,255,.15); color:#fff}
 .page-view .pv-scroll{flex:1; overflow:auto; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y pinch-zoom}
 .page-view .pv-scroll img{display:block; width:100%; height:auto}
+/* 本のページに蛍光ペン(2026-11-28d) */
+.page-view .pv-wrap{position:relative; width:100%}
+.page-view .pv-wrap canvas{position:absolute; left:0; top:0; width:100%; height:100%; touch-action:pan-x pan-y pinch-zoom; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
+.page-view .pv-bar button.on{background:#ffe14d; color:#222}
+.page-view .pv-hint{color:#ccc; font-size:calc(12px * var(--fs,1)); padding:0 12px 6px}
+.page-thumbs .pt{position:relative}
+.page-thumbs .pt canvas.pt-ink{position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none}
 .page-view .pv-msg{color:#ddd; padding:20px; font-size:calc(14px * var(--fs,1))}
 .tr-prism{margin:-4px 0 10px; font-size:calc(12px * var(--fs,1)); color:var(--sub); line-height:1.6}
 .tr-prism a{display:inline-block; margin-top:4px; color:var(--accent); text-decoration:none;
@@ -869,7 +876,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-28c";
+const BUILD = "2026-11-28d";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -934,6 +941,7 @@ function load(raw){
      text は単語登録(課の下の単語)の語そのもの。無くても従来どおり動く。 */
   if(!Array.isArray(d.study)) d.study = [];
   /* 今日のタグ(2026-11-15)。{date:"YYYY-MM-DD", tag, seen:{タグ:見た日}, last:{タグ:最後に出した日}} */
+  if(!d.pageInk || typeof d.pageInk !== "object" || Array.isArray(d.pageInk)) d.pageInk = {};   // 本のページの蛍光ペン(2026-11-28d)
   if(!d.tagDay || typeof d.tagDay !== "object" || Array.isArray(d.tagDay)) d.tagDay = {};
   if(!d.tagDay.seen || typeof d.tagDay.seen !== "object") d.tagDay.seen = {};
   if(!d.tagDay.last || typeof d.tagDay.last !== "object") d.tagDay.last = {};
@@ -3527,18 +3535,128 @@ async function pageImageURL(path){
   pageURLs.set(path, url);
   return url;
 }
+/* 本のページに蛍光ペン(2026-11-28d、Mayの依頼「単語/フレーズの画像に Apple Pencil で蛍光ペンを。色は黄色だけ、消しゴムも」)。
+   書けるのは写真を押して大きく開いた画面で、Apple Pencil のときだけ(指は今までどおり動かす・拡大)。
+   線は db.pageInk[ファイル名] = [{c:"y", w:太さ, p:[[x,y],…]}, …]。x・y は写真の幅・高さに対する千分率(拡大してもずれない)。
+   画像は保存しない(点の並びだけ)ので、同期・書き出しはほとんど増えない。同じページの別の単語のカードにも同じ線が出る。
+   戻すなら、pageViewer の pv-ink・pv-erase と pageThumbs の paintThumbInk を外す(db.pageInk は残っても害はない) */
+const PAGE_INK_COLOR = {y: "rgba(255, 221, 0, 0.42)"};
+const PAGE_INK_WIDTH = 22;   // 千分率(写真の幅に対して)。本文の1行がだいたい隠れる太さ
+function drawPageInk(ctx, strokes, W, H){
+  ctx.clearRect(0, 0, W, H);
+  (strokes || []).forEach(st=>{
+    const p = st.p || [];
+    if(!p.length) return;
+    ctx.strokeStyle = PAGE_INK_COLOR[st.c] || PAGE_INK_COLOR.y;
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.lineWidth = (st.w || PAGE_INK_WIDTH) / 1000 * W;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath();
+    if(p.length === 1){ ctx.arc(p[0][0] / 1000 * W, p[0][1] / 1000 * H, ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill(); return; }
+    ctx.moveTo(p[0][0] / 1000 * W, p[0][1] / 1000 * H);
+    for(let i = 1; i < p.length; i++) ctx.lineTo(p[i][0] / 1000 * W, p[i][1] / 1000 * H);
+    ctx.stroke();   // 1本を1回で塗る(重なったところが濃くならない)
+  });
+}
+// カードの小さい写真にも線を重ねる
+function paintThumbInk(btn, file){
+  if(!btn || !btn.isConnected) return;
+  const old = btn.querySelector("canvas.pt-ink"); if(old) old.remove();
+  const strokes = (db.pageInk || {})[file];
+  if(!strokes || !strokes.length) return;
+  const cv = document.createElement("canvas"); cv.className = "pt-ink";
+  btn.appendChild(cv);
+  const r = btn.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if(!r.width) return;
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  drawPageInk(cv.getContext("2d"), strokes, cv.width, cv.height);
+}
 function pageViewer(file, caption){
   const w = document.createElement("div");
   w.className = "page-view";
-  w.innerHTML = '<div class="pv-bar"><span class="pv-cap"></span><button class="pv-zoom" data-d="-1">−</button><button class="pv-zoom" data-d="1">＋</button><button class="pv-close">閉じる</button></div>'
-    + '<div class="pv-scroll"><div class="pv-msg">読み込んでいます…</div><img alt=""></div>';
+  w.innerHTML = '<div class="pv-bar"><span class="pv-cap"></span><button class="pv-erase">消しゴム</button><button class="pv-zoom" data-d="-1">−</button><button class="pv-zoom" data-d="1">＋</button><button class="pv-close">閉じる</button></div>'
+    + '<div class="pv-hint">Apple Pencil でなぞると黄色の蛍光ペンになります。指では動かす・拡大ができます。</div>'
+    + '<div class="pv-scroll"><div class="pv-msg">読み込んでいます…</div><div class="pv-wrap"><img alt=""><canvas class="pv-ink"></canvas></div></div>';
   w.querySelector(".pv-cap").textContent = caption || "";
-  const img = w.querySelector("img"), sc = w.querySelector(".pv-scroll");
+  const img = w.querySelector("img"), sc = w.querySelector(".pv-scroll"), wrap = w.querySelector(".pv-wrap"), cv = w.querySelector(".pv-ink");
+  const ctx = cv.getContext("2d");
+  if(!db.pageInk || typeof db.pageInk !== "object") db.pageInk = {};
+  const strokes = (db.pageInk[file] || []).map(x=>x);   // 書いている間はこの写し。終わるたびに記録へ
+  const redraw = ()=>drawPageInk(ctx, strokes, cv.width, cv.height);
+  /* 描く面の大きさには上限を置く(拡大4倍だと1億画素を超え、iPad では描けない・重くなる)。上限を超えるときは粗く描く(蛍光ペンなので目立たない) */
+  const fit = ()=>{
+    if(!img.clientWidth) return;
+    const cw = img.clientWidth, ch = img.clientHeight;
+    const k = Math.min(window.devicePixelRatio || 1, Math.sqrt(6e6 / (cw * ch)));
+    cv.width = Math.max(1, Math.round(cw * k)); cv.height = Math.max(1, Math.round(ch * k)); redraw(); };
   let z = 1;
-  const setZ = v=>{ z = Math.max(1, Math.min(4, v)); img.style.width = (z * 100) + "%"; };
+  const setZ = v=>{ z = Math.max(1, Math.min(4, v)); wrap.style.width = (z * 100) + "%"; fit(); };
   w.querySelectorAll(".pv-zoom").forEach(b=>b.onclick = ()=>setZ(z + Number(b.dataset.d)));
   img.ondblclick = ()=>setZ(z >= 2 ? 1 : 2.5);
-  w.querySelector(".pv-close").onclick = ()=>w.remove();
+  img.onload = fit;
+  const store = ()=>{
+    if(strokes.length) db.pageInk[file] = strokes.map(x=>x); else delete db.pageInk[file];
+    save();
+  };
+  w.querySelector(".pv-close").onclick = ()=>{
+    w.remove();
+    document.querySelectorAll('.page-thumbs .pt[data-file="' + CSS.escape(file) + '"]').forEach(b=>paintThumbInk(b, file));
+  };
+  let eraser = false;
+  const eb = w.querySelector(".pv-erase");
+  eb.onclick = ()=>{ eraser = !eraser; eb.classList.toggle("on", eraser); eb.textContent = eraser ? "消しゴム中" : "消しゴム"; };
+  // ペンで触ったところは画面を動かさない(Safari はペンでも動かしてしまうので、touchstart で止める。指はそのまま)
+  const isStylus = e=>[...(e.touches || [])].some(t=>t.touchType === "stylus");
+  cv.addEventListener("touchstart", e=>{ if(isStylus(e)) e.preventDefault(); }, {passive: false});
+  cv.addEventListener("touchmove", e=>{ if(isStylus(e)) e.preventDefault(); }, {passive: false});
+  const pt = e=>{ const r = cv.getBoundingClientRect();
+    return [Math.round((e.clientX - r.left) / r.width * 1000), Math.round((e.clientY - r.top) / r.height * 1000)]; };
+  const eraseAt = a=>{
+    const near = st=>{
+      const p = st.p || [], R = ((st.w || PAGE_INK_WIDTH) / 2) + 12;
+      if(p.length === 1) return Math.hypot(p[0][0] - a[0], p[0][1] - a[1]) <= R;
+      for(let i = 1; i < p.length; i++){
+        const P = p[i-1], Q = p[i], dx = Q[0] - P[0], dy = Q[1] - P[1], L = dx*dx + dy*dy;
+        const t = L ? Math.max(0, Math.min(1, ((a[0] - P[0]) * dx + (a[1] - P[1]) * dy) / L)) : 0;
+        if(Math.hypot(P[0] + t*dx - a[0], P[1] + t*dy - a[1]) <= R) return true;
+      }
+      return false;
+    };
+    const n = strokes.length;
+    for(let i = strokes.length - 1; i >= 0; i--) if(near(strokes[i])) strokes.splice(i, 1);
+    if(strokes.length !== n) redraw();
+    return strokes.length !== n;
+  };
+  let cur = null, erased = false;
+  cv.addEventListener("pointerdown", e=>{
+    if(e.pointerType !== "pen" || cur) return;   // 書けるのは Apple Pencil だけ
+    e.preventDefault();
+    try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+    const a = pt(e);
+    if(eraser){ cur = {id: e.pointerId, erase: true}; erased = eraseAt(a) || erased; return; }
+    cur = {id: e.pointerId, st: {c: "y", w: PAGE_INK_WIDTH, p: [a]}};
+    strokes.push(cur.st); redraw();
+  });
+  cv.addEventListener("pointermove", e=>{
+    if(!cur || e.pointerId !== cur.id) return;
+    e.preventDefault();
+    let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+    if(!evs || !evs.length) evs = [e];
+    if(cur.erase){ evs.forEach(ev=>{ erased = eraseAt(pt(ev)) || erased; }); return; }
+    const p = cur.st.p;
+    evs.forEach(ev=>{ const b = pt(ev), a = p[p.length - 1];
+      if(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) >= 3) p.push(b); });   // 細かすぎる点は足さない(記録を小さく)
+    redraw();
+  });
+  const end = e=>{
+    if(!cur || e.pointerId !== cur.id) return;
+    const wasErase = cur.erase; cur = null;
+    if(wasErase){ if(erased){ erased = false; store(); } }
+    else store();
+  };
+  cv.addEventListener("pointerup", end);
+  cv.addEventListener("pointercancel", end);
+  window.addEventListener("resize", ()=>{ if(w.isConnected) fit(); });
   document.body.appendChild(w);
   pageImageURL("pages/" + file).then(u=>{ img.src = u; w.querySelector(".pv-msg").remove(); })
     .catch(e=>{ w.querySelector(".pv-msg").textContent = "写真を読めませんでした: " + e.message; });
@@ -3597,11 +3715,13 @@ function pageThumbs(host, hits){
       b.title = x.cap;
       b.onclick = ()=>pageViewer(x.f, x.cap);
       row.appendChild(b);
+      b.dataset.file = x.f;   // 蛍光ペンの線を重ねるため(2026-11-28d)
       pageImageURL("pages/small/" + x.f).then(u=>{
         b.innerHTML = '<img alt="">';
         const im = b.querySelector("img");
         // 縦長の Kindle のページも切らずに出す(読み込めたら、枠を写真の縦横に合わせる。2026-11-22)
-        im.onload = ()=>{ if(im.naturalWidth){ b.style.aspectRatio = im.naturalWidth + "/" + im.naturalHeight; im.style.objectFit = "contain"; } };
+        im.onload = ()=>{ if(im.naturalWidth){ b.style.aspectRatio = im.naturalWidth + "/" + im.naturalHeight; im.style.objectFit = "contain"; }
+          paintThumbInk(b, x.f); };
         im.src = u; })
         .catch(()=>{ b.innerHTML = '<span class="pt-wait">写真を読めません</span>'; });
     });
@@ -4895,6 +5015,14 @@ function importData(raw, msgEl){
   }
   // 覚えたい単語と練習の記録(2026-10-16)。(lang, lesson, text) で照合し、最後に練習したのが新しいほうを残す
   let studyAdded = 0, studyUpdated = 0;
+  // 本のページの蛍光ペン(2026-11-28d)。ページ(ファイル名)ごとに丸ごと差し替え。空の配列はそのページの線を消す
+  if(data.pageInk && typeof data.pageInk === "object" && !Array.isArray(data.pageInk)){
+    if(!db.pageInk || typeof db.pageInk !== "object") db.pageInk = {};
+    Object.keys(data.pageInk).forEach(f=>{
+      const v = data.pageInk[f];
+      if(Array.isArray(v) && v.length) db.pageInk[f] = v; else delete db.pageInk[f];
+    });
+  }
   if(Array.isArray(data.study)){
     data.study.forEach(x=>{
       if(!x || !x.lang || x.lesson==null || !x.text) return;
