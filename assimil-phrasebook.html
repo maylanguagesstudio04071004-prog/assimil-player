@@ -563,7 +563,9 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 
 <!-- 検索 -->
 <section id="pageSearch" style="display:none">
-  <input id="q" type="search" placeholder="全言語・全レッスンから検索(原文・日本語訳、部分一致)">
+  <!-- 2026-11-28c: 「検索に切り替えると画面が真っ暗」(Mayの報告、iPad/iPhone)。同期の鍵の欄(11-20)と同じく、iOS の自動入力(パスワード)の画面が
+       出ていると見て、自動入力の対象から外す指定を足した。戻すなら autocomplete 以下を消す -->
+  <input id="q" type="search" placeholder="全言語・全レッスンから検索(原文・日本語訳、部分一致)" autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other">
   <div class="filterbar">
     <button id="fAll" class="on">すべて</button>
     <!-- 「フレーズ」「単語」の絞り込みは隠した(2026-11-15、Mayの依頼「使っていないので無くてもいい」)。
@@ -867,7 +869,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-28b";
+const BUILD = "2026-11-28c";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -2484,7 +2486,9 @@ function showTab(t){
     $(pages[k]).style.display = (k===t) ? "" : "none";
   });
   if(t==="tabLesson") renderLesson();
-  if(t==="tabSearch"){ renderSearch(); $("q").focus(); }
+  /* iPad・iPhone では検索欄を自動で選ばない(2026-11-28c)。選ぶとすぐキーボードと自動入力の画面が出て、真っ暗に見えていた。
+     指で欄を押したときだけ出る。戻すなら if を外して $("q").focus() だけにする */
+  if(t==="tabSearch"){ renderSearch(); if(!(navigator.maxTouchPoints > 0)) $("q").focus(); }
   if(t==="tabFav") renderFavs();
   // 頭へ戻してから描く(2026-11-18)。描いたあとに戻すと、画面が低いときにカードの文が下に隠れたままになる
   if(t==="tabStudy" || t==="tabGram"){ studyMode = t === "tabGram" ? "gram" : "word";   // 文法タブ(2026-11-28b)
