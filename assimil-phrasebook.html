@@ -876,7 +876,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-29a";
+const BUILD = "2026-11-29b";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -8389,6 +8389,23 @@ function openFromHash(){
     }
   }
 }
+/* すべての入力欄を iOS の自動入力(パスワード・1Password など)の対象から外す(2026-11-29b)。
+   iPad で文字の欄を押すと画面が真っ暗になる、が 同期の鍵の欄(11-20c)・検索欄(11-28c)・レッスンの編集(11-29b、仏L30)と3回起きた。
+   欄ごとに付けると付け忘れるので、画面にある欄と、あとから作られる小窓の欄にも自動で付ける。戻すならこのブロックを消す */
+function noAutofill(el){
+  if(!el || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+  if(el.tagName === "INPUT" && /^(file|range|checkbox|radio|button|submit|color)$/i.test(el.type)) return;
+  if(!el.hasAttribute("autocomplete")) el.setAttribute("autocomplete", "off");
+  el.setAttribute("data-1p-ignore", ""); el.setAttribute("data-lpignore", "true"); el.setAttribute("data-form-type", "other");
+}
+document.querySelectorAll("input, textarea").forEach(noAutofill);
+try{
+  new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{
+    if(n.nodeType !== 1) return;
+    noAutofill(n);
+    if(n.querySelectorAll) n.querySelectorAll("input, textarea").forEach(noAutofill);
+  }))).observe(document.body, {childList: true, subtree: true});
+}catch(e){}
 window.addEventListener("hashchange", openFromHash);
 bootStorage().then(openFromHash, openFromHash).then(()=>{ syncStart(); if(bootRescue) syncRescue(); else if(syncOn()) syncRun("pull"); });
 // 閉じる直前にもう一度書いておく(入力直後にアプリを閉じた場合の取りこぼし防止)
