@@ -217,7 +217,7 @@ input,textarea,select{font-family:inherit}
 /* 本のページに蛍光ペン(2026-11-28d) */
 .page-view .pv-wrap{position:relative; width:100%}
 .page-view .pv-wrap canvas{position:absolute; left:0; top:0; width:100%; height:100%; touch-action:pan-x pan-y pinch-zoom; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
-.page-view .pv-bar button.on{background:#ffe14d; color:#222}
+.page-view .pv-bar button.on{background:#fff; color:#1b3a8c; font-weight:700}
 .page-view .pv-hint{color:#ccc; font-size:calc(12px * var(--fs,1)); padding:0 12px 6px}
 .page-thumbs .pt{position:relative}
 .page-thumbs .pt canvas.pt-ink{position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none}
@@ -876,7 +876,7 @@ pre{background:var(--bg); border:1px solid var(--border); border-radius:12px; pa
 "use strict";
 // このファイルを直すたびに上げる。設定→保存の状態 に出るので、
 // スマホ側が新しいファイルを受け取れているかを一目で確認できる(2026-08-15)
-const BUILD = "2026-11-28e";
+const BUILD = "2026-11-28f";
 const KEY = "phrasebook.v3";
 const $ = id => document.getElementById(id);
 
@@ -3542,11 +3542,15 @@ async function pageImageURL(path){
    戻すなら、pageViewer の pv-ink・pv-erase と pageThumbs の paintThumbInk を外す(db.pageInk は残っても害はない) */
 /* 2026-11-28e: 水色に変えた(Mayの依頼)。前に引いた黄色の線(c:"y")も水色で出す。黄色に戻すなら y を "rgba(255, 221, 0, 0.42)" に、
    新しい線の c を "y" に戻す */
-const PAGE_INK_COLOR = {b: "rgba(70, 185, 255, 0.40)", y: "rgba(70, 185, 255, 0.40)"};
+const PAGE_INK_COLOR = {b: "rgba(70, 185, 255, 0.40)", y: "rgba(70, 185, 255, 0.40)",
+  k: "#1b3a8c"};   // k = 細い濃い青のペン(2026-11-28f、Mayの依頼「文字を書き込めるように」)。蛍光ペンの上に重ねて描く
+const PAGE_PEN_PX = 2.2;   // ペンの太さ(画面の上の px)。拡大の倍率で割って千分率にし、どの倍率で書いても同じ細さに見える
 const PAGE_INK_WIDTH = 22;   // 千分率(写真の幅に対して)。本文の1行がだいたい隠れる太さ
 function drawPageInk(ctx, strokes, W, H){
   ctx.clearRect(0, 0, W, H);
-  (strokes || []).forEach(st=>{
+  // 蛍光ペンを先に、ペン(k)をあとに描く(塗った所に書いても字が沈まない。2026-11-28f)
+  const list = (strokes || []).filter(st=>st.c !== "k").concat((strokes || []).filter(st=>st.c === "k"));
+  list.forEach(st=>{
     const p = st.p || [];
     if(!p.length) return;
     ctx.strokeStyle = PAGE_INK_COLOR[st.c] || PAGE_INK_COLOR.b;
@@ -3559,6 +3563,11 @@ function drawPageInk(ctx, strokes, W, H){
     for(let i = 1; i < p.length; i++) ctx.lineTo(p[i][0] / 1000 * W, p[i][1] / 1000 * H);
     ctx.stroke();   // 1本を1回で塗る(重なったところが濃くならない)
   });
+}
+// ペンの線を1区間だけ描き足す(書いている間に全部描き直さない。2026-11-28f)
+function drawPenSeg(ctx, st, a, b, W, H){
+  ctx.strokeStyle = PAGE_INK_COLOR.k; ctx.lineWidth = st.w / 1000 * W; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(a[0] / 1000 * W, a[1] / 1000 * H); ctx.lineTo(b[0] / 1000 * W, b[1] / 1000 * H); ctx.stroke();
 }
 // カードの小さい写真にも線を重ねる
 function paintThumbInk(btn, file){
@@ -3576,8 +3585,8 @@ function paintThumbInk(btn, file){
 function pageViewer(file, caption){
   const w = document.createElement("div");
   w.className = "page-view";
-  w.innerHTML = '<div class="pv-bar"><span class="pv-cap"></span><button class="pv-erase">消しゴム</button><button class="pv-zoom" data-d="-1">−</button><button class="pv-zoom" data-d="1">＋</button><button class="pv-close">閉じる</button></div>'
-    + '<div class="pv-hint">Apple Pencil でなぞると水色の蛍光ペンになります。指では動かす・拡大ができます。</div>'
+  w.innerHTML = '<div class="pv-bar"><span class="pv-cap"></span><button class="pv-tool" data-t="hl">蛍光</button><button class="pv-tool" data-t="pen">ペン</button><button class="pv-tool" data-t="erase">消しゴム</button><button class="pv-zoom" data-d="-1">−</button><button class="pv-zoom" data-d="1">＋</button><button class="pv-close">閉じる</button></div>'
+    + '<div class="pv-hint">Apple Pencil で書けます(蛍光=水色の蛍光ペン、ペン=細い濃い青)。指では動かす・拡大ができます。</div>'
     + '<div class="pv-scroll"><div class="pv-msg">読み込んでいます…</div><div class="pv-wrap"><img alt=""><canvas class="pv-ink"></canvas></div></div>';
   w.querySelector(".pv-cap").textContent = caption || "";
   const img = w.querySelector("img"), sc = w.querySelector(".pv-scroll"), wrap = w.querySelector(".pv-wrap"), cv = w.querySelector(".pv-ink");
@@ -3604,18 +3613,22 @@ function pageViewer(file, caption){
     w.remove();
     document.querySelectorAll('.page-thumbs .pt[data-file="' + CSS.escape(file) + '"]').forEach(b=>paintThumbInk(b, file));
   };
-  let eraser = false;
-  const eb = w.querySelector(".pv-erase");
-  eb.onclick = ()=>{ eraser = !eraser; eb.classList.toggle("on", eraser); eb.textContent = eraser ? "消しゴム中" : "消しゴム"; };
+  /* 道具は 蛍光(hl)・ペン(pen)・消しゴム(erase) の3つから1つ(2026-11-28f)。最後に使った道具を端末に覚えておく */
+  let tool = "hl";
+  try{ const t = localStorage.getItem(KEY + ".pageTool"); if(["hl", "pen", "erase"].includes(t)) tool = t; }catch(e){}
+  const paintTool = ()=>w.querySelectorAll(".pv-tool").forEach(b=>b.classList.toggle("on", b.dataset.t === tool));
+  w.querySelectorAll(".pv-tool").forEach(b=>b.onclick = ()=>{ tool = b.dataset.t; lsSet(KEY + ".pageTool", tool); paintTool(); });
+  paintTool();
   // ペンで触ったところは画面を動かさない(Safari はペンでも動かしてしまうので、touchstart で止める。指はそのまま)
   const isStylus = e=>[...(e.touches || [])].some(t=>t.touchType === "stylus");
   cv.addEventListener("touchstart", e=>{ if(isStylus(e)) e.preventDefault(); }, {passive: false});
   cv.addEventListener("touchmove", e=>{ if(isStylus(e)) e.preventDefault(); }, {passive: false});
-  const pt = e=>{ const r = cv.getBoundingClientRect();
-    return [Math.round((e.clientX - r.left) / r.width * 1000), Math.round((e.clientY - r.top) / r.height * 1000)]; };
+  // ペンは細かく(千分率の小数1けた)、蛍光ペンは粗く(整数)。記録を小さく保つ
+  const pt = (e, fine)=>{ const r = cv.getBoundingClientRect(), q = fine ? 10 : 1;
+    return [Math.round((e.clientX - r.left) / r.width * 1000 * q) / q, Math.round((e.clientY - r.top) / r.height * 1000 * q) / q]; };
   const eraseAt = a=>{
     const near = st=>{
-      const p = st.p || [], R = ((st.w || PAGE_INK_WIDTH) / 2) + 12;
+      const p = st.p || [], R = ((st.w || PAGE_INK_WIDTH) / 2) + (st.c === "k" ? 6 : 12);
       if(p.length === 1) return Math.hypot(p[0][0] - a[0], p[0][1] - a[1]) <= R;
       for(let i = 1; i < p.length; i++){
         const P = p[i-1], Q = p[i], dx = Q[0] - P[0], dy = Q[1] - P[1], L = dx*dx + dy*dy;
@@ -3634,10 +3647,13 @@ function pageViewer(file, caption){
     if(e.pointerType !== "pen" || cur) return;   // 書けるのは Apple Pencil だけ
     e.preventDefault();
     try{ cv.setPointerCapture(e.pointerId); }catch(err){}
-    const a = pt(e);
-    if(eraser){ cur = {id: e.pointerId, erase: true}; erased = eraseAt(a) || erased; return; }
-    cur = {id: e.pointerId, st: {c: "b", w: PAGE_INK_WIDTH, p: [a]}};
-    strokes.push(cur.st); redraw();
+    const pen = tool === "pen";
+    const a = pt(e, pen);
+    if(tool === "erase"){ cur = {id: e.pointerId, erase: true}; erased = eraseAt(a) || erased; return; }
+    const pw = Math.round(PAGE_PEN_PX / cv.getBoundingClientRect().width * 1000 * 100) / 100;   // 画面の上で PAGE_PEN_PX になる千分率
+    cur = {id: e.pointerId, pen, st: pen ? {c: "k", w: pw, p: [a]} : {c: "b", w: PAGE_INK_WIDTH, p: [a]}};
+    strokes.push(cur.st);
+    if(pen) drawPenSeg(ctx, cur.st, a, a, cv.width, cv.height); else redraw();
   });
   cv.addEventListener("pointermove", e=>{
     if(!cur || e.pointerId !== cur.id) return;
@@ -3646,15 +3662,21 @@ function pageViewer(file, caption){
     if(!evs || !evs.length) evs = [e];
     if(cur.erase){ evs.forEach(ev=>{ erased = eraseAt(pt(ev)) || erased; }); return; }
     const p = cur.st.p;
+    if(cur.pen){   // ペンは描き足すだけ。字の形が崩れないよう、間引きは細かく(画面の上で約1px)
+      const step = 1 / cv.getBoundingClientRect().width * 1000;
+      evs.forEach(ev=>{ const b = pt(ev, true), a = p[p.length - 1];
+        if(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) >= step){ drawPenSeg(ctx, cur.st, a, b, cv.width, cv.height); p.push(b); } });
+      return;
+    }
     evs.forEach(ev=>{ const b = pt(ev), a = p[p.length - 1];
       if(Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]) >= 3) p.push(b); });   // 細かすぎる点は足さない(記録を小さく)
     redraw();
   });
   const end = e=>{
     if(!cur || e.pointerId !== cur.id) return;
-    const wasErase = cur.erase; cur = null;
+    const wasErase = cur.erase, wasPen = cur.pen; cur = null;
     if(wasErase){ if(erased){ erased = false; store(); } }
-    else store();
+    else { if(wasPen) redraw(); store(); }   // ペンは書き終わりに描き直して、蛍光ペンとの重なりの順を整える
   };
   cv.addEventListener("pointerup", end);
   cv.addEventListener("pointercancel", end);
