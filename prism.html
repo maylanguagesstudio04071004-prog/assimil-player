@@ -361,7 +361,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-28b";
+const BUILD = "2026-11-28c";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -959,7 +959,7 @@ function _openBt(id){
   $("tab"+curTab).classList.add("on");
   renderBt(id); window.scrollTo(0,0);
 }
-function openBooks(){ subHist.push(_openBooks); _openBooks(); }
+function openBooks(){ bookSeries = ""; subHist.push(()=>{ bookSeries = ""; _openBooks(); }); _openBooks(); }
 function _openBooks(){
   TABS.forEach(t => $("page"+t).classList.remove("on"));
   SUBS.forEach(p => $(p).classList.toggle("on", p==="pageBooks"));
@@ -2161,13 +2161,66 @@ function renderRift(){
 }
 
 /* ---------- 本 ---------- */
+/* 本の一覧は2段にした(2026-11-28にMayが指定「旅の指さし会話帳とDKでまとめてリンクを貼り、
+   どちらかを選ぶとそれぞれの言語一覧が出てくるように」)。本が23になって縦に長かった。
+   **本も見開きも消していない。選ぶ段を1つ足しただけ。**
+   並びは 旅の指さし会話帳 → DK → そのほか(Mayの指定)。
+   戻すなら renderBooks() を db.sources をそのまま並べる形に戻す(seriesList() の中身がそれ) */
+const BOOK_SERIES = [
+  {key:"sashi", name:"旅の指さし会話帳", unit:"冊",
+   note:"言語ごとに1冊。紙面の見開きをそのまま取り込んでいる。",
+   has: s => s.kind === "pointbook"},
+  {key:"dk", name:"DK ビジュアル辞典", unit:"冊",
+   note:"5言語辞典と1言語版。紙面に日本語は無く、日本語ラベルは整理用。",
+   has: s => s.kind === "visual_dictionary"},
+  /* 本ではない出典(Atlasの辞書・Notionの記録・補い)。消さずにここへ入れる。語には今までどおり⚠が付く */
+  {key:"other", name:"そのほか（本ではないもの）", unit:"件",   /* 本ではないので「冊」と数えない */
+   note:"Atlasの辞書・Mayの記録（Notion）・補い。本の転記ではない語。",
+   has: s => s.kind !== "pointbook" && s.kind !== "visual_dictionary"}
+];
+let bookSeries = "";          // "" なら最初の画面(シリーズを選ぶ)
+function seriesOf(key){ return BOOK_SERIES.find(x=>x.key===key); }
+function booksIn(key){
+  const g = seriesOf(key); return g ? db.sources.filter(g.has) : [];
+}
+function openBookSeries(key){
+  bookSeries = key;
+  subHist.push(()=>{ bookSeries = key; _openBooks(); });
+  _openBooks();
+}
 function renderBooks(){
   const el = $("bookList");
   if(!db.sources.length){
-    el.innerHTML = '<div class="empty">まだ本がありません。設定タブからJSONを取り込んでください。</div>';
+    el.innerHTML = '<div class="empty">まだ本がありません。設定の「取り込み」からJSONを取り込んでください。</div>';
     return;
   }
-  el.innerHTML = db.sources.map(s=>{
+  el.innerHTML = bookSeries ? seriesList(bookSeries) : seriesMenu();
+}
+function seriesMenu(){
+  return BOOK_SERIES.map(g=>{
+    const ss = db.sources.filter(g.has);
+    if(!ss.length) return "";
+    const bts = db.bookThemes.filter(b=>ss.some(s=>s.id===b.sourceId)).length;
+    const langs = new Set(ss.map(s=>s.lang).filter(Boolean));
+    return '<div class="card tap" onclick="openBookSeries(\''+g.key+'\')">'
+      + '<div class="row"><b class="grow">'+esc(g.name)+'</b>'
+      + '<span class="tag plain">'+ss.length+esc(g.unit)+'</span></div>'
+      + '<div class="sub">'+esc(g.note)+'</div>'
+      + '<div class="sub" style="margin-top:4px">'
+      + (langs.size ? langs.size+'言語 ／ ' : '') + bts + '見開き</div></div>';
+  }).join("");
+}
+function seriesList(key){
+  const g = seriesOf(key);
+  /* 言語の並びは、設定の「言語の表示順」にそろえる。言語の無い本(DKの5言語辞典・Atlasの辞書)は先頭 */
+  const ss = booksIn(key).slice().sort((a,b)=>{
+    const ai = a.lang ? db.langs.indexOf(a.lang) : -1, bi = b.lang ? db.langs.indexOf(b.lang) : -1;
+    return (ai < 0 ? -1 : ai) - (bi < 0 ? -1 : bi);
+  });
+  return '<div class="row" style="margin-bottom:8px">'
+    + '<button class="btn" onclick="bookSeries=\'\';renderBooks();window.scrollTo(0,0)">‹ 本をえらび直す</button>'
+    + '<span class="sub grow" style="text-align:right">'+esc(g.name)+' ／ '+ss.length+esc(g.unit)+'</span></div>'
+    + ss.map(s=>{
     const bts = db.bookThemes.filter(b=>b.sourceId===s.id)
       .sort((a,b)=>(a.page||0)-(b.page||0));
     return '<div class="card">'
