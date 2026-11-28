@@ -180,6 +180,7 @@ table.ax td.off{color:var(--line)}
   <small>身近な単語から観察する</small>
   <a class="hlink" id="atlasLink" href="./assimil-phrasebook.html">▶ Atlas</a>
   <!-- 設定はタブから外してここへ(2026-09-26。Mayの依頼「独立したタブで置いておく必要はない」) -->
+  <a class="hlink icon" id="booksLink" href="#" title="本" onclick="event.preventDefault();openBooks()">📖</a>
   <a class="hlink icon" id="settingsLink" href="#" title="設定" onclick="event.preventDefault();showTab('Settings')">⚙</a>
 </header>
 
@@ -227,11 +228,6 @@ table.ax td.off{color:var(--line)}
   <h2>文字の大きさ</h2>
   <div class="row" id="fsBar" style="flex-wrap:wrap; margin-bottom:6px"></div>
   <div class="sub" style="margin-bottom:6px">アプリ全体の文字が変わります。この端末だけの設定で、書き出しには入りません。</div>
-
-  <hr>
-  <h2>本</h2>
-  <div class="sub" style="margin-bottom:6px">取り込んだ本と、その見開き。語の出典行からも開けます。</div>
-  <div id="bookList"></div>
 
   <hr>
   <h2>取り込み</h2>
@@ -305,21 +301,33 @@ table.ax td.off{color:var(--line)}
   <div class="sub">Atlasと同じ置き場所と鍵を使います(Atlasで入れてあれば、ここにも入っています)。開いたときに相手の端末の記録を受け取り、手が止まって10秒たつと自分の記録を送ります。文字の大きさなど端末ごとの設定は送りません。</div>
 
   <hr>
-  <h2>言語の表示順</h2>
-  <div id="langOrder"></div>
-
-  <hr>
   <h2>保存の状態</h2>
   <div id="storeInfo" class="sub"></div>
   <div class="row" style="margin-top:8px">
     <button class="btn" onclick="loadDemo()">デモデータを入れる</button>
     <button class="btn warn" onclick="wipeAll()">全部消す</button>
   </div>
+  <!-- 設定の並び(2026-11-28にMayが指定): 文字の大きさ → 取り込み → 書き出し・バックアップ →
+       端末どうしの同期 → 保存の状態 → 言語の表示順。並びはこのHTMLの順がそのままで、
+       renderSettings() は描くだけで順番を決めていない -->
+  <hr>
+  <h2>言語の表示順</h2>
+  <div id="langOrder"></div>
 </section>
 
 <section id="pageSense">
   <button class="back" onclick="goBack()">‹ 戻る</button>
   <div id="senseBody"></div>
+</section>
+
+<!-- 本の一覧(2026-11-28にMayが指定「本だけ設定とは別のアイコンで、歯車の横に」)。
+     設定の中にあったが、15冊・342見開きになって設定の一覧が長くなったため、ヘッダーの📖へ出した。
+     **タブは増やしていない**(iPhoneの幅に6つ目が入らない制約は変わらない)。中身は今までと同じ renderBooks() -->
+<section id="pageBooks">
+  <button class="back" onclick="goBack()">‹ 戻る</button>
+  <h2>本</h2>
+  <div class="sub" style="margin-bottom:6px">取り込んだ本と、その見開き。語の出典行からも開けます。</div>
+  <div id="bookList"></div>
 </section>
 
 <section id="pageBookTheme">
@@ -353,7 +361,7 @@ table.ax td.off{color:var(--line)}
    Language Atlas (assimil-phrasebook.html) とは別アプリ。
    保存先も別 (IndexedDB "prismDB")。Atlasのデータには触らない。
    =========================================================== */
-const BUILD = "2026-11-28a";
+const BUILD = "2026-11-28b";
 const KEY   = "prism.v1";
 const IDB_NAME = "prismDB", IDB_VER = 1, ST_DB = "db", ST_IMG = "img";
 const $ = id => document.getElementById(id);
@@ -905,7 +913,7 @@ function normalizeDb(d){
 
 /* ---------- 画面切替 ---------- */
 const TABS = ["Collections","Themes","Words","Settings"];   // 画面の並びと同じ順(2026-09-21にMayが 観察/テーマ/語/設定 に変更)
-const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift","pageCollection"];
+const SUBS = ["pageSense","pageBookTheme","pageImage","pageRift","pageCollection","pageBooks"];
 let curTab = "Collections";   // 起動時はいちばん左の観察(2026-09-18。Mayがタブの並びを変えた)
 let backStack = [];
 
@@ -950,6 +958,13 @@ function _openBt(id){
   SUBS.forEach(p => $(p).classList.toggle("on", p==="pageBookTheme"));
   $("tab"+curTab).classList.add("on");
   renderBt(id); window.scrollTo(0,0);
+}
+function openBooks(){ subHist.push(_openBooks); _openBooks(); }
+function _openBooks(){
+  TABS.forEach(t => $("page"+t).classList.remove("on"));
+  SUBS.forEach(p => $(p).classList.toggle("on", p==="pageBooks"));
+  $("tab"+curTab).classList.add("on");
+  renderBooks(); window.scrollTo(0,0);
 }
 function openCollection(id){ subHist.push(()=>_openCol(id)); _openCol(id); }
 function _openCol(id){
@@ -3253,7 +3268,7 @@ function doExportAtlas(){
 /* ---------- 設定 ---------- */
 function renderSettings(){
   renderFontScale();   // 文字の大きさ(2026-11-17)
-  renderBooks();   // 本の一覧は設定の中(2026-09-12g)。タブから外しただけで中身は同じ
+  // 本の一覧は設定から外してヘッダーの📖へ(2026-11-28)。描くのは _openBooks()
   renderStore(); renderLangOrder(); renderFmtHelp(); if(typeof syncPaint === "function") syncPaint();   // renderImgPicker() は撤去(2026-09-09)
 }
 function renderStore(){
